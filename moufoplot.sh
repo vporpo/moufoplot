@@ -1,8 +1,24 @@
 #!/bin/bash
 color_array=("#000000" "#000099" "#009900" "#009999" "#990000" "#990099" "#999900" "#dddddd" "#555555" "#00ff00" "#00ffff" "#ff0000" "#ff00ff" "ffff00")
+
+if [ "$1" == "--help" ]||[ "$1" == "-help" ]||[ "$1" == "-h" ]||[ $# -lt 2 ]; then
+    echo "Usage: $0 DIR \"X-axis-data\" \"Y-axis-data\" [other-data] [x-title] [y-title]"
+    echo "Example1: if data files are like aX_bY_cZ"
+    echo "          $0 ./data/ \"b1 b2 b3\" \"c1 c2\" \"\" benchmarks cycles "
+    echo "          plots a single graph with b{1-3} on the X axis and"
+    echo "                                    c{1-2} on the Y axis."
+    echo ""
+    echo "Example1: if data files are like aX_bY_cZ_dW"
+    echo "          $0 ./data/ \"b1 b2 b3\" \"c1 c2\" \"a1\" benchmarks cycles "
+    echo "          plots a single graph with b{1-3} on the X axis and"
+    echo "                                    c{1-2} on the Y axis"
+    echo "          such that a1 is in the filename."
+
+    exit 1
+fi
+
 DIR=$1
 XAXIS=$2
-GROUP=$3
 
 # Input: FILE
 # Output: A string with all the parts separated by space
@@ -51,12 +67,14 @@ check_parts()
     local first_file=`ls -1 $DIR|head -n 1`
     local last_cnt=`count_parts ${first_file}`
     local files=`ls -1 $DIR`
+    local f
     for f in $files; do
 	# echo $f
 	local cnt=`count_parts $f`
 	# echo $cnt
 	if [ ${cnt} -ne ${last_cnt} ]; then
-	    echo "$f has ${cnt} parts !!! It should have ${last_cnt} parts!!!"
+	    echo "ERROR!!!"
+	    echo "FILE: $DIR/$f has ${cnt} parts !!! Iet should have ${last_cnt} parts!!!"
 	    exit 1
 	fi
 	last_cnt=$cnt
@@ -103,15 +121,17 @@ found_in_array()
     local haystack=$2
     local found=0
     for hay in ${haystack}; do
-	if [ $needle -eq $hay ]; then
+	if [ "$needle" == "$hay" ]; then
 	    found=1
 	fi
     done
     echo $found
 }
 
-# Input: FIRST_NUM END_NUM NAME_PREFIX
+# Input: FIRST_NUM END_NUM NAME_PREFIX "SKIP_ARRAY"
 # Output: the figure names
+# Description: Generate names by concatenating the parts that correspond
+#              to FIRST_NUM up to END_NUM excluding "SKIP_ARRAY".
 gen_names()
 {
     local i=$1
@@ -222,18 +242,23 @@ normalize()
 
 gp_options()
 {
-    local columns=$2
-    local data_columns=$3
+    local DIR=$1
+    local data_columns=$2
+
+    local rows=1
+    local columns=1
+
     data_columns=$((data_columns+1)) #since we start at column 2
 
 # the yrange for each row starting from row 0 
-    local Y_RANGE_ENABLED=0
-    # local yrange_row=(0:4.7 0:4.3 0:6.5 0:4 0:3 0:3 0:7) # Lowest first
+    local Y_RANGE_ENABLED=1
+    local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
     local size_x=0.75
-    local size_y=0.8
+    local size_y=1.0
 #bottom_margin=`echo "${size_y}/2.0" |bc -l`
     local bottom_margin=0.01
-    local KEYSTUFF="inside top"
+    # local KEYSTUFF="inside top"
+    local KEYSTUFF="tmargin"
     local LW=7
     local POINTSIZE=3
     local LEG_X=0
@@ -243,8 +268,8 @@ gp_options()
     local boxwidth=0.2
 
     # local yrange="0.5:"
-    # local ytitle="Normalized cycles"
-    # local xtitle="Issue-Width per Core"
+    local xtitle=$3
+    local ytitle=$4
 
 
     local FONTSIZE="38"
@@ -253,13 +278,13 @@ gp_options()
     local KEYFONTSPACING="3.7"
     local TICSFONTSIZE="30"
 
-    local XLABELOFFSET="0"
-    local YLABELOFFSET="0"
+    local XLABELOFFSET="-2,-2"
+    local YLABELOFFSET="-2,-2"
     local LABELFONTSIZE=$FONTSIZE
     local LABELFONTSIZE="28"
 
-    if [ $# -ne 3 ]; then
-	echo "Usage: $0 path/ <columns> <data columns>"
+    if [ $# -lt 2 ]; then
+	echo "Usage: $0 path/ <data columns> [xtitle] [ytitle]"
 	exit 1
     fi
 
@@ -272,20 +297,20 @@ gp_options()
 
     local size="$size_x,$size_y"
 
-    local DIR=$1
 
     local num=0
-    for f in `ls -1 $DIR`;do
+    for f in `ls -1 ${DIR}`;do
 	num=$(($num + 1))
     done
-    local rows=$(($num / $columns))
-
     local epsfile="${argfname}.eps"
     echo "set term postscript eps enhanced color" > $FILE 
+    echo "#rows:${rows}, columns:${columns} DIR=${DIR} num=${num}" >> $FILE 
+
     echo "set output \"${epsfile}\"" >>$FILE
     echo "set boxwidth $boxwidth" >> $FILE
     echo "unset ylabel" >> $FILE
-    echo "set xtics 1" >>$FILE
+    # echo "set xtics 1" >>$FILE
+    echo "set xtics rotate by -40 offset character 0,0" >> $FILE
 # echo "set ytics 1" >>$FILE
     echo " " >> $FILE
     echo "set key $KEYSTUFF" >> $FILE
@@ -305,7 +330,7 @@ gp_options()
 	local f=`echo ${f} | sed s'/$DIR//' `
 	local fname=`echo ${f} |sed s'/_/-/g'`
 	echo " " >> $FILE
-	echo "set title \"{${fname}}\" font \"Times,$FONTSIZE\"" >> $FILE
+	echo "set title \"{${fname}}\" font \"Times,$FONTSIZE\" " >> $FILE
 	echo "set size $size" >> $FILE
 	echo "set origin `echo \"$col * $size_x\"|bc`,`echo \"$row * $size_y + $bottom_margin\"|bc`" >> $FILE
     # echo "set pointsize 3" >> $FILE
@@ -385,43 +410,95 @@ gp_options()
     done
     echo "Running \"gnuplot ${gpfname}\" to generate ${epsfile}..."
     gnuplot ${gpfname}
-
+    echo "View ${epsfile}"
+    okular ${epsfile}
 }
 
 
+# Input: "X_VALUES" "Y_VLUES" FILENAME
+# Output: creates FILENAME and puts in it all the data.
+# Description: Create the data file for a figure. 
+create_data_file()
+{
+    local x_array=$1
+    local y_array=$2
+    local out_file=$3
+    local others=$4
+    local x
+    local y
+    local fig_options=`get_all_parts_of_file "${fig_file}"`
+    echo "x_array: ${x_array}"
+
+    local data="NULL"
+    for x in ${x_array}; do
+	data="${data} $x"
+    done
+    data="${data}\n"
+
+
+    for y in ${y_array}; do
+	data="${data}$y"
+	for x in ${x_array}; do
+	    local opts="${x} ${y} ${others}"
+	    # echo "opts: $opts"
+	    local file=`get_match "$DIR" "$opts"`
+	    if [ $? -eq 1 ];then
+		get_match "$DIR" "$opts"
+		exit 1
+	    fi
+	    # echo "file: ${file}"
+	    local file_val=`get_file_value "${DIR}/${file}"`
+	    # echo "file_val: ${file_val}"
+	    data="${data} ${file_val}"
+	done
+	data="${data}\n"
+    done
+    echo -e $data |tee ${out_file}
+    data="NULL"
+}
 
 
 parts_cnt=`check_parts $DIR`
-echo "Each file in $DIR contains ${parts_cnt} parts"
+echo "Each file in $DIR contains ${parts_cnt} parts."
 
+# VAL_ARRAY [PARTi]   holds all the possible values of PARTi 
+# Example: if the result filenames are like aX_bY_cZ, 
+#          then val_array[0] is (cZ1, cZ2, cZ3, ...)
 i=0
 while [ $i -lt ${parts_cnt} ];do
     val_array[$i]=`get_all_values_in_part "$DIR" $i`
     i=$((i+1))
 done
 
-x_values=$2
-x_values_array=($x_values)
+x_vals=$2
+y_vals=$3
+others=$4
+x_title=$5
+y_title=$6
+echo "X Axis points (${x_title}): ${x_vals}"
+echo "Y Axis points (${y_title}): ${y_vals}"
+
+
 # Sanity checks
-x_selected=`echo ${x_values}|wc -w`
-if [ ${x_selected} -gt 2 ]; then
-    echo "Too many parts (${x_selected}) selected for the X Axis: \"${x_values}\"!. Maximum allowed is 2."
-    exit 1
-fi
-for x in ${x_values}; do
-    if [ $x -ge ${parts_cnt} ]; then
-	echo "WRONG value $x in \"${x_values}\". It should be less than ${parts_cnt}!"
-	exit 1
-    fi
-done
+# num_of_parts=`echo ${axis_parts}|wc -w`
+# if [ ${num_of_parts} -gt 2 ]; then
+#     echo "Too many parts (${num_of_parts}) selected: \"${axis_parts}\"!. Maximum allowed is 2."
+#     exit 1
+# fi
+# echo "Filename parts in axis: ${axis_parts}"
+# for x in ${axis_parts}; do
+#     if [ $x -ge ${parts_cnt} ]; then
+# 	echo "WRONG value $x in \"${axis_parts}\". It should be less than ${parts_cnt}!"
+# 	exit 1
+#     fi
+# done
 
 
-not_x_values=`get_not_x "${x_values}" ${parts_cnt}`
-echo ${not_x_values}
-all_figs=`gen_names 0 4 "" "${x_values}"`
-echo ${all_figs}
-all_x=`gen_names 0 4 "" "${not_x_values}"`
-echo ${all_x}
+# not_x_values=`get_not_x "${axis_parts}" ${parts_cnt}`
+# echo "Filename parts not in axis: ${not_x_values}"
+# all_x=`gen_names 0 ${parts_cnt} "" "${not_x_values}"`
+# echo "Grid of axis points:"
+# echo ${all_x}
 
 data_file_prefix="cycles"
 data_dir="/tmp/moufoplot/"
@@ -431,46 +508,17 @@ if [ "${data_dir}" == "" ] || [ "${data_dir}" == "/" ];then
 fi
 rm ${data_dir}/*
 mkdir -p $data_dir
-data="X"
+
 data_file_array=""
-for fig in ${all_figs}; do
-    data_filename="${data_dir}/${data_file_prefix}$fig"
-    data_file_array="${data_file_array} ${data_filename}"
-    echo $data_filename
-    echo "----------------------"
-    fig_options=`get_all_parts_of_file ${fig}`
-    xi=${x_values_array[1]}
-    for x in ${val_array[$xi]}; do
-	data="${data} $x"
-    done
-    data="${data}\n"
-    yi=${x_values_array[0]}
-    for y in ${val_array[$yi]}; do
-	data="${data}$y"
-	for x in ${val_array[$xi]}; do
-	    opts="${fig_options} ${x} ${y}"
-	    # echo $opts
-	    file=`get_match "$DIR" "$opts"`
-	    if [ $? -eq 1 ];then
-		get_match "$DIR" "$opts"
-		exit 1
-	    fi
-	    # echo ${file}
-	    file_val=`get_file_value "$DIR/$file"`
-	    # echo ${file_val}
-	    data="${data} ${file_val}"
-	done
-	data="${data}\n"
-    done
-    echo -e $data |tee ${data_filename}
-    data="X"
-done
 
-echo "List of data files:"
-echo $data_file_array
 
-xtitle="X axis"
-ytitle="Y axis"
-data_columns=`echo ${val_array[${x_values_array[1]}]}|wc -w`
-echo ${data_columns}
-gp_options ${data_dir} 2 ${data_columns}
+
+data_filename="${data_dir}/${data_file_prefix}"
+echo "FIG path: ${data_filename}"
+echo "-------------------------------"
+create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
+
+
+data_columns=$((`echo ${x_vals}|wc -w` + 1))
+echo "GP columns: ${data_columns}"
+gp_options ${data_dir} ${data_columns} ${x_title} ${y_title}
