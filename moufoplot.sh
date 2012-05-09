@@ -1,8 +1,10 @@
 #!/bin/bash
+
 color_array=("#000000" "#000099" "#009900" "#009999" "#990000" "#990099" "#999900" "#dddddd" "#555555" "#00ff00" "#00ffff" "#ff0000" "#ff00ff" "ffff00")
 
 if [ "$1" == "--help" ]||[ "$1" == "-help" ]||[ "$1" == "-h" ]||[ $# -lt 2 ]; then
-    echo "Usage: $0 DIR \"X-axis-data\" \"Y-axis-data\" [other-data] [x-title] [y-title]"
+    echo "Usage: $0 DIR \"x1 x2 x3...\" \"y1 y2 ...\" \"other1 other2\" [x-label] [y-label]"
+    echo ""
     echo "Example1: if data files are like aX_bY_cZ"
     echo "          $0 ./data/ \"b1 b2 b3\" \"c1 c2\" \"\" benchmarks cycles "
     echo "          plots a single graph with b{1-3} on the X axis and"
@@ -17,8 +19,7 @@ if [ "$1" == "--help" ]||[ "$1" == "-help" ]||[ "$1" == "-h" ]||[ $# -lt 2 ]; th
     exit 1
 fi
 
-DIR=$1
-XAXIS=$2
+
 
 # Input: FILE
 # Output: A string with all the parts separated by space
@@ -211,7 +212,13 @@ get_not_x()
 get_file_value()
 {
     local file=$1
-    cat $file
+    local data=`cat ${file}`
+    if [ "$data" == "" ]; then
+	echo "ERROR: file ${file} is empty!!!"
+	exit 1
+    fi
+    echo ${data}
+    RET_VAL=${data}
 }
 
 # Input: DATA_FILE_ARRAY OUT_DIR
@@ -278,8 +285,8 @@ gp_options()
     local KEYFONTSPACING="3.7"
     local TICSFONTSIZE="30"
 
-    local XLABELOFFSET="-2,-2"
-    local YLABELOFFSET="-2,-2"
+    local XLABELOFFSET="0,-2.0"
+    local YLABELOFFSET="-3.0,0"
     local LABELFONTSIZE=$FONTSIZE
     local LABELFONTSIZE="28"
 
@@ -447,7 +454,9 @@ create_data_file()
 		exit 1
 	    fi
 	    # echo "file: ${file}"
-	    local file_val=`get_file_value "${DIR}/${file}"`
+	    # local file_val=`get_file_value "${DIR}/${file}"`
+	    get_file_value "${DIR}/${file}"
+	    local file_val=${RET_VAL}
 	    # echo "file_val: ${file_val}"
 	    data="${data} ${file_val}"
 	done
@@ -457,6 +466,19 @@ create_data_file()
     data="NULL"
 }
 
+check_if_arguments_exist()
+{
+    local vals=$1
+    local dir=$2
+    local val
+    for val in ${vals}; do
+	ls -1 ${dir} |grep ${val}
+	if [ $? -ne 0 ]; then
+	    echo "ERROR: ${val} can't be found in ${DIR}."
+	    exit 1
+	fi
+    done
+}
 
 parts_cnt=`check_parts $DIR`
 echo "Each file in $DIR contains ${parts_cnt} parts."
@@ -470,14 +492,22 @@ while [ $i -lt ${parts_cnt} ];do
     i=$((i+1))
 done
 
+DIR=$1
 x_vals=$2
 y_vals=$3
 others=$4
 x_title=$5
 y_title=$6
+if [ "${x_title}" == "" ];then
+    x_title="x-label"
+fi
+if [ "${y_title}" == "" ];then
+    y_title="y-label"
+fi
+
 echo "X Axis points (${x_title}): ${x_vals}"
 echo "Y Axis points (${y_title}): ${y_vals}"
-
+check_if_arguments_exist "${x_vals} ${y_vals}" ${DIR}
 
 # Sanity checks
 # num_of_parts=`echo ${axis_parts}|wc -w`
@@ -514,8 +544,9 @@ data_file_array=""
 
 
 data_filename="${data_dir}/${data_file_prefix}"
-echo "FIG path: ${data_filename}"
+echo "Data: ${data_filename}"
 echo "-------------------------------"
+
 create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
 
 
