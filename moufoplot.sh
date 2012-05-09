@@ -1,5 +1,13 @@
 #!/bin/bash
-
+echo $0
+script_name=${0##*/}
+if [ "${script_name}" == "moufoplot_hmap.sh" ]; then
+    plot_type="heatmap"
+fi
+if [ "${script_name}" == "moufoplot_bar.sh" ]; then
+    plot_type="bargraph"
+fi
+    
 color_array=("#000000" "#000099" "#009900" "#009999" "#990000" "#990099" "#999900" "#dddddd" "#555555" "#00ff00" "#00ffff" "#ff0000" "#ff00ff" "ffff00")
 
 if [ "$1" == "--help" ]||[ "$1" == "-help" ]||[ "$1" == "-h" ]||[ $# -lt 2 ]; then
@@ -28,7 +36,7 @@ fi
 get_all_parts_of_file()
 {
     local f=$1
-    local parts=`echo $f |egrep -o [[:alnum:]-]+`
+    local parts=`echo $f |egrep -o "[[:alnum:]-]+"`
     echo $parts
 }
 
@@ -394,12 +402,13 @@ gp_options()
 
 	local cmn=2
 	local plot_cmd="plot "
+
 	while [ $cmn -lt ${data_columns} ]; do
-    # Legend control
+                # Legend control
 	    if [ $col -eq ${LEG_X} ] && [ $row -eq ${LEG_Y} ]; then
 		local TITLE="title columnheader(${cmn})"
 	    else
-	    # local TITLE="notitle"
+	            # local TITLE="notitle"
 		local TITLE="title columnheader(${cmn})"
 	    fi
 	    local color=${color_array[$cmn]}
@@ -409,6 +418,7 @@ gp_options()
 		plot_cmd="${plot_cmd}, "
 	    fi
 	done
+
 	echo "${plot_cmd}" >> $FILE
 
 	# echo "plot for [${gpcol}] \"${DIR}/${f}\" using COL:xtic(1) ${TITLE}" >> $FILE
@@ -416,6 +426,145 @@ gp_options()
 	col=$(($col + 1))
     done
     echo "Running \"gnuplot ${gpfname}\" to generate ${epsfile}..."
+    gnuplot ${gpfname}
+    echo "View ${epsfile}"
+    okular ${epsfile}
+}
+
+
+gp_heatmap_options()
+{
+    local DATA_FILE=$1
+
+    local rows=1
+    local columns=1
+
+
+# the yrange for each row starting from row 0 
+    local Y_RANGE_ENABLED=1
+    local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
+    local size_x=0.5
+    local size_y=0.5
+#bottom_margin=`echo "${size_y}/2.0" |bc -l`
+    local bottom_margin=0.01
+    # local KEYSTUFF="inside top"
+    local KEYSTUFF="tmargin"
+    local LW=7
+    local POINTSIZE=3
+    local LEG_X=0
+    local LEG_Y=0
+    local boxwidth=0.2
+
+    # local yrange="0.5:"
+    local x_vals=$2
+    local y_vals=$3
+
+    local FONTSIZE="38"
+
+    local KEYFONTSIZE="34"
+    local KEYFONTSPACING="3.7"
+    local TICSFONTSIZE="30"
+
+    local XLABELOFFSET="0,-2.0"
+    local YLABELOFFSET="-3.0,0"
+    local LABELFONTSIZE=$FONTSIZE
+    local LABELFONTSIZE="28"
+
+    if [ $# -lt 2 ]; then
+	echo "Usage: $0 path/ <data columns> [xtitle] [ytitle]"
+	exit 1
+    fi
+
+
+    local argfname=`echo $1|sed s'/\///g'`
+    local gpfname="${argfname}.gp"
+    echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, $gpcol, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
+    local FILE="${gpfname}"
+    local size="$size_x,$size_y"
+
+    local epsfile="${argfname}.eps"
+    echo "set term postscript eps enhanced color" > $FILE 
+    echo "set output \"${epsfile}\"" >>$FILE
+    echo "set boxwidth $boxwidth" >> $FILE
+    echo "unset ylabel" >> $FILE
+    # echo "set xtics 1" >>$FILE
+    echo "set xtics rotate by -40 offset character 0,0" >> $FILE
+# echo "set ytics 1" >>$FILE
+    echo " " >> $FILE
+    # echo "set key $KEYSTUFF" >> $FILE
+    echo " " >> $FILE
+    # echo "set size  `echo \"$columns * $size_x\"|bc`,`echo \"$rows * $size_y + $bottom_margin\"|bc`" >> $FILE
+    # echo "set multiplot" >> $FILE
+    # echo "set tics font \"Times,$TICSFONTSIZE\""  >> $FILE
+    # echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
+
+    # Heatmap excluseive options
+    echo "set palette rgbformula 7,7,7" >> $FILE
+    echo "set palette rgbformula 30,31,32" >> $FILE
+    echo "set cblabel \"\""  >> $FILE
+    echo "unset cbtics" >> $FILE
+    echo "unset key" >> $FILE # Otherwise the filename is displayed
+    # echo "set xrange [-0.5: ]" >> $FILE
+    # echo "set yrange [-0.5: ]" >> $FILE
+
+
+    local title=${DATA_FILE##*/}
+    # local title="TITLE"
+    # echo "set title \"{${title}}\" font \"Times,$FONTSIZE\" " >> $FILE
+    echo "set title \"{${title}}\" " >> $FILE
+    echo "set size $size" >> $FILE
+	# echo "set origin `echo \"$col * $size_x\"|bc`,`echo \"$row * $size_y + $bottom_margin\"|bc`" >> $FILE
+    # echo "set pointsize 3" >> $FILE
+    # echo "set style line 6 lt 7">> $FILE
+
+	# echo "set boxwidth 1 relative" >> $FILE
+	# echo "set style data histograms" >> $FILE
+
+	# echo "set style histogram cluster gap 1" >> $FILE
+	# echo "set style fill solid 1.0 border lt \"black\"" >> $FILE
+	# echo "set grid ytics ls 10 lt rgb \"black\"" >> $FILE
+
+
+
+        # x,y titles
+    local x_vals_array=(${x_vals})
+    local y_vals_array=(${y_vals})
+    local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+
+    # echo "set ylabel \"${ytitle}\" font \"Times,$LABELFONTSIZE\" offset $YLABELOFFSET" >> $FILE
+    # echo "set xlabel \"${xtitle}\" font \"Times,$LABELFONTSIZE\" offset $XLABELOFFSET" >>$FILE
+    echo "set ylabel \"${ytitle}\""  >> $FILE
+    echo "set xlabel \"${xtitle}\""  >> $FILE
+
+
+	# TICS: set xtics ("aaa" 0, "bbb" 1, ...)
+    local x
+    xtics_cmd="set xtics ("
+    local i=0
+    for x in ${x_vals}; do
+	xtics_cmd="${xtics_cmd}\"${x}\" ${i},"
+	i=$((i + 1))
+    done
+    xtics_cmd="${xtics_cmd%?})"
+    echo "${xtics_cmd}" >> $FILE
+
+    local y
+    ytics_cmd="set ytics ("
+    local i=0
+    for y in ${y_vals}; do
+	ytics_cmd="${ytics_cmd}\"${y}\" ${i},"
+	i=$((i + 1))
+    done
+    ytics_cmd="${ytics_cmd%?})"
+    echo "${ytics_cmd}" >> $FILE
+
+
+	# PLOT
+    local plot_cmd="plot "
+    plot_cmd="${plot_cmd} \"${DATA_FILE}\" matrix with image"
+    echo "${plot_cmd}" >> $FILE
+
     gnuplot ${gpfname}
     echo "View ${epsfile}"
     okular ${epsfile}
@@ -465,6 +614,45 @@ create_data_file()
     echo -e $data |tee ${out_file}
     data="NULL"
 }
+
+
+# Input: "X_VALUES" "Y_VLUES" FILENAME
+# Output: creates FILENAME and puts in it all the data.
+# Description: Create the data file for a heatmap. 
+create_heatmap_data_file()
+{
+    local x_array=$1
+    local y_array=$2
+    local out_file=$3
+    local others=$4
+    local x
+    local y
+    local fig_options=`get_all_parts_of_file "${fig_file}"`
+
+    local data=""
+    for y in ${y_array}; do
+	for x in ${x_array}; do
+	    local opts="${x} ${y} ${others}"
+	    # echo "opts: $opts"
+	    local file=`get_match "$DIR" "$opts"`
+	    if [ $? -eq 1 ];then
+		get_match "$DIR" "$opts"
+		exit 1
+	    fi
+	    # echo "file: ${file}"
+	    # local file_val=`get_file_value "${DIR}/${file}"`
+	    get_file_value "${DIR}/${file}"
+	    local file_val=${RET_VAL}
+	    # echo "file_val: ${file_val}"
+	    data="${data}${file_val} "
+	done
+	data="${data}\n"
+    done
+    echo "${out_file}"
+    echo "- - - - - - - - - - - -"
+    echo -e $data |tee ${out_file}
+}
+
 
 check_if_arguments_exist()
 {
@@ -546,10 +734,13 @@ data_file_array=""
 data_filename="${data_dir}/${data_file_prefix}"
 echo "Data: ${data_filename}"
 echo "-------------------------------"
+if [ "${plot_type}" == "heatmap" ];then
+    create_heatmap_data_file "${x_vals}" "${y_vals}" "${data_filename}" "${others}"
+    gp_heatmap_options "${data_filename}" "${x_vals}" "${y_vals}"
+elif [ "${plot_type}" == "bargraph" ];then
+    create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
+    data_columns=$((`echo ${x_vals}|wc -w` + 1))
+    echo "GP columns: ${data_columns}"
+    gp_options ${data_dir} ${data_columns} ${x_title} ${y_title}
+fi
 
-create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
-
-
-data_columns=$((`echo ${x_vals}|wc -w` + 1))
-echo "GP columns: ${data_columns}"
-gp_options ${data_dir} ${data_columns} ${x_title} ${y_title}
