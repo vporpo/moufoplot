@@ -1,11 +1,15 @@
 #!/bin/bash
 echo $0
 script_name=${0##*/}
-if [ "${script_name}" == "moufoplot_hmap.sh" ]; then
+if [ "${script_name}" == "moufoplot_hmap" ]; then
     plot_type="heatmap"
-fi
-if [ "${script_name}" == "moufoplot_bar.sh" ]; then
+elif [ "${script_name}" == "moufoplot_bar" ]; then
     plot_type="bargraph"
+elif [ "${script_name}" == "moufoplot_line" ]; then
+    plot_type="linegraph"
+else
+    echo "No graph type selected, exiting. Please read instruction manual."
+    exit 1;
 fi
     
 color_array=("#000000" "#000099" "#009900" "#009999" "#990000" "#990099" "#999900" "#dddddd" "#555555" "#00ff00" "#00ffff" "#ff0000" "#ff00ff" "ffff00")
@@ -431,6 +435,100 @@ gp_options()
     okular ${epsfile}
 }
 
+gp_line_options()
+{
+    local DATA_FILE=$1
+    local x_vals=$2
+    local y_vals=$3
+
+
+# the yrange for each row starting from row 0 
+    local Y_RANGE_ENABLED=1
+    local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
+    local size_x=0.4
+    local size_y=0.7
+    # local KEYSTUFF="inside top"
+    local KEYSTUFF="tmargin"
+    local LW=4
+    local POINTSIZE=2
+    local LEG_X=0
+    local LEG_Y=0
+
+    local FONTSIZE="38"
+
+    local KEYFONTSIZE="34"
+    local KEYFONTSPACING="3.7"
+    local TICSFONTSIZE="30"
+
+    local XLABELOFFSET="0,-2.0"
+    local YLABELOFFSET="-3.0,0"
+    local LABELFONTSIZE=$FONTSIZE
+    local LABELFONTSIZE="28"
+
+
+    local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
+    local gpfname="${argfname}.gp"
+    echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
+    local FILE="${gpfname}"
+
+    local size="${size_x},${size_y}"
+
+    local epsfile="${argfname}.eps"
+    echo "set term postscript eps enhanced color" > $FILE 
+
+    echo "set output \"${epsfile}\"" >>$FILE
+
+    echo "unset ylabel" >> $FILE
+    echo "set grid y" >>$FILE
+    # echo "set grid x" >>$FILE
+
+    echo "set xtics rotate by -60 offset character 0,0" >> $FILE
+# echo "set ytics 1" >>$FILE
+    echo " " >> $FILE
+    echo "set key $KEYSTUFF" >> $FILE
+    echo " " >> $FILE
+    # echo "set tics font \"Times,$TICSFONTSIZE\""  >> $FILE
+    # echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
+
+    # echo "set title \"{${fname}}\" font \"Times,$FONTSIZE\" " >> $FILE
+    local title=${DATA_FILE##*/}
+    echo "set title \"${title}\" " >> $FILE
+
+    echo "set size $size" >> $FILE
+
+    if [ ${Y_RANGE_ENABLED} -eq 1 ]; then
+	echo "set yrange[${yrange_row[$row]}] ">> $FILE
+    fi
+    echo "set xrange[0:]" >> $FILE
+
+
+    # x,y titles
+    local x_vals_array=(${x_vals})
+    local y_vals_array=(${y_vals})
+    local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    echo "set ylabel \"${ytitle}\""  >> $FILE
+    echo "set xlabel \"${xtitle}\""  >> $FILE
+
+
+    # PLOT
+    local plot_cmd="plot "
+    local x_set_array=(${x_set})
+    local x
+    local cmn=0
+    for x in ${x_vals}; do
+	local color=${color_array[$cmn]}
+	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) with linespoints title columnheader(${cmn}) lw $LW lc rgb \"${color}\","
+	cmn=$((cmn+1))
+    done
+    echo "${plot_cmd%?}" >> $FILE
+    gnuplot ${gpfname}
+
+    # VIEW PDF
+    echo "View ${epsfile}"
+    okular ${epsfile}
+}
+
 
 gp_heatmap_options()
 {
@@ -476,7 +574,7 @@ gp_heatmap_options()
     fi
 
 
-    local argfname=`echo $1|sed s'/\///g'`
+    local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
     local gpfname="${argfname}.gp"
     echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, $gpcol, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
     local FILE="${gpfname}"
@@ -488,7 +586,7 @@ gp_heatmap_options()
     echo "set boxwidth $boxwidth" >> $FILE
     echo "unset ylabel" >> $FILE
     # echo "set xtics 1" >>$FILE
-    echo "set xtics rotate by -40 offset character 0,0" >> $FILE
+    echo "set xtics rotate by -40 offset character 0,0 " >> $FILE
 # echo "set ytics 1" >>$FILE
     echo " " >> $FILE
     # echo "set key $KEYSTUFF" >> $FILE
@@ -511,7 +609,7 @@ gp_heatmap_options()
     local title=${DATA_FILE##*/}
     # local title="TITLE"
     # echo "set title \"{${title}}\" font \"Times,$FONTSIZE\" " >> $FILE
-    echo "set title \"{${title}}\" " >> $FILE
+    echo "set title \"${title}\" " >> $FILE
     echo "set size $size" >> $FILE
 	# echo "set origin `echo \"$col * $size_x\"|bc`,`echo \"$row * $size_y + $bottom_margin\"|bc`" >> $FILE
     # echo "set pointsize 3" >> $FILE
@@ -526,7 +624,7 @@ gp_heatmap_options()
 
 
 
-        # x,y titles
+    # x,y titles
     local x_vals_array=(${x_vals})
     local y_vals_array=(${y_vals})
     local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
@@ -742,5 +840,10 @@ elif [ "${plot_type}" == "bargraph" ];then
     data_columns=$((`echo ${x_vals}|wc -w` + 1))
     echo "GP columns: ${data_columns}"
     gp_options ${data_dir} ${data_columns} ${x_title} ${y_title}
+elif [ "${plot_type}" == "linegraph" ];then
+    create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
+    data_columns=$((`echo ${x_vals}|wc -w` + 1))
+    echo "GP columns: ${data_columns}"
+    gp_line_options "${data_filename}" "${x_vals}" "${y_vals}"
 fi
 
