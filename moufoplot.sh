@@ -15,18 +15,19 @@ fi
 color_array=("#000000" "#000099" "#009900" "#009999" "#990000" "#990099" "#999900" "#dddddd" "#555555" "#00ff00" "#00ffff" "#ff0000" "#ff00ff" "ffff00")
 
 if [ "$1" == "--help" ]||[ "$1" == "-help" ]||[ "$1" == "-h" ]||[ $# -lt 2 ]; then
-    echo "Usage: $0 DIR \"x1 x2 x3...\" \"y1 y2 ...\" \"other1 other2\" [x-label] [y-label]"
+    echo "Usage: $0 DIR \"x1 x2 x3...\" \"y1 y2 ...\" \"other1 other2\" [\"TITLE\"] [x-label] [y-label]"
     echo ""
     echo "Example1: if data files are like aX_bY_cZ"
-    echo "          $0 ./data/ \"b1 b2 b3\" \"c1 c2\" \"\" benchmarks cycles "
-    echo "          plots a single graph with b{1-3} on the X axis and"
+    echo "  $0 ./data/ \"b1 b2 b3\" \"c1 c2\" \"\" benchmarks cycles "
+    echo "       plots a single graph with b{1-3} on the X axis and"
     echo "                                    c{1-2} on the Y axis."
     echo ""
-    echo "Example1: if data files are like aX_bY_cZ_dW"
-    echo "          $0 ./data/ \"b1 b2 b3\" \"c1 c2\" \"a1\" benchmarks cycles "
-    echo "          plots a single graph with b{1-3} on the X axis and"
+    echo "Example2: if data files are like aX_bY_cZ_dW"
+    echo "  $0 ./data/ \"b1 b2 b3\" \"c1 c2\" \"a1\" benchmarks cycles "
+    echo "      plots a single graph with b{1-3} on the X axis and"
     echo "                                    c{1-2} on the Y axis"
-    echo "          such that a1 is in the filename."
+    echo "                         such that a1 is in the filename."
+    echo "Example3: $0 data/ \"b1 b2 b3\" \"c1 c2\" \"energy\" \"The Energy\""
 
     exit 1
 fi
@@ -259,188 +260,12 @@ normalize()
 }
 
 
-gp_options()
-{
-    local DIR=$1
-    local data_columns=$2
-
-    local rows=1
-    local columns=1
-
-    data_columns=$((data_columns+1)) #since we start at column 2
-
-# the yrange for each row starting from row 0 
-    local Y_RANGE_ENABLED=1
-    local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
-    local size_x=0.75
-    local size_y=1.0
-#bottom_margin=`echo "${size_y}/2.0" |bc -l`
-    local bottom_margin=0.01
-    # local KEYSTUFF="inside top"
-    local KEYSTUFF="tmargin"
-    local LW=7
-    local POINTSIZE=3
-    local LEG_X=0
-    local LEG_Y=0
-    local gpcol="COL=2:${data_columns}" # due to x axis on column 1
-
-    local boxwidth=0.2
-
-    # local yrange="0.5:"
-    local xtitle=$3
-    local ytitle=$4
-
-
-    local FONTSIZE="38"
-
-    local KEYFONTSIZE="34"
-    local KEYFONTSPACING="3.7"
-    local TICSFONTSIZE="30"
-
-    local XLABELOFFSET="0,-2.0"
-    local YLABELOFFSET="-3.0,0"
-    local LABELFONTSIZE=$FONTSIZE
-    local LABELFONTSIZE="28"
-
-    if [ $# -lt 2 ]; then
-	echo "Usage: $0 path/ <data columns> [xtitle] [ytitle]"
-	exit 1
-    fi
-
-
-    local argfname=`echo $1|sed s'/\///g'`
-    local gpfname="${argfname}.gp"
-    echo "Generating ${gpfname} . $gpcol, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
-    local FILE="${gpfname}"
-
-
-    local size="$size_x,$size_y"
-
-
-    local num=0
-    for f in `ls -1 ${DIR}`;do
-	num=$(($num + 1))
-    done
-    local epsfile="${argfname}.eps"
-    echo "set term postscript eps enhanced color" > $FILE 
-    echo "#rows:${rows}, columns:${columns} DIR=${DIR} num=${num}" >> $FILE 
-
-    echo "set output \"${epsfile}\"" >>$FILE
-    echo "set boxwidth $boxwidth" >> $FILE
-    echo "unset ylabel" >> $FILE
-    # echo "set xtics 1" >>$FILE
-    echo "set xtics rotate by -40 offset character 0,0" >> $FILE
-# echo "set ytics 1" >>$FILE
-    echo " " >> $FILE
-    echo "set key $KEYSTUFF" >> $FILE
-    echo " " >> $FILE
-    echo "set size  `echo \"$columns * $size_x\"|bc`,`echo \"$rows * $size_y + $bottom_margin\"|bc`" >> $FILE
-    echo "set multiplot" >> $FILE
-    echo "set tics font \"Times,$TICSFONTSIZE\""  >> $FILE
-    echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
-
-    local col=0
-    local row=0
-    for f in `ls -1 $DIR`; do
-	if [ $col -eq $columns ]; then
-	    col=0
-	    row=$(($row + 1))
-	fi
-	local f=`echo ${f} | sed s'/$DIR//' `
-	local fname=`echo ${f} |sed s'/_/-/g'`
-	echo " " >> $FILE
-	echo "set title \"{${fname}}\" font \"Times,$FONTSIZE\" " >> $FILE
-	echo "set size $size" >> $FILE
-	echo "set origin `echo \"$col * $size_x\"|bc`,`echo \"$row * $size_y + $bottom_margin\"|bc`" >> $FILE
-    # echo "set pointsize 3" >> $FILE
-    # echo "set style line 6 lt 7">> $FILE
-
-	echo "set boxwidth 1 relative" >> $FILE
-	echo "set style data histograms" >> $FILE
-
-	echo "set style histogram cluster gap 1" >> $FILE
-	echo "set style fill solid 1.0 border lt \"black\"" >> $FILE
-	echo "set grid ytics ls 10 lt rgb \"black\"" >> $FILE
-
-	if [ ${Y_RANGE_ENABLED} -eq 1 ]; then
-	    echo "set yrange[${yrange_row[$row]}] ">> $FILE
-	fi
-
-
-    # x,y titles
-
-	if [ $col -eq 0 ]; then
-	    echo "set ylabel \"${ytitle}\" font \"Times,$LABELFONTSIZE\" offset $YLABELOFFSET" >> $FILE
-	else
-	    echo "unset ylabel">> $FILE
-	fi	
-	if [ $row -eq 0 ]; then
-	    echo "set xlabel \"${xtitle}\" font \"Times,$LABELFONTSIZE\" offset $XLABELOFFSET" >>$FILE
-	else
-	    echo "unset xlabel">> $FILE
-	fi
-	# echo "plot for [${gpcol}] \"${DIR}/${f}\" using 1:COL with linespoints $TITLE lw $LW ps $POINTSIZE lt COL pt COL" >> $FILE
-	# echo "plot for [${gpcol}] \"${DIR}/${f}\" using COL:xticlabels(1) " >> $FILE
-
-    # crappy code for fixing the xtics disposition when notitle
-	# if [ $col -eq ${LEG_X} ] && [ $row -eq ${LEG_X} ]; then
-	#     if [ "${TITLE}" == "notitle" ]; then
-	# 	echo "set xtics offset -9" >> $FILE
-	# 	echo "set xrange [:4.5]" >> $FILE
-	#     else
-	# 	echo "set xtics nooffset" >> $FILE
-	#     fi
-	#     echo "plot for [${gpcol}] \"${DIR}/${f}\" using COL:xtic(1) ${TITLE} " >> $FILE
-	# else
-	#     if [ "${TITLE}" == "notitle" ]; then
-	# 	echo "set xtics offset -7" >> $FILE
-	# 	echo "set xrange [:4.5]" >> $FILE
-	#     else
-	# 	echo "set xtics nooffset" >> $FILE
-	#     fi
-
-	#     echo "plot for [${gpcol}] \"${DIR}/${f}\" using COL:xtic(1) ${TITLE} " >> $FILE
-	# fi
-
-	# echo "plot for [${gpcol}] \"${DIR}/${f}\" using COL:xtic(1) ${TITLE}" >> $FILE
-
-	local cmn=2
-	local plot_cmd="plot "
-
-	while [ $cmn -lt ${data_columns} ]; do
-                # Legend control
-	    if [ $col -eq ${LEG_X} ] && [ $row -eq ${LEG_Y} ]; then
-		local TITLE="title columnheader(${cmn})"
-	    else
-	            # local TITLE="notitle"
-		local TITLE="title columnheader(${cmn})"
-	    fi
-	    local color=${color_array[$cmn]}
-	    plot_cmd="${plot_cmd} \"${DIR}/${f}\" using ${cmn}:xtic(1) $TITLE fc rgb \"${color}\""
-	    cmn=$((cmn + 1))
-	    if [ $cmn -lt ${data_columns} ]; then
-		plot_cmd="${plot_cmd}, "
-	    fi
-	done
-
-	echo "${plot_cmd}" >> $FILE
-
-	# echo "plot for [${gpcol}] \"${DIR}/${f}\" using COL:xtic(1) ${TITLE}" >> $FILE
-
-	col=$(($col + 1))
-    done
-    echo "Running \"gnuplot ${gpfname}\" to generate ${epsfile}..."
-    gnuplot ${gpfname}
-    echo "View ${epsfile}"
-    okular ${epsfile}
-}
-
-gp_line_options()
+gp_bar_options()
 {
     local DATA_FILE=$1
     local x_vals=$2
     local y_vals=$3
-
+    local title=$4
 
 # the yrange for each row starting from row 0 
     local Y_RANGE_ENABLED=1
@@ -491,8 +316,115 @@ gp_line_options()
     # echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
 
     # echo "set title \"{${fname}}\" font \"Times,$FONTSIZE\" " >> $FILE
-    local title=${DATA_FILE##*/}
-    echo "set title \"${title}\" " >> $FILE
+    # local title=${DATA_FILE##*/}
+    if [ "${title}XX" != "XX" ];then
+	echo "set title \"${title}\" " >> $FILE
+    fi
+
+    echo "set size $size" >> $FILE
+
+    if [ ${Y_RANGE_ENABLED} -eq 1 ]; then
+	echo "set yrange[${yrange_row[$row]}] ">> $FILE
+    fi
+    # echo "set xrange[0:]" >> $FILE
+
+    # Bargraph specific
+    echo "set boxwidth 1 relative" >> $FILE
+    echo "set style data histograms" >> $FILE
+    echo "set style histogram cluster gap 1" >> $FILE
+    echo "set style fill solid 1.0 border lt \"black\"" >> $FILE
+    echo "set grid ytics ls 10 lt rgb \"black\"" >> $FILE
+
+
+    # x,y titles
+    local x_vals_array=(${x_vals})
+    local y_vals_array=(${y_vals})
+    local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    echo "set ylabel \"${ytitle}\""  >> $FILE
+    echo "set xlabel \"${xtitle}\""  >> $FILE
+
+
+    # PLOT
+    local plot_cmd="plot "
+    local x_set_array=(${x_set})
+    local x
+    local cmn=2
+    for x in ${x_vals}; do
+	local color=${color_array[$cmn]}
+	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) title columnheader(${cmn}) fc rgb \"${color}\","
+	cmn=$((cmn+1))
+    done
+    echo "${plot_cmd%?}" >> $FILE
+    gnuplot ${gpfname}
+
+    # VIEW PDF
+    echo "View ${epsfile}"
+    okular ${epsfile}
+}
+
+
+
+gp_line_options()
+{
+    local DATA_FILE=$1
+    local x_vals=$2
+    local y_vals=$3
+    local title=$4
+
+# the yrange for each row starting from row 0 
+    local Y_RANGE_ENABLED=1
+    local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
+    local size_x=0.4
+    local size_y=0.7
+    # local KEYSTUFF="inside top"
+    local KEYSTUFF="tmargin"
+    local LW=4
+    local POINTSIZE=2
+    local LEG_X=0
+    local LEG_Y=0
+
+    local FONTSIZE="38"
+
+    local KEYFONTSIZE="34"
+    local KEYFONTSPACING="3.7"
+    local TICSFONTSIZE="30"
+
+    local XLABELOFFSET="0,-2.0"
+    local YLABELOFFSET="-3.0,0"
+    local LABELFONTSIZE=$FONTSIZE
+    local LABELFONTSIZE="28"
+
+
+    local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
+    local gpfname="${argfname}.gp"
+    echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
+    local FILE="${gpfname}"
+
+    local size="${size_x},${size_y}"
+
+    local epsfile="${argfname}.eps"
+    echo "set term postscript eps enhanced color" > $FILE 
+
+    echo "set output \"${epsfile}\"" >>$FILE
+
+    echo "unset ylabel" >> $FILE
+    echo "set grid y" >>$FILE
+    # echo "set grid x" >>$FILE
+
+    echo "set xtics rotate by -60 offset character 0,0" >> $FILE
+# echo "set ytics 1" >>$FILE
+    echo " " >> $FILE
+    echo "set key $KEYSTUFF" >> $FILE
+    echo " " >> $FILE
+    # echo "set tics font \"Times,$TICSFONTSIZE\""  >> $FILE
+    # echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
+
+    # echo "set title \"{${fname}}\" font \"Times,$FONTSIZE\" " >> $FILE
+    # local title=${DATA_FILE##*/}
+    if [ "${title}XX" != "XX" ];then
+	echo "set title \"${title}\" " >> $FILE
+    fi
 
     echo "set size $size" >> $FILE
 
@@ -515,7 +447,7 @@ gp_line_options()
     local plot_cmd="plot "
     local x_set_array=(${x_set})
     local x
-    local cmn=0
+    local cmn=2
     for x in ${x_vals}; do
 	local color=${color_array[$cmn]}
 	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) with linespoints title columnheader(${cmn}) lw $LW lc rgb \"${color}\","
@@ -568,11 +500,6 @@ gp_heatmap_options()
     local LABELFONTSIZE=$FONTSIZE
     local LABELFONTSIZE="28"
 
-    if [ $# -lt 2 ]; then
-	echo "Usage: $0 path/ <data columns> [xtitle] [ytitle]"
-	exit 1
-    fi
-
 
     local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
     local gpfname="${argfname}.gp"
@@ -606,10 +533,12 @@ gp_heatmap_options()
     # echo "set yrange [-0.5: ]" >> $FILE
 
 
-    local title=${DATA_FILE##*/}
+    # local title=${DATA_FILE##*/}
     # local title="TITLE"
     # echo "set title \"{${title}}\" font \"Times,$FONTSIZE\" " >> $FILE
-    echo "set title \"${title}\" " >> $FILE
+    if [ "${title}XX" != "XX" ];then
+	echo "set title \"${title}\" " >> $FILE
+    fi
     echo "set size $size" >> $FILE
 	# echo "set origin `echo \"$col * $size_x\"|bc`,`echo \"$row * $size_y + $bottom_margin\"|bc`" >> $FILE
     # echo "set pointsize 3" >> $FILE
@@ -782,8 +711,9 @@ DIR=$1
 x_vals=$2
 y_vals=$3
 others=$4
-x_title=$5
-y_title=$6
+main_title=$5
+x_title=$6
+y_title=$7
 if [ "${x_title}" == "" ];then
     x_title="x-label"
 fi
@@ -828,22 +758,26 @@ mkdir -p $data_dir
 data_file_array=""
 
 
-
+echo "AAAAAAAAAAAA:${main_title}"
 data_filename="${data_dir}/${data_file_prefix}"
 echo "Data: ${data_filename}"
 echo "-------------------------------"
 if [ "${plot_type}" == "heatmap" ];then
     create_heatmap_data_file "${x_vals}" "${y_vals}" "${data_filename}" "${others}"
-    gp_heatmap_options "${data_filename}" "${x_vals}" "${y_vals}"
+    gp_heatmap_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}"
 elif [ "${plot_type}" == "bargraph" ];then
+    # create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
+    # data_columns=$((`echo ${x_vals}|wc -w` + 1))
+    # echo "GP columns: ${data_columns}"
+    # gp_options ${data_dir} ${data_columns} ${x_title} ${y_title}
     create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
     data_columns=$((`echo ${x_vals}|wc -w` + 1))
     echo "GP columns: ${data_columns}"
-    gp_options ${data_dir} ${data_columns} ${x_title} ${y_title}
+    gp_bar_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}"
 elif [ "${plot_type}" == "linegraph" ];then
     create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
     data_columns=$((`echo ${x_vals}|wc -w` + 1))
     echo "GP columns: ${data_columns}"
-    gp_line_options "${data_filename}" "${x_vals}" "${y_vals}"
+    gp_line_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}"
 fi
 
