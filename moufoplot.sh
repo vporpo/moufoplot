@@ -11,8 +11,10 @@ else
     echo "No graph type selected, exiting. Please read instruction manual."
     exit 1;
 fi
-    
-color_array=("#000000" "#000099" "#009900" "#009999" "#990000" "#990099" "#999900" "#dddddd" "#555555" "#00ff00" "#00ffff" "#ff0000" "#ff00ff" "ffff00")
+# black,  dark_blue, green, light_blue, red, light_orange, purple,
+ color_array=("#000000" "#000099" "#009900" "#6699ff" "#990000" "#ffcc00" "#990099" "#999900" "#dddddd" "#555555" "#00ff00" "#00ffff" "#ff0000" "#ff00ff" "ffff00")
+# dark blue, light orange, dark green, light pink, dark brown, light grey
+#color_array=("#000066" "#ffcc00" "#336600" "#ff66ff" "#660000" "#999999")
 
 if [ "$1" == "--help" ]||[ "$1" == "-help" ]||[ "$1" == "-h" ]||[ $# -lt 2 ]; then
     echo "Usage: $0 DIR \"x1 x2 x3...\" \"y1 y2 ...\" \"other1 other2\" [\"TITLE\"] [x-label] [y-label]"
@@ -266,6 +268,8 @@ gp_bar_options()
     local x_vals=$2
     local y_vals=$3
     local title=$4
+    local xtitle=$5
+    local ytitle=$6
 
 # the yrange for each row starting from row 0 
     local Y_RANGE_ENABLED=1
@@ -337,12 +341,18 @@ gp_bar_options()
 
 
     # x,y titles
-    local x_vals_array=(${x_vals})
-    local y_vals_array=(${y_vals})
-    local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    echo "set ylabel \"${ytitle}\""  >> $FILE
-    echo "set xlabel \"${xtitle}\""  >> $FILE
+    # local x_vals_array=(${x_vals})
+    # local y_vals_array=(${y_vals})
+    # local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    # local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    # echo "set ylabel \"${ytitle}\""  >> $FILE
+    # echo "set xlabel \"${xtitle}\""  >> $FILE
+    if [ "${xtitle}XX" == "XX" ]; then
+	echo "set ylabel \"${ytitle}\""  >> $FILE
+    fi
+    if [ "${ytitle}XX" == "XX" ]; then
+	echo "set xlabel \"${xtitle}\""  >> $FILE
+    fi
 
 
     # PLOT
@@ -371,6 +381,8 @@ gp_line_options()
     local x_vals=$2
     local y_vals=$3
     local title=$4
+    local xtitle=$5
+    local ytitle=$6
 
 # the yrange for each row starting from row 0 
     local Y_RANGE_ENABLED=1
@@ -435,13 +447,16 @@ gp_line_options()
 
 
     # x,y titles
-    local x_vals_array=(${x_vals})
-    local y_vals_array=(${y_vals})
-    local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    echo "set ylabel \"${ytitle}\""  >> $FILE
-    echo "set xlabel \"${xtitle}\""  >> $FILE
-
+    # local x_vals_array=(${x_vals})
+    # local y_vals_array=(${y_vals})
+    # local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    # local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    if [ "${xtitle}XX" == "XX" ]; then
+	echo "set ylabel \"${ytitle}\""  >> $FILE
+    fi
+    if [ "${ytitle}XX" == "XX" ]; then
+	echo "set xlabel \"${xtitle}\""  >> $FILE
+    fi
 
     # PLOT
     local plot_cmd="plot "
@@ -468,7 +483,11 @@ gp_heatmap_options()
 
     local rows=1
     local columns=1
-
+    local x_vals=$2
+    local y_vals=$3
+    local title=$4
+    local xtitle=$5
+    local ytitle=$6
 
 # the yrange for each row starting from row 0 
     local Y_RANGE_ENABLED=1
@@ -486,8 +505,6 @@ gp_heatmap_options()
     local boxwidth=0.2
 
     # local yrange="0.5:"
-    local x_vals=$2
-    local y_vals=$3
 
     local FONTSIZE="38"
 
@@ -554,15 +571,23 @@ gp_heatmap_options()
 
 
     # x,y titles
-    local x_vals_array=(${x_vals})
-    local y_vals_array=(${y_vals})
-    local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    # local x_vals_array=(${x_vals})
+    # local y_vals_array=(${y_vals})
+    # local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    # local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
 
     # echo "set ylabel \"${ytitle}\" font \"Times,$LABELFONTSIZE\" offset $YLABELOFFSET" >> $FILE
     # echo "set xlabel \"${xtitle}\" font \"Times,$LABELFONTSIZE\" offset $XLABELOFFSET" >>$FILE
-    echo "set ylabel \"${ytitle}\""  >> $FILE
-    echo "set xlabel \"${xtitle}\""  >> $FILE
+    # echo "set ylabel \"${ytitle}\""  >> $FILE
+    # echo "set xlabel \"${xtitle}\""  >> $FILE
+
+    if [ "${xtitle}XX" == "XX" ]; then
+	echo "set ylabel \"${ytitle}\""  >> $FILE
+    fi
+    if [ "${ytitle}XX" == "XX" ]; then
+	echo "set xlabel \"${xtitle}\""  >> $FILE
+    fi
+
 
 
 	# TICS: set xtics ("aaa" 0, "bbb" 1, ...)
@@ -714,12 +739,6 @@ others=$4
 main_title=$5
 x_title=$6
 y_title=$7
-if [ "${x_title}" == "" ];then
-    x_title="x-label"
-fi
-if [ "${y_title}" == "" ];then
-    y_title="y-label"
-fi
 
 echo "X Axis points (${x_title}): ${x_vals}"
 echo "Y Axis points (${y_title}): ${y_vals}"
@@ -758,13 +777,12 @@ mkdir -p $data_dir
 data_file_array=""
 
 
-echo "AAAAAAAAAAAA:${main_title}"
 data_filename="${data_dir}/${data_file_prefix}"
 echo "Data: ${data_filename}"
 echo "-------------------------------"
 if [ "${plot_type}" == "heatmap" ];then
     create_heatmap_data_file "${x_vals}" "${y_vals}" "${data_filename}" "${others}"
-    gp_heatmap_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}"
+    gp_heatmap_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
 elif [ "${plot_type}" == "bargraph" ];then
     # create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
     # data_columns=$((`echo ${x_vals}|wc -w` + 1))
@@ -773,11 +791,11 @@ elif [ "${plot_type}" == "bargraph" ];then
     create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
     data_columns=$((`echo ${x_vals}|wc -w` + 1))
     echo "GP columns: ${data_columns}"
-    gp_bar_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}"
+    gp_bar_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
 elif [ "${plot_type}" == "linegraph" ];then
     create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
     data_columns=$((`echo ${x_vals}|wc -w` + 1))
     echo "GP columns: ${data_columns}"
-    gp_line_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}"
+    gp_line_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
 fi
 
