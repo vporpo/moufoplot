@@ -1,40 +1,4 @@
 #!/bin/bash
-IFS_CHAR=','
-echo $0
-script_name=${0##*/}
-if [ "${script_name}" == "moufoplot_hmap" ]; then
-    plot_type="heatmap"
-elif [ "${script_name}" == "moufoplot_bar" ]; then
-    plot_type="bargraph"
-elif [ "${script_name}" == "moufoplot_line" ]; then
-    plot_type="linegraph"
-else
-    echo "No graph type selected, exiting. Please read instruction manual."
-    exit 1;
-fi
-# black,  dark_blue, green, light_blue, red, light_orange, purple,
- color_array=("#000000" "#000099" "#009900" "#6699ff" "#990000" "#ffcc00" "#990099" "#999900" "#dddddd" "#555555" "#00ff00" "#00ffff" "#ff0000" "#ff00ff" "ffff00")
-# dark blue, light orange, dark green, light pink, dark brown, light grey
-#color_array=("#000066" "#ffcc00" "#336600" "#ff66ff" "#660000" "#999999")
-
-if [ "$1" == "--help" ]||[ "$1" == "-help" ]||[ "$1" == "-h" ]||[ $# -lt 2 ]; then
-    echo "Usage: $0 DIR \"x1,x2,x3...\" \"y1,y2 ...\" \"other1,other2\" [\"TITLE\"] [x-label] [y-label]"
-    echo ""
-    echo "Example1: if data files are like aX_bY_cZ"
-    echo "  $0 ./data/ \"b1,b2,b3\" \"c1,c2\" \"\" benchmarks cycles "
-    echo "       plots a single graph with b{1-3} on the X axis and"
-    echo "                                    c{1-2} on the Y axis."
-    echo ""
-    echo "Example2: if data files are like aX_bY_cZ_dW"
-    echo "  $0 ./data/ \"b1,b2,b3\" \"c1,c2\" \"a1\" benchmarks cycles "
-    echo "      plots a single graph with b{1-3} on the X axis and"
-    echo "                                    c{1-2} on the Y axis"
-    echo "                         such that a1 is in the filename."
-    echo "Example3: $0 data/ \"b1,b2,b3\" \"c1,c2\" \"energy\" \"The Energy\""
-
-    exit 1
-fi
-
 
 
 # Input: FILE
@@ -45,7 +9,7 @@ get_all_parts_of_file()
 {
     local f=$1
     local parts=`echo $f |egrep -o "[[:alnum:]-]+"`
-    echo $parts
+    RETVAL=${parts}
 }
 
 
@@ -55,10 +19,11 @@ get_all_parts_of_file()
 #          Returns: opt1
 get_part_of_file()
 {
-    local f=$1
-    local part=$2
-    local parts=(`get_all_parts_of_file $f`)
-    echo ${parts[$part]}
+    local f=${1}
+    local part=${2}
+    get_all_parts_of_file ${f}
+    local parts=${RETVAL}
+    RETVAL=${parts[$part]}
 }
 
 
@@ -68,10 +33,11 @@ get_part_of_file()
 #         Returns: 4
 count_parts()
 {
-    local f=$1
-    local p=`get_all_parts_of_file $f`
+    local f=${1}
+    get_all_parts_of_file ${f}
+    local p=${RETVAL}
     local parts_cnt=`echo $p|wc -w`
-    echo ${parts_cnt}
+    RETVAL=${parts_cnt}
 }
 
 # Input: DIR
@@ -80,23 +46,27 @@ count_parts()
 #          Returns 4
 check_parts()
 {
-    local DIR=$1
-    local first_file=`ls -1 $DIR|head -n 1`
-    local last_cnt=`count_parts ${first_file}`
-    local files=`ls -1 $DIR`
+    printf "Checking file formats in ${DIR} ..."
+    local DIR="${1}"
+    local first_file=`ls -1 ${DIR}|head -n 1`
+    count_parts ${first_file}
+    local last_cnt=${RETVAL}
+    local files=`ls -1 ${DIR}`
     local f
-    for f in $files; do
+    for f in ${files}; do
 	# echo $f
-	local cnt=`count_parts $f`
+	count_parts ${f}
+	local cnt=${RETVAL}
 	# echo $cnt
 	if [ ${cnt} -ne ${last_cnt} ]; then
 	    echo "ERROR!!!"
-	    echo "FILE: $DIR/$f has ${cnt} parts !!! Iet should have ${last_cnt} parts!!!"
+	    echo "FILE: ${DIR}/${f} has ${cnt} parts !!! Iet should have ${last_cnt} parts!!!"
 	    exit 1
 	fi
-	last_cnt=$cnt
+	last_cnt=${cnt}
     done
-    echo $last_cnt
+    RETVAL=${last_cnt}
+    printf " parts:%s\n" "${RETVAL}"
 }
 
 # Input: DIR PART_NUM
@@ -111,20 +81,19 @@ get_all_values_in_part()
     local all_values=()
     local f
     for f in $files; do
-	part_value=`get_part_of_file $f $part`
+	get_part_of_file ${f} ${part}
+	part_value=${RETVAL}
 	local found=0
-	for val in ${all_values}; do
-	    if [ "$val" == "${part_value}" ];then
-		found=1
-	    fi
-	done
+	# for val in ${all_values}; do
+	#     if [ "$val" == "${part_value}" ];then
+	# 	found=1
+	#     fi
+	# done
 	if [ $found -eq 0 ]; then
 	    all_values="${all_values} ${part_value}"
 	fi
     done
-    echo ${all_values}
-
-    
+    RETVAL=${all_values}
 }
 
 
@@ -165,7 +134,6 @@ gen_names()
 	fi
     done
     local val
-    # for val in `get_all_values_in_part "$DIR" $i`;do
     for val in ${val_array[$i]}; do
 	gen_names $((i+1)) ${end_i} "${name}_${val}" "${skip_i}"
     done
@@ -180,27 +148,36 @@ gen_names()
 #          Returns jpeg_opt2_i2_d1
 get_match ()
 {
-    IFS=", "
     local DIR=$1
     local matches=$2
+    local exit_on_multiple_matches=$3
     local grep_cmd=""
+    local out=""
+
+    # echo "Matching... ${matches}"
+
+    set_ifs ", "
     for match in $matches; do
 	grep_cmd="${grep_cmd}|egrep \"_${match}_|^${match}_|_${match}\\$\""
     done
+    reset_ifs
+
     grep_cmd="ls -1 ${DIR}${grep_cmd}"
-    # echo $grep_cmd
+    # echo "GREP_CMD: $grep_cmd"
+
     local filename=`eval ${grep_cmd}`
     local count_files=`echo $filename|wc -w`
-    if [ ${count_files} -ne 1 ]; then
+    if [ ${count_files} -ne 1 ]&&[ "${exit_on_multiple_matches}" == "" ]; then
 	echo "ERROR!!! Filter: ${matches} matches ${count_files} files in ${DIR} !!!"
-    	echo -e "$filename"
-    	echo $grep_cmd
+    	echo -e "FILES: $filename"
+
     	# echo "This is usually caused by some parameters being exclusive."
 	# echo "Example: d3 is exclusive to jpeg_i1: jpeg_i1_d3 but NO mpeg_i1_d3."
     	exit 1
     fi
-    echo $filename
-    unset IFS
+    # echo $filename
+    out="${filename} ${out}"
+    RETVAL=${out}
 }
 
 
@@ -235,7 +212,7 @@ get_file_value()
 	echo "ERROR: file ${file} is empty!!!"
 	exit 1
     fi
-    echo ${data}
+    # echo ${data}
     RET_VAL=${data}
 }
 
@@ -267,12 +244,12 @@ normalize()
 
 gp_bar_options()
 {
-    local DATA_FILE=$1
-    local x_vals=$2
-    local y_vals=$3
-    local title=$4
-    local xtitle=$5
-    local ytitle=$6
+    local DATA_FILE="${1}"
+    local x_vals="${2}"
+    local y_vals="${3}"
+    local title="${4}"
+    local xtitle="${5}"
+    local ytitle="${6}"
 
 # the yrange for each row starting from row 0 
     local Y_RANGE_ENABLED=1
@@ -363,13 +340,13 @@ gp_bar_options()
     local x_set_array=(${x_set})
     local x
     local cmn=2
-    IFS=${IFS_CHAR}    
+    set_ifs "${IFS_CHAR}"
     for x in ${x_vals}; do
 	local color=${color_array[$cmn]}
 	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) title columnheader(${cmn}) fc rgb \"${color}\","
 	cmn=$((cmn+1))
     done
-    unset IFS
+    reset_ifs
     echo "${plot_cmd%?}" >> $FILE
     gnuplot ${gpfname}
 
@@ -451,6 +428,7 @@ gp_line_options()
     echo "set xrange[0:]" >> $FILE
 
 
+ 
     # x,y titles
     # local x_vals_array=(${x_vals})
     # local y_vals_array=(${y_vals})
@@ -468,13 +446,13 @@ gp_line_options()
     local x_set_array=(${x_set})
     local x
     local cmn=2
-    IFS=${IFS_CHAR}
+    set_ifs "${IFS_CHAR}"
     for x in ${x_vals}; do
 	local color=${color_array[$cmn]}
 	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) with linespoints title columnheader(${cmn}) lw $LW lc rgb \"${color}\","
 	cmn=$((cmn+1))
     done
-    unset IFS
+    reset_ifs
     echo "${plot_cmd%?}" >> $FILE
     gnuplot ${gpfname}
 
@@ -483,6 +461,44 @@ gp_line_options()
     okular ${epsfile}
 }
 
+
+create_tics()
+{
+    local xORy="${1}"
+    # TICS: set xtics ("aaa" 0, "bbb" 1, ...)
+
+    set_ifs ","
+    if [ "${xORy}" == "x" ];then
+	local x
+	local xtics_cmd="set xtics ("
+	local i=0
+	for x in ${x_vals}; do
+	    if [ "${y_tags}" != "" ]; then
+		local tag="${xtags_array[${i}]}"
+	    else
+		local tag=${x}
+	    fi
+	    xtics_cmd="${xtics_cmd}\"${tag}\" ${i},"
+	    i=$((i + 1))
+	done
+	RETVAL="${xtics_cmd%?})"
+    else
+	local y
+	local ytics_cmd="set ytics ("
+	local i=0
+	for y in ${y_vals}; do
+	    if [ "${y_tags}" != "" ]; then
+		local tag="${ytags_array[${i}]}"
+	    else
+		local tag=${y}
+	    fi
+	    ytics_cmd="${ytics_cmd}\"${tag}\" ${i},"
+	    i=$((i + 1))
+	done
+	RETVAL="${ytics_cmd%?})"
+    fi
+    reset_ifs 
+}
 
 gp_heatmap_options()
 {
@@ -595,29 +611,13 @@ gp_heatmap_options()
 	echo "set xlabel \"${xtitle}\""  >> $FILE
     fi
 
-
-
-	# TICS: set xtics ("aaa" 0, "bbb" 1, ...)
-    local x
-    xtics_cmd="set xtics ("
-    local i=0
-    for x in ${x_vals}; do
-	xtics_cmd="${xtics_cmd}\"${x}\" ${i},"
-	i=$((i + 1))
-    done
-    xtics_cmd="${xtics_cmd%?})"
+    create_tics "x"
+    xtics_cmd="${RETVAL}"
     echo "${xtics_cmd}" >> $FILE
 
-    local y
-    ytics_cmd="set ytics ("
-    local i=0
-    for y in ${y_vals}; do
-	ytics_cmd="${ytics_cmd}\"${y}\" ${i},"
-	i=$((i + 1))
-    done
-    ytics_cmd="${ytics_cmd%?})"
+    create_tics "y"
+    ytics_cmd="${RETVAL}"
     echo "${ytics_cmd}" >> $FILE
-
 
 	# PLOT
     local plot_cmd="plot "
@@ -629,6 +629,30 @@ gp_heatmap_options()
     okular ${epsfile}
 }
 
+# set IFS to the given value and save the previous one
+set_ifs()
+{
+    local CURRENT_IFS="${1}"
+    IFS="${CURRENT_IFS}"
+    IFS_STACK[${IFS_CNT}]="${CURRENT_IFS}"
+    IFS_CNT=$((IFS_CNT + 1))
+    # echo "set_ifs: ->${CURRENT_IFS}<-, stack_cnt:${IFS_CNT}"
+}
+
+# reset IFS to the last one
+reset_ifs()
+{
+    local IFS_CNT_PREV=$((IFS_CNT - 1))
+    if [ ${IFS_CNT_PREV} -ge 0 ];then
+	local IFS_CURRENT=${IFS_STACK[${IFS_CNT_PREV}]}
+	IFS=${IFS_CURRENT}
+	IFS_CNT=${IFS_CNT_PREV}
+	# echo "reset_ifs: ->${IFS_CURRENT}<-, stack_cnt:${IFS_CNT}"
+    else
+	echo "Too many reset_ifs !!!"
+	exit 1
+    fi
+}
 
 # Input: "X_VALUES" "Y_VLUES" FILENAME
 # Output: creates FILENAME and puts in it all the data.
@@ -642,37 +666,49 @@ create_data_file()
     local x
     local y
     local fig_options=`get_all_parts_of_file "${fig_file}"`
-    echo "x_array: ${x_array}"
+
+    printf "Creating data file ${data_file} ..."
+    set_ifs "${IFS_CHAR}" # Let ',' be the separator character
 
     local data="NULL"
+
+
+    local xi=0
     for x in ${x_array}; do
-	data="${data} $x"
+	if [ "${x_tags}" != "" ];then
+	    local xtag=${xtags_array[${xi}]}
+	else
+	    local xtag=${x}
+	fi
+	data="${data} ${xtag}"
+	xi=$((xi + 1))
     done
     data="${data}\n"
 
-    IFS=${IFS_CHAR} # Let ',' be the separator character
+
+    local yi=0    
     for y in ${y_array}; do
-	data="${data}$y"
+	if [ "${y_tags}" != "" ];then
+	    local ytag=${ytags_array[${yi}]}
+	else
+	    local ytag=${y}
+	fi
+	data="${data}${ytag}"
 	for x in ${x_array}; do
 	    local opts="${x} ${y} ${others}"
-	    # echo "opts: $opts"
-	    local file=`get_match "$DIR" "$opts"`
-	    if [ $? -eq 1 ];then
-		get_match "$DIR" "$opts"
-		exit 1
-	    fi
-	    # echo "file: ${file}"
-	    # local file_val=`get_file_value "${DIR}/${file}"`
+	    get_match "$DIR" "$opts"
+	    local file=${RETVAL}
 	    get_file_value "${DIR}/${file}"
 	    local file_val=${RET_VAL}
-	    # echo "file_val: ${file_val}"
 	    data="${data} ${file_val}"
 	done
 	data="${data}\n"
+	yi=$((yi + 1))
     done
+    reset_ifs
+    printf " Done.\n"
+    # Dump data
     echo -e $data |tee ${out_file}
-    data="NULL"
-    unset IFS
 }
 
 
@@ -681,7 +717,6 @@ create_data_file()
 # Description: Create the data file for a heatmap. 
 create_heatmap_data_file()
 {
-    IFS=${IFS_CHAR} # Let ',' be the separator character
     local x_array=$1
     local y_array=$2
     local out_file=$3
@@ -691,34 +726,29 @@ create_heatmap_data_file()
     local fig_options=`get_all_parts_of_file "${fig_file}"`
 
     local data=""
+    set_ifs "${IFS_CHAR}" # Let ',' be the separator character
     for y in ${y_array}; do
 	for x in ${x_array}; do
 	    local opts="${x} ${y} ${others}"
-	    # echo "opts: $opts"
-	    local file=`get_match "$DIR" "$opts"`
-	    if [ $? -eq 1 ];then
-		get_match "$DIR" "$opts"
-		exit 1
-	    fi
-	    # echo "file: ${file}"
-	    # local file_val=`get_file_value "${DIR}/${file}"`
+	    get_match "$DIR" "$opts"
+	    local file=${RETVAL}
 	    get_file_value "${DIR}/${file}"
 	    local file_val=${RET_VAL}
-	    # echo "file_val: ${file_val}"
 	    data="${data}${file_val} "
+	    xi=$((xi + 1))
 	done
 	data="${data}\n"
     done
+    reset_ifs
     echo "${out_file}"
     echo "- - - - - - - - - - - -"
     echo -e $data |tee ${out_file}
-    unset IFS
 }
 
 
 check_if_arguments_exist()
 {
-    IFS=${IFS_CHAR} # Let ',' be the separator character
+    set_ifs "${IFS_CHAR}" # Let ',' be the separator character
     local vals1=$1
     local vals2=$2
     local vals3=$3
@@ -729,7 +759,8 @@ check_if_arguments_exist()
     for val1 in ${vals1}; do
 	for val2 in ${vals2}; do
 	    for val3 in ${vals3}; do
-		local matches=`get_match "${DIR}" "${val1} ${val2} ${val3}"`
+		get_match "${DIR}" "${val1} ${val2} ${val3}" "NO"
+		# local matches=${RETVAL}
 		if [ $? -ne 0 ]; then
 		    echo "ERROR: Filters: ${val1} ${val2} ${val3} are too restrictive! Can't find match in ${DIR}."
 		    exit 1
@@ -737,88 +768,181 @@ check_if_arguments_exist()
 	    done
 	done
     done
-    unset IFS
+    reset_ifs
 }
 
-parts_cnt=`check_parts $DIR`
+setup_val_array()
+{
+    printf "Setting up the data array..."
+    local parts_cnt=${1}
+    local i=0
+    while [ $i -lt ${parts_cnt} ];do
+	get_all_values_in_part "$DIR" ${i}
+	val_array[$i]=${RETVAL}
+	i=$((i+1))
+    done
+    printf " Done!\n"
+}
 
-echo "Each file in $DIR contains ${parts_cnt} parts."
+sanity_checks()
+{
+    if [ ! -d "${DIR}" ]; then
+	echo "ERROR: Directory: \"${DIR}\" does not exist!"
+	exit 1;
+    fi
 
-# VAL_ARRAY [PARTi]   holds all the possible values of PARTi 
-# Example: if the result filenames are like aX_bY_cZ, 
-#          then val_array[0] is (cZ1, cZ2, cZ3, ...)
-i=0
-while [ $i -lt ${parts_cnt} ];do
-    val_array[$i]=`get_all_values_in_part "$DIR" $i`
-    i=$((i+1))
-done
+    if [ "${data_file}" == "" ] || [ "${data_dir}" == "/" ];then
+	echo "ERROR: data file == '/'  !!!"
+	exit 1
+    fi
 
-DIR=$1
-x_vals=$2
-y_vals=$3
-others=$4
-main_title=$5
-x_title=$6
-y_title=$7
-echo "+----------------------+"
-echo "| MoufoPlot            |  "
-echo "+----------------------+"
-echo "| DIR:${DIR}"
-echo "| x: ${x_vals}"
-echo "| y: ${y_vals}"
-echo "| filter: ${others}"
-echo "| Title: ${main_title}"
-echo "| x label: ${x_title}"
-echo "| y label: ${y_title}"
-echo "+----------------------+"
-echo "X Axis points (${x_title}): ${x_vals}"
-echo "Y Axis points (${y_title}): ${y_vals}"
-check_if_arguments_exist "${x_vals}" "${y_vals}" "${others}" "${DIR}"
+    local data_file_dir=${data_file%/*}
+    if [ ! -d "${data_file_dir}" ]; then
+	mkdir -p $data_file_dir
+	if [ $? -ne 0 ]; then
+	    echo "ERROR: Can't create ${data_file_dir} for ${data_file}."
+	    exit 1
+	fi
+    fi
 
-# Sanity checks
-# num_of_parts=`echo ${axis_parts}|wc -w`
-# if [ ${num_of_parts} -gt 2 ]; then
-#     echo "Too many parts (${num_of_parts}) selected: \"${axis_parts}\"!. Maximum allowed is 2."
-#     exit 1
-# fi
-# echo "Filename parts in axis: ${axis_parts}"
-# for x in ${axis_parts}; do
-#     if [ $x -ge ${parts_cnt} ]; then
-# 	echo "WRONG value $x in \"${axis_parts}\". It should be less than ${parts_cnt}!"
-# 	exit 1
-#     fi
-# done
+    check_if_arguments_exist "${x_vals}" "${y_vals}" "${others}" "${DIR}"
+    if [ $? -ne 0 ]; then exit 1; fi    
+
+# These take a long time and I don't think they are even necessary
+# check_parts ${DIR}
+# parts_cnt=${RETVAL}
+# setup_val_array ${parts_cnt}
+
+}
+
+parse_arguments()
+{
+    local args=`getopt -o "hd:x:y:f:t:" \
+	-l "help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:w-data:,xtags:,ytags:" \
+	-n "getopt.sh" -- "$@"`
+    local args_array=($args)
+    if [ $? -ne 0 ]||[ "${args_array[0]}" == "--" ] ;then
+	echo "Bad argument(s), printing help and exiting."
+	usage
+	exit 1
+    fi
+    eval set -- "$args"
+    while true; do
+	case "$1" in
+	    "--dir"|"-dir"|"-d") DIR="$2";shift;;
+	    "--xvals"|"-xvals"|"-x") x_vals="$2";shift;;
+	    "--yvals"|"-yvals"|"-y") y_vals="$2";shift;;
+	    "--filter"|"-filter"|"-f") others="$2";shift;;
+	    "--title"|"-title"|"-t") main_title="$2";shift;;
+	    "--xtags"|"-xtags") x_tags="$2";shift;;
+	    "--ytags"|"-ytags") y_tags="$2";shift;;
+	    "--xlabel"|"-xlabel") x_title="$2";shift;;
+	    "--ylabel"|"-ylabel") y_title="$2";shift;;
+	    "--help"|"-help"|"-h") usage; exit 1;;
+	    "--bar"|"-bar") plot_type="bargraph";;
+	    "--hmap"|"-hmap") plot_type="heatmap";;
+	    "--line"|"-line") plot_type="linegraph";;
+	    "--w-data"|"-w-data") data_file="$2";shift;;
+	    "--") break;
+	esac
+	shift
+    done
+    # Check if plot type is not set. If so default to bargraph
+    if [ "${plot_type}XX" == "XX" ];then
+	plot_type="bargraph"
+    fi
+
+    if [ "${data_file}XX" == "XX" ];then
+	data_file="/tmp/moufoplot.data"
+    fi
 
 
-# not_x_values=`get_not_x "${axis_parts}" ${parts_cnt}`
-# echo "Filename parts not in axis: ${not_x_values}"
-# all_x=`gen_names 0 ${parts_cnt} "" "${not_x_values}"`
-# echo "Grid of axis points:"
-# echo ${all_x}
+    set_ifs ","
+    local xi=0
+    xtags_array
+    for x in ${x_tags}; do
+	xtags_array[${xi}]="${x}"
+	xi=$((xi+1))
+    done
 
-data_file_prefix="cycles"
-data_dir="/tmp/moufoplot/"
-if [ "${data_dir}" == "" ] || [ "${data_dir}" == "/" ];then
-    echo "ERROR!!! Trying to delete /  !!!"
+    local yi=0
+    ytags_array
+    for y in ${y_tags}; do
+	ytags_array[${yi}]="${y}"
+	yi=$((yi + 1))
+    done
+    reset_ifs
+
+    echo "+----------------------+"
+    echo "| MoufoPlot            |  "
+    echo "+----------------------+"
+    echo "| Type: ${plot_type}"
+    echo "| DIR:${DIR}"
+    echo "| x: ${x_vals}"
+    echo "| y: ${y_vals}"
+    echo "| filter: ${others}"
+    echo "| Title: ${main_title}"
+    echo "| x label: ${x_title}"
+    echo "| y label: ${y_title}"
+    echo "| Data file: ${data_file}"
+    echo "| x tags: ${x_tags}"
+    echo "| y tags: ${y_tags}"
+    echo "+----------------------+"
+}
+
+
+usage()
+{
+    script_name=${0##*/}
+    echo "Usage: ${script_name} <OPTIONS>"
+    echo "   --bar                        : Generate bar-graphs."
+    echo "   --line                       : Generate line-graphs."
+    echo "   --hmap                       : Generate heat-map graphs."
+    echo "   --dir,-d \"<DIR>\"           : The result files Directory."
+    echo "   --xvals,-x \"<x values>\"    : The identifiers of the X values."
+    echo "   --yvals,-y \"<y values>\"    : The identifiers of the Y values."
+    echo "   --filter,-f \"<filter vals>\": The filtering identifiers."
+    echo "   --title, -t \"<title>\"      : Optional graph title."
+    echo "   --xlabel \"<x label>\"       : Optional label of the X axis."
+    echo "   --ylabel \"<y label>\"       : Optional label of the Y axis."
+    echo "   --w-data \"<file path>\"     : Data file where data is written."
+    echo "   --xtags \"<tags>\"           : Optional tags for the X axis."
+    echo "   --ytags \"<tags>\"           : Optional tags for the Y axis."
     exit 1
-fi
-rm ${data_dir}/*
-mkdir -p $data_dir
+}
 
-data_file_array=""
+setup_colors()
+{
+    # black,  dark_blue, green, light_blue, red, light_orange, purple,
+    color_array=("#000000" "#000099" "#009900" "#6699ff" "#990000" "#ffcc00" "#990099" "#999900" "#dddddd" "#555555" "#00ff00" "#00ffff" "#ff0000" "#ff00ff" "ffff00")
+    # dark blue, light orange, dark green, light pink, dark brown, light grey
+    #color_array=("#000066" "#ffcc00" "#336600" "#ff66ff" "#660000" "#999999")
+}
+
+moufoplot()
+{
+    IFS_CNT=0
+    IFS_CHAR=','
+    setup_colors
+    parse_arguments "$@"
+
+    if [ $? -ne 0 ]; then exit 1; fi
+    sanity_checks
+    if [ $? -ne 0 ]; then exit 1; fi
 
 
-data_filename="${data_dir}/${data_file_prefix}"
-echo "Data: ${data_filename}"
-echo "-------------------------------"
-if [ "${plot_type}" == "heatmap" ];then
-    create_heatmap_data_file "${x_vals}" "${y_vals}" "${data_filename}" "${others}"
-    gp_heatmap_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
-elif [ "${plot_type}" == "bargraph" ];then
-    create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
-    gp_bar_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
-elif [ "${plot_type}" == "linegraph" ];then
-    create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
-    gp_line_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
-fi
+    if [ "${plot_type}" == "heatmap" ];then
+	create_heatmap_data_file "${x_vals}" "${y_vals}" "${data_file}" "${others}"
+	gp_heatmap_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
+    elif [ "${plot_type}" == "bargraph" ];then
+	create_data_file "${x_vals}" "${y_vals}" "${data_file}" "${others}"
+	gp_bar_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
+    elif [ "${plot_type}" == "linegraph" ];then
+	create_data_file "${x_vals}" "${y_vals}" "${data_file}" "${others}"
+	gp_line_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
+    fi
+
+}
+
+moufoplot "$@"
 
