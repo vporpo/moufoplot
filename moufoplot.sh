@@ -1,4 +1,5 @@
 #!/bin/bash
+IFS_CHAR=','
 echo $0
 script_name=${0##*/}
 if [ "${script_name}" == "moufoplot_hmap" ]; then
@@ -17,19 +18,19 @@ fi
 #color_array=("#000066" "#ffcc00" "#336600" "#ff66ff" "#660000" "#999999")
 
 if [ "$1" == "--help" ]||[ "$1" == "-help" ]||[ "$1" == "-h" ]||[ $# -lt 2 ]; then
-    echo "Usage: $0 DIR \"x1 x2 x3...\" \"y1 y2 ...\" \"other1 other2\" [\"TITLE\"] [x-label] [y-label]"
+    echo "Usage: $0 DIR \"x1,x2,x3...\" \"y1,y2 ...\" \"other1,other2\" [\"TITLE\"] [x-label] [y-label]"
     echo ""
     echo "Example1: if data files are like aX_bY_cZ"
-    echo "  $0 ./data/ \"b1 b2 b3\" \"c1 c2\" \"\" benchmarks cycles "
+    echo "  $0 ./data/ \"b1,b2,b3\" \"c1,c2\" \"\" benchmarks cycles "
     echo "       plots a single graph with b{1-3} on the X axis and"
     echo "                                    c{1-2} on the Y axis."
     echo ""
     echo "Example2: if data files are like aX_bY_cZ_dW"
-    echo "  $0 ./data/ \"b1 b2 b3\" \"c1 c2\" \"a1\" benchmarks cycles "
+    echo "  $0 ./data/ \"b1,b2,b3\" \"c1,c2\" \"a1\" benchmarks cycles "
     echo "      plots a single graph with b{1-3} on the X axis and"
     echo "                                    c{1-2} on the Y axis"
     echo "                         such that a1 is in the filename."
-    echo "Example3: $0 data/ \"b1 b2 b3\" \"c1 c2\" \"energy\" \"The Energy\""
+    echo "Example3: $0 data/ \"b1,b2,b3\" \"c1,c2\" \"energy\" \"The Energy\""
 
     exit 1
 fi
@@ -179,6 +180,7 @@ gen_names()
 #          Returns jpeg_opt2_i2_d1
 get_match ()
 {
+    IFS=", "
     local DIR=$1
     local matches=$2
     local grep_cmd=""
@@ -190,14 +192,15 @@ get_match ()
     local filename=`eval ${grep_cmd}`
     local count_files=`echo $filename|wc -w`
     if [ ${count_files} -ne 1 ]; then
-    	echo "ERROR!!! ${count_files} files detected with the given options: $matches"
+	echo "ERROR!!! Filter: ${matches} matches ${count_files} files in ${DIR} !!!"
     	echo -e "$filename"
     	echo $grep_cmd
-    	echo "This is usually caused by some parameters being exclusive."
-	echo "Example: d3 is exclusive to jpeg_i1: jpeg_i1_d3 but NO mpeg_i1_d3."
+    	# echo "This is usually caused by some parameters being exclusive."
+	# echo "Example: d3 is exclusive to jpeg_i1: jpeg_i1_d3 but NO mpeg_i1_d3."
     	exit 1
     fi
     echo $filename
+    unset IFS
 }
 
 
@@ -360,11 +363,13 @@ gp_bar_options()
     local x_set_array=(${x_set})
     local x
     local cmn=2
+    IFS=${IFS_CHAR}    
     for x in ${x_vals}; do
 	local color=${color_array[$cmn]}
 	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) title columnheader(${cmn}) fc rgb \"${color}\","
 	cmn=$((cmn+1))
     done
+    unset IFS
     echo "${plot_cmd%?}" >> $FILE
     gnuplot ${gpfname}
 
@@ -463,11 +468,13 @@ gp_line_options()
     local x_set_array=(${x_set})
     local x
     local cmn=2
+    IFS=${IFS_CHAR}
     for x in ${x_vals}; do
 	local color=${color_array[$cmn]}
 	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) with linespoints title columnheader(${cmn}) lw $LW lc rgb \"${color}\","
 	cmn=$((cmn+1))
     done
+    unset IFS
     echo "${plot_cmd%?}" >> $FILE
     gnuplot ${gpfname}
 
@@ -643,7 +650,7 @@ create_data_file()
     done
     data="${data}\n"
 
-
+    IFS=${IFS_CHAR} # Let ',' be the separator character
     for y in ${y_array}; do
 	data="${data}$y"
 	for x in ${x_array}; do
@@ -665,6 +672,7 @@ create_data_file()
     done
     echo -e $data |tee ${out_file}
     data="NULL"
+    unset IFS
 }
 
 
@@ -673,6 +681,7 @@ create_data_file()
 # Description: Create the data file for a heatmap. 
 create_heatmap_data_file()
 {
+    IFS=${IFS_CHAR} # Let ',' be the separator character
     local x_array=$1
     local y_array=$2
     local out_file=$3
@@ -703,24 +712,36 @@ create_heatmap_data_file()
     echo "${out_file}"
     echo "- - - - - - - - - - - -"
     echo -e $data |tee ${out_file}
+    unset IFS
 }
 
 
 check_if_arguments_exist()
 {
-    local vals=$1
-    local dir=$2
-    local val
-    for val in ${vals}; do
-	ls -1 ${dir} |grep ${val}
-	if [ $? -ne 0 ]; then
-	    echo "ERROR: ${val} can't be found in ${DIR}."
-	    exit 1
-	fi
+    IFS=${IFS_CHAR} # Let ',' be the separator character
+    local vals1=$1
+    local vals2=$2
+    local vals3=$3
+    local dir=$4
+    local val1
+    local val2
+    local val3
+    for val1 in ${vals1}; do
+	for val2 in ${vals2}; do
+	    for val3 in ${vals3}; do
+		local matches=`get_match "${DIR}" "${val1} ${val2} ${val3}"`
+		if [ $? -ne 0 ]; then
+		    echo "ERROR: Filters: ${val1} ${val2} ${val3} are too restrictive! Can't find match in ${DIR}."
+		    exit 1
+		fi
+	    done
+	done
     done
+    unset IFS
 }
 
 parts_cnt=`check_parts $DIR`
+
 echo "Each file in $DIR contains ${parts_cnt} parts."
 
 # VAL_ARRAY [PARTi]   holds all the possible values of PARTi 
@@ -739,10 +760,20 @@ others=$4
 main_title=$5
 x_title=$6
 y_title=$7
-
+echo "+----------------------+"
+echo "| MoufoPlot            |  "
+echo "+----------------------+"
+echo "| DIR:${DIR}"
+echo "| x: ${x_vals}"
+echo "| y: ${y_vals}"
+echo "| filter: ${others}"
+echo "| Title: ${main_title}"
+echo "| x label: ${x_title}"
+echo "| y label: ${y_title}"
+echo "+----------------------+"
 echo "X Axis points (${x_title}): ${x_vals}"
 echo "Y Axis points (${y_title}): ${y_vals}"
-check_if_arguments_exist "${x_vals} ${y_vals}" ${DIR}
+check_if_arguments_exist "${x_vals}" "${y_vals}" "${others}" "${DIR}"
 
 # Sanity checks
 # num_of_parts=`echo ${axis_parts}|wc -w`
@@ -784,18 +815,10 @@ if [ "${plot_type}" == "heatmap" ];then
     create_heatmap_data_file "${x_vals}" "${y_vals}" "${data_filename}" "${others}"
     gp_heatmap_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
 elif [ "${plot_type}" == "bargraph" ];then
-    # create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
-    # data_columns=$((`echo ${x_vals}|wc -w` + 1))
-    # echo "GP columns: ${data_columns}"
-    # gp_options ${data_dir} ${data_columns} ${x_title} ${y_title}
     create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
-    data_columns=$((`echo ${x_vals}|wc -w` + 1))
-    echo "GP columns: ${data_columns}"
     gp_bar_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
 elif [ "${plot_type}" == "linegraph" ];then
     create_data_file "${x_vals}" "${y_vals}" ${data_filename} "${others}"
-    data_columns=$((`echo ${x_vals}|wc -w` + 1))
-    echo "GP columns: ${data_columns}"
     gp_line_options "${data_filename}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
 fi
 
