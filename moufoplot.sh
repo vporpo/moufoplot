@@ -319,6 +319,13 @@ gp_bar_options()
     # echo "set grid x" >>$FILE
 
     echo "set xtics rotate by ${x_tics_rotate} offset character 0,0" >> $FILE
+    if [ "${x_format}" != "" ];then
+	echo "set format x \"${x_format}\"" >> $FILE
+    fi
+    if [ "${y_format}" != "" ];then
+	echo "set format y \"${y_format}\"" >> $FILE
+    fi
+
 # echo "set ytics 1" >>$FILE
     echo " " >> $FILE
     # echo "set key $KEYSTUFF" >> $FILE
@@ -439,6 +446,13 @@ gp_line_options()
     # echo "set grid x" >>$FILE
 
     echo "set xtics rotate by ${x_tics_rotate} offset character 0,0" >> $FILE
+    if [ "${x_format}" != "" ];then
+	echo "set format x \"${x_format}\"" >> $FILE
+    fi
+    if [ "${y_format}" != "" ];then
+	echo "set format y \"${y_format}\"" >> $FILE
+    fi
+
 # echo "set ytics 1" >>$FILE
     echo " " >> $FILE
     # echo "set key $KEYSTUFF" >> $FILE
@@ -591,6 +605,14 @@ gp_heatmap_options()
     echo "unset ylabel" >> $FILE
     # echo "set xtics 1" >>$FILE
     echo "set xtics rotate by ${x_tics_rotate} offset character 0,0 " >> $FILE
+
+    if [ "${x_format}" != "" ];then
+	echo "set format x \"${x_format}\"" >> $FILE
+    fi
+    if [ "${y_format}" != "" ];then
+	echo "set format y \"${y_format}\"" >> $FILE
+    fi
+
 # echo "set ytics 1" >>$FILE
     echo " " >> $FILE
     # echo "set key $KEYSTUFF" >> $FILE
@@ -890,11 +912,13 @@ sanity_checks()
 	echo "ERROR: size of y: ${size_param_y} in size parameter ${size_param} is not a number."
 	exit 1
     fi
-    if [ ${size_param_x} -le 0 ]; then
+    isgt0=`echo "${size_param_x} > 0.0"|bc -l`
+    if [ ${isgt0} -eq 0 ]; then
 	echo "ERROR: Wrong X size: ${size_param_x} of param:${size_param}. Must be > 0."
 	exit 1
     fi
-    if [ ${size_param_y} -le 0 ]; then
+    isgt0=`echo "${size_param_y} > 0.0"|bc -l`
+    if [ ${isgt0} -eq 0 ]; then
 	echo "ERROR: Wrong Y size ${size_param_y} of param:${size_param}. Must be > 0."
 	exit 1
     fi
@@ -986,6 +1010,7 @@ parse_legend()
     local p
     for p in ${legend_params}; do
 	case "${p}" in
+	    "on") mask[${ON}]=1;;
 	    "off") mask[${OFF}]=1;;
 	    "out") mask[${OUT}]=1;;
 	    "in") mask[${IN}]=1;;
@@ -1117,7 +1142,7 @@ parse_size()
 parse_arguments()
 {
     local args=`getopt -o "hd:x:y:f:t:" \
-	-l "help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:" \
+	-l "help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,xformat:,yformat:" \
 	-n "getopt.sh" -- "$@"`
     local args_array=($args)
     if [ $? -ne 0 ]||[ "${args_array[0]}" == "--" ] ;then
@@ -1147,6 +1172,8 @@ parse_arguments()
 	    "--xrotate"|"-xrotate") x_tics_rotate="$2";shift;;
 	    "--legend"|"-legend") legend_params="$2";shift;;
 	    "--size"|"-size") size_param="$2";shift;;
+	    "--xformat"|"-xformat") x_format="$2";shift;;
+	    "--yformat"|"-yformat") y_format="$2";shift;;
 	    "--") break;
 	esac
 	shift
@@ -1204,6 +1231,8 @@ parse_arguments()
     echo "| x label rotate: ${x_tics_rotate}"
     echo "| Legend: ${legend_params}"
     echo "| Size: ${size_param}"
+    echo "| Xformat: ${x_format}"
+    echo "| Yformat: ${y_format}"
     echo "+-------------------------------+"
 }
 
@@ -1212,26 +1241,28 @@ usage()
 {
     script_name=${0##*/}
     echo "Usage: ${script_name} <OPTIONS>"
-    echo "   --bar                        : Generate bar-graphs."
+    echo "   --bar                        : (DEF) Generate bar-graphs."
     echo "   --line                       : Generate line-graphs."
     echo "   --hmap                       : Generate heat-map graphs."
     echo "   --dir,-d \"<DIR>\"           : The result files Directory."
     echo "   --xvals,-x \"<x values>\"    : The identifiers of the X values."
     echo "   --yvals,-y \"<y values>\"    : The identifiers of the Y values."
     echo "   --filter,-f \"<filter vals>\": The filtering identifiers."
-    echo "   --title, -t \"<title>\"      : Optional graph title."
-    echo "   --xlabel \"<x label>\"       : Optional label of the X axis."
-    echo "   --ylabel \"<y label>\"       : Optional label of the Y axis."
-    echo "   --w-data \"<file path>\"     : Data file where data is written."
-    echo "   --xtags \"<tags>\"           : Optional tags for the X axis."
-    echo "   --ytags \"<tags>\"           : Optional tags for the Y axis."
-    echo "   --xnorm \"<x norm values>\"  : Opt. normalization filter values X."
-    echo "   --ynorm \"<y norm values>\"  : Opt. normalization filter values Y."
-    echo "   --x-labels-rotate \"<angle>\": Optional rotate angle for X labels."
-    echo "   --legend \"<parameters>\"    : Control the legend position, attr."
+    echo "   --title, -t \"<title>\"      : (Opt) Graph title."
+    echo "   --xlabel \"<x label>\"       : (Opt) Label of the X axis."
+    echo "   --ylabel \"<y label>\"       : (Opt) Label of the Y axis."
+    echo "   --w-data \"<file path>\"     : (Opt) Path of data file."
+    echo "   --xtags \"<tags>\"           : (Opt) Tags for the X axis."
+    echo "   --ytags \"<tags>\"           : (Opt) Tags for the Y axis."
+    echo "   --xnorm \"<x norm values>\"  : (Opt) Normalization filter X."
+    echo "   --ynorm \"<y norm values>\"  : (Opt) Normalization filter Y."
+    echo "   --x-labels-rotate \"<angle>\": (Opt) Rotate angle for X labels."
+    echo "   --legend \"<parameters>\"    : (Opt) Control legend attrib."
     echo "         Parameters: on/off, in/out, top/bottom, right/left,"
     echo "                     horizontal/vertical"
-    echo "   --size NUMxNUM               : The x,y dimensions of the graph."
+    echo "   --size NUMxNUM               : (Opt) Dimensions of the graph."
+    echo "   --xformat \"format\"         : (Opt) Format of the x tags."
+    echo "   --yformat \"format\"         : (Opt) Format of the y tags."
     echo "   --help                       : Print this help screen."
     exit 1
 }
