@@ -1010,7 +1010,7 @@ parse_legend()
     local key_start="set key"
     key_command=${key_start}
     if [ "${mask[${OFF}]}" == "1" ];then
-	key_command=""
+	key_command="${key_command} off"
     else
 
 	# Exclusive options
@@ -1089,7 +1089,7 @@ parse_legend()
 
 
     fi
-    # echo "Legend: ${key_command}"
+    echo "Legend: ${key_command}"
 }
 
 
