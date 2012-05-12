@@ -241,6 +241,19 @@ normalize()
     echo "Done!"
 }
 
+
+is_number()
+{
+    value=${1}
+    grepped_val=`echo ${1} | egrep -o "(-|)([[:digit:]]+\.*[[:digit:]]*)"`
+    if [ "${value}" == "${grepped_val}" ]; then
+	RETVAL="ye"
+    else
+	RETVAL="no"
+    fi
+}
+
+
 is_integer()
 {
     value=${1}
@@ -287,10 +300,14 @@ gp_bar_options()
 
     local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
     local gpfname="${argfname}.gp"
-    echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
+    # echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
     local FILE="${gpfname}"
 
-    local size="${size_x},${size_y}"
+    if [ "${size_param}" != "" ];then
+	local size="${size_param_x},${size_param_y}"
+    else
+	local size="$size_x,$size_y"
+    fi
 
     local epsfile="${argfname}.eps"
     echo "set term postscript eps enhanced color" > $FILE 
@@ -304,7 +321,8 @@ gp_bar_options()
     echo "set xtics rotate by ${x_tics_rotate} offset character 0,0" >> $FILE
 # echo "set ytics 1" >>$FILE
     echo " " >> $FILE
-    echo "set key $KEYSTUFF" >> $FILE
+    # echo "set key $KEYSTUFF" >> $FILE
+    echo "${key_command}" >> $FILE
     echo " " >> $FILE
     # echo "set tics font \"Times,$TICSFONTSIZE\""  >> $FILE
     # echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
@@ -402,10 +420,14 @@ gp_line_options()
 
     local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
     local gpfname="${argfname}.gp"
-    echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
+    # echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
     local FILE="${gpfname}"
 
-    local size="${size_x},${size_y}"
+    if [ "${size_param}" != "" ];then
+	local size="${size_param_x},${size_param_y}"
+    else
+	local size="$size_x,$size_y"
+    fi
 
     local epsfile="${argfname}.eps"
     echo "set term postscript eps enhanced color" > $FILE 
@@ -419,7 +441,8 @@ gp_line_options()
     echo "set xtics rotate by ${x_tics_rotate} offset character 0,0" >> $FILE
 # echo "set ytics 1" >>$FILE
     echo " " >> $FILE
-    echo "set key $KEYSTUFF" >> $FILE
+    # echo "set key $KEYSTUFF" >> $FILE
+    echo "${key_command}" >> $FILE
     echo " " >> $FILE
     # echo "set tics font \"Times,$TICSFONTSIZE\""  >> $FILE
     # echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
@@ -553,9 +576,13 @@ gp_heatmap_options()
 
     local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
     local gpfname="${argfname}.gp"
-    echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, $gpcol, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
+    # echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, $gpcol, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
     local FILE="${gpfname}"
-    local size="$size_x,$size_y"
+    if [ "${size_param}" != "" ];then
+	local size="${size_param_x},${size_param_y}"
+    else
+	local size="$size_x,$size_y"
+    fi
 
     local epsfile="${argfname}.eps"
     echo "set term postscript eps enhanced color" > $FILE 
@@ -849,6 +876,30 @@ sanity_checks()
     else
 	x_tics_rotate=-60
     fi
+
+    # size is number
+    is_number ${size_param_x}
+    local is=${RETVAL}
+    if [ "${is}" == "no" ];then
+	echo "ERROR: size of x: ${size_param_x} in size parameter ${size_param} is not a number."
+	exit 1
+    fi
+    is_number ${size_param_y}
+    local is=${RETVAL}
+    if [ "${is}" == "no" ];then
+	echo "ERROR: size of y: ${size_param_y} in size parameter ${size_param} is not a number."
+	exit 1
+    fi
+    if [ ${size_param_x} -le 0 ]; then
+	echo "ERROR: Wrong X size: ${size_param_x} of param:${size_param}. Must be > 0."
+	exit 1
+    fi
+    if [ ${size_param_y} -le 0 ]; then
+	echo "ERROR: Wrong Y size ${size_param_y} of param:${size_param}. Must be > 0."
+	exit 1
+    fi
+
+
     
 
 # These take a long time and I don't think they are even necessary
@@ -913,10 +964,160 @@ get_normalize_values()
     reset_ifs
 }
 
+parse_legend()
+{
+    local ON=0
+    local OFF=1
+    local OUT=2
+    local IN=3
+    local TOP=4
+    local BOTTOM=5
+    local RIGHT=6
+    local LEFT=7
+    local VERTICAL=8
+    local HORIZONTAL=9
+    local BOX=10
+    local NOBOX=11
+
+
+    
+    set_ifs ","
+    local mask
+    local p
+    for p in ${legend_params}; do
+	case "${p}" in
+	    "off") mask[${OFF}]=1;;
+	    "out") mask[${OUT}]=1;;
+	    "in") mask[${IN}]=1;;
+	    "top") mask[${TOP}]=1;;
+	    "bottom") mask[${BOTTOM}]=1;;
+	    "right") mask[${RIGHT}]=1;;
+	    "left") mask[${left}]=1;;
+	    "vertical") mask[${VERTICAL}]=1;;
+	    "horizontal") mask[${HORIZONTAL}]=1;;
+	    "box") mask[${BOX}]=1;;
+	    "nobox") mask[${NOBOX}]=1;;
+	    *) echo "Unknown legend option: ${p}"; exit 1;;
+	esac
+    done
+    reset_ifs
+
+    if [ "${legend_params}" != "" ];then
+	mask[${ON}]=1
+    fi
+
+    local key_default="set key tmargin"
+    local key_start="set key"
+    key_command=${key_start}
+    if [ "${mask[${OFF}]}" == "1" ];then
+	key_command=""
+    else
+
+	# Exclusive options
+	if [ "${mask[${OUT}]}" == "1" ]&&[ "${mask[${IN}]}" == "1" ];then
+	    echo "ERROR: Both in,out enabled!"
+	    exit 1
+	fi
+	if [ "${mask[${TOP}]}" == "1" ]&&[ "${mask[${BOTTOM}]}" == "1" ];then
+	    echo "ERROR: Both top,bottom enabled!"
+	    exit 1
+	fi
+	if [ "${mask[${RIGHT}]}" == "1" ]&&[ "${mask[${LEFT}]}" == "1" ];then
+	    echo "ERROR: Both right,left enabled!"
+	    exit 1
+	fi
+	if [ "${mask[${VERTICAL}]}" == "1" ]&&[ "${mask[${HORIZONTAL}]}" == "1" ];then
+	    echo "ERROR: Both vertical,horizontal enabled!"
+	    exit 1
+	fi
+	if [ "${mask[${BOX}]}" == "1" ]&&[ "${mask[${NOBOX}]}" == "1" ];then
+	    echo "ERROR: Both box,nobox enabled!"
+	    exit 1
+	fi
+
+
+	# Position 
+	if [ "${mask[${OUT}]}" == "1" ]&&[ "${mask[${TOP}]}" == "1" ];then
+	    key_command="${key_command} tmargin"
+	fi
+	if [ "${mask[${OUT}]}" == "1" ]&&[ "${mask[${BOTTOM}]}" == "1" ];then
+	    key_command="${key_command} bmargin"
+	fi
+	if [ "${mask[${OUT}]}" == "1" ]&&[ "${mask[${RIGHT}]}" == "1" ];then
+	    key_command="${key_command} rmargin"
+	fi
+	if [ "${mask[${OUT}]}" == "1" ]&&[ "${mask[${LEFT}]}" == "1" ];then
+	    key_command="${key_command} lmargin"
+	fi
+
+	if [ "${mask[${IN}]}" == "1" ]&&[ "${mask[${TOP}]}" == "1" ];then
+	    key_command="${key_command} top"
+	fi
+	if [ "${mask[${IN}]}" == "1" ]&&[ "${mask[${BOTTOM}]}" == "1" ];then
+	    key_command="${key_command} bottom"
+	fi
+	if [ "${mask[${IN}]}" == "1" ]&&[ "${mask[${RIGHT}]}" == "1" ];then
+	    key_command="${key_command} Right"
+	fi
+	if [ "${mask[${IN}]}" == "1" ]&&[ "${mask[${LEFT}]}" == "1" ];then
+	    key_command="${key_command} Left"
+	fi
+
+
+	# Default 
+	if [ "${key_command}" == "${key_start}" ];then
+	    key_command=${key_default}
+	fi
+
+
+	# Vertical-Horizontal (optional)
+	if [ "${mask[${VERTICAL}]}" == "1" ];then
+	    key_command="${key_command} vertical"
+	fi
+	if [ "${mask[${HORIZONTAL}]}" == "1" ];then
+	    key_command="${key_command} horizontal"
+	fi
+
+
+	# Box/Nobox
+	if [ "${mask[${BOX}]}" == "1" ];then
+	    key_command="${key_command} box"
+	fi
+	if [ "${mask[${NOBOX}]}" == "1" ];then
+	    key_command="${key_command} nobox"
+	fi
+
+
+    fi
+    # echo "Legend: ${key_command}"
+}
+
+
+parse_size()
+{
+    if [ "${size_param}" != "" ]; then
+	set_ifs "xX"
+	local s
+	local si=0
+	local size_array
+	for s in ${size_param};do
+	    size_array[${si}]=${s}
+	    si=$((si + 1))
+	done
+	reset_ifs
+	if [ ${si} -gt 2 ]||[ "${size_array[0]}" == "" ]||[ "${size_array[1]}" == "" ]; then
+	    echo "ERROR: parsing size parameter: ${size_param}. Must be: NUMxNUM."
+	    exit 1
+	fi
+	size_param_x=${size_array[0]}
+	size_param_y=${size_array[1]}
+    fi
+}
+
 parse_arguments()
 {
     local args=`getopt -o "hd:x:y:f:t:" \
-	-l "help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:" \
+	-l "help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:" \
 	-n "getopt.sh" -- "$@"`
     local args_array=($args)
     if [ $? -ne 0 ]||[ "${args_array[0]}" == "--" ] ;then
@@ -944,6 +1145,8 @@ parse_arguments()
 	    "--xnorm"|"-xnorm") x_norm="$2";shift;;
 	    "--ynorm"|"-ynorm") y_norm="$2";shift;;
 	    "--xrotate"|"-xrotate") x_tics_rotate="$2";shift;;
+	    "--legend"|"-legend") legend_params="$2";shift;;
+	    "--size"|"-size") size_param="$2";shift;;
 	    "--") break;
 	esac
 	shift
@@ -973,11 +1176,18 @@ parse_arguments()
     reset_ifs
 
 
+    # Parse Legend parameters
+    parse_legend
+    if [ $? -ne 0 ]; then exit 1; fi    
 
+    # Parse Size parameter
+    parse_size
+    if [ $? -ne 0 ]; then exit 1; fi    
 
-    echo "+----------------------+"
-    echo "| MoufoPlot            |  "
-    echo "+----------------------+"
+    echo "+--------------------------------+"
+    echo "|         MoufoPlot              |"
+    echo "+--------------------------------+"
+    echo "| COMMAND LINE OPTIONS:"
     echo "| Type: ${plot_type}"
     echo "| DIR:${DIR}"
     echo "| x: ${x_vals}"
@@ -992,7 +1202,9 @@ parse_arguments()
     echo "| x norm filters: ${x_norm}"
     echo "| y norm filters: ${y_norm}"
     echo "| x label rotate: ${x_tics_rotate}"
-    echo "+----------------------+"
+    echo "| Legend: ${legend_params}"
+    echo "| Size: ${size_param}"
+    echo "+-------------------------------+"
 }
 
 
@@ -1016,6 +1228,10 @@ usage()
     echo "   --xnorm \"<x norm values>\"  : Opt. normalization filter values X."
     echo "   --ynorm \"<y norm values>\"  : Opt. normalization filter values Y."
     echo "   --x-labels-rotate \"<angle>\": Optional rotate angle for X labels."
+    echo "   --legend \"<parameters>\"    : Control the legend position, attr."
+    echo "         Parameters: on/off, in/out, top/bottom, right/left,"
+    echo "                     horizontal/vertical"
+    echo "   --size NUMxNUM               : The x,y dimensions of the graph."
     echo "   --help                       : Print this help screen."
     exit 1
 }
