@@ -168,7 +168,7 @@ get_match ()
     local filename=`eval ${grep_cmd}`
     local count_files=`echo $filename|wc -w`
     if [ ${count_files} -ne 1 ]&&[ "${exit_on_multiple_matches}" == "" ]; then
-	echo "ERROR!!! Filter: ${matches} matches ${count_files} files in ${DIR} !!!"
+	echo -e "\nERROR: Filter: ${matches} matches ${count_files} files in ${DIR} !!!"
     	echo -e "FILES: $filename"
 
     	# echo "This is usually caused by some parameters being exclusive."
@@ -213,7 +213,7 @@ get_file_value()
 	exit 1
     fi
     # echo ${data}
-    RET_VAL=${data}
+    RETVAL=${data}
 }
 
 # Input: DATA_FILE_ARRAY OUT_DIR
@@ -241,6 +241,16 @@ normalize()
     echo "Done!"
 }
 
+is_integer()
+{
+    value=${1}
+    grepped_val=`echo ${1} | egrep -o "(-|)([[:digit:]])+"`
+    if [ "${value}" == "${grepped_val}" ]; then
+	RETVAL="ye"
+    else
+	RETVAL="no"
+    fi
+}
 
 gp_bar_options()
 {
@@ -291,7 +301,7 @@ gp_bar_options()
     echo "set grid y" >>$FILE
     # echo "set grid x" >>$FILE
 
-    echo "set xtics rotate by -60 offset character 0,0" >> $FILE
+    echo "set xtics rotate by ${x_tics_rotate} offset character 0,0" >> $FILE
 # echo "set ytics 1" >>$FILE
     echo " " >> $FILE
     echo "set key $KEYSTUFF" >> $FILE
@@ -406,7 +416,7 @@ gp_line_options()
     echo "set grid y" >>$FILE
     # echo "set grid x" >>$FILE
 
-    echo "set xtics rotate by -60 offset character 0,0" >> $FILE
+    echo "set xtics rotate by ${x_tics_rotate} offset character 0,0" >> $FILE
 # echo "set ytics 1" >>$FILE
     echo " " >> $FILE
     echo "set key $KEYSTUFF" >> $FILE
@@ -553,7 +563,7 @@ gp_heatmap_options()
     echo "set boxwidth $boxwidth" >> $FILE
     echo "unset ylabel" >> $FILE
     # echo "set xtics 1" >>$FILE
-    echo "set xtics rotate by -40 offset character 0,0 " >> $FILE
+    echo "set xtics rotate by ${x_tics_rotate} offset character 0,0 " >> $FILE
 # echo "set ytics 1" >>$FILE
     echo " " >> $FILE
     # echo "set key $KEYSTUFF" >> $FILE
@@ -687,20 +697,36 @@ create_data_file()
 
 
     local yi=0    
+    local normalize_value=1.0
     for y in ${y_array}; do
 	if [ "${y_tags}" != "" ];then
 	    local ytag=${ytags_array[${yi}]}
 	else
 	    local ytag=${y}
 	fi
+
+        # Normalization on the Y axis
+	if [ "${y_norm_array[${yi}]}" != "" ];then
+	    normalize_value=`echo ${y_norm_array[${yi}]}*1.0|bc -l`
+	fi
+
 	data="${data}${ytag}"
+	local xi=0
 	for x in ${x_array}; do
 	    local opts="${x} ${y} ${others}"
-	    get_match "$DIR" "$opts"
+	    get_match "${DIR}" "$opts"
 	    local file=${RETVAL}
 	    get_file_value "${DIR}/${file}"
-	    local file_val=${RET_VAL}
+	    local file_val=${RETVAL}
+
+	    # Normalization on the X axis
+	    if [ "${x_norm_array[${xi}]}" != "" ];then
+		normalize_value=`echo ${x_norm_array[${xi}]}*1.0|bc -l`
+	    fi
+
+	    file_val=`echo ${file_val}/${normalize_value}|bc -l`
 	    data="${data} ${file_val}"
+	    xi=$((xi + 1))
 	done
 	data="${data}\n"
 	yi=$((yi + 1))
@@ -733,7 +759,7 @@ create_heatmap_data_file()
 	    get_match "$DIR" "$opts"
 	    local file=${RETVAL}
 	    get_file_value "${DIR}/${file}"
-	    local file_val=${RET_VAL}
+	    local file_val=${RETVAL}
 	    data="${data}${file_val} "
 	    xi=$((xi + 1))
 	done
@@ -808,6 +834,23 @@ sanity_checks()
     check_if_arguments_exist "${x_vals}" "${y_vals}" "${others}" "${DIR}"
     if [ $? -ne 0 ]; then exit 1; fi    
 
+    if [ "${x_norm}" != "" ]&&[ "${y_norm}" ]; then
+	echo "ERROR: Can't enable BOTH --xnorm AND --ynorm"
+	exit 1
+    fi
+
+    if [ "${x_tics_rotate}" != "" ];then
+	is_integer ${x_tics_rotate}
+	local angle_is_integer=${RETVAL}
+	if [ "${angle_is_integer}" == "no" ];then
+	    echo "ERROR: X label rotate must be an integer, not: ${x_tics_rotate}."
+	    exit 1
+	fi
+    else
+	x_tics_rotate=-60
+    fi
+    
+
 # These take a long time and I don't think they are even necessary
 # check_parts ${DIR}
 # parts_cnt=${RETVAL}
@@ -815,10 +858,65 @@ sanity_checks()
 
 }
 
+
+# Read -xnorm and -ynorm filters and find the values that correspond to them
+get_normalize_values()
+{
+    # Normalize
+    set_ifs ","
+    printf "Getting X normalization values from filters... "
+    local ni=0
+    local xn
+    for xn in ${x_norm};do
+	get_match "${DIR}" "${xn} ${others}"
+	local file=${RETVAL}
+	get_file_value "${DIR}/${file}"
+	local xnorm_val=${RETVAL}
+	x_norm_array[${ni}]=${xnorm_val}
+	ni=$((ni + 1))
+    done
+
+    local xi=0
+    local x
+    for x in ${x_vals};do
+	if [ "${x_norm_array[${xi}]}" == "" ];then
+	    x_norm_array[${xi}]=${x_norm_array[0]}
+	fi
+	xi=$((xi + 1))
+    done
+    
+    printf "Done!\n"
+    echo "X norm values: ${x_norm_array[@]}"
+
+    printf "Getting Y normalization values from filters... "
+    local ni=0
+    local yn
+    for yn in ${y_norm};do
+	get_match "${DIR}" "${yn} ${others}"
+	local file=${RETVAL}
+	get_file_value "${DIR}/${file}"
+	local ynorm_val=${RETVAL}
+	y_norm_array[${ni}]=${ynorm_val}
+	ni=$((ni + 1))
+    done
+
+    local yi=0
+    local y
+    for y in ${x_vals};do
+	if [ "${y_norm_array[${yi}]}" == "" ];then
+	    y_norm_array[${yi}]=${y_norm_array[0]}
+	fi
+	yi=$((yi + 1))
+    done
+    printf "Done!\n"
+    echo "Y norm values: ${y_norm_array[@]}"
+    reset_ifs
+}
+
 parse_arguments()
 {
     local args=`getopt -o "hd:x:y:f:t:" \
-	-l "help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:w-data:,xtags:,ytags:" \
+	-l "help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:" \
 	-n "getopt.sh" -- "$@"`
     local args_array=($args)
     if [ $? -ne 0 ]||[ "${args_array[0]}" == "--" ] ;then
@@ -842,7 +940,10 @@ parse_arguments()
 	    "--bar"|"-bar") plot_type="bargraph";;
 	    "--hmap"|"-hmap") plot_type="heatmap";;
 	    "--line"|"-line") plot_type="linegraph";;
-	    "--w-data"|"-w-data") data_file="$2";shift;;
+	    "--wdata"|"-wdata") data_file="$2";shift;;
+	    "--xnorm"|"-xnorm") x_norm="$2";shift;;
+	    "--ynorm"|"-ynorm") y_norm="$2";shift;;
+	    "--xrotate"|"-xrotate") x_tics_rotate="$2";shift;;
 	    "--") break;
 	esac
 	shift
@@ -857,21 +958,22 @@ parse_arguments()
     fi
 
 
+    # Custom Labels (TAGS)
     set_ifs ","
     local xi=0
-    xtags_array
     for x in ${x_tags}; do
 	xtags_array[${xi}]="${x}"
 	xi=$((xi+1))
     done
-
     local yi=0
-    ytags_array
     for y in ${y_tags}; do
 	ytags_array[${yi}]="${y}"
 	yi=$((yi + 1))
     done
     reset_ifs
+
+
+
 
     echo "+----------------------+"
     echo "| MoufoPlot            |  "
@@ -887,6 +989,9 @@ parse_arguments()
     echo "| Data file: ${data_file}"
     echo "| x tags: ${x_tags}"
     echo "| y tags: ${y_tags}"
+    echo "| x norm filters: ${x_norm}"
+    echo "| y norm filters: ${y_norm}"
+    echo "| x label rotate: ${x_tics_rotate}"
     echo "+----------------------+"
 }
 
@@ -908,6 +1013,10 @@ usage()
     echo "   --w-data \"<file path>\"     : Data file where data is written."
     echo "   --xtags \"<tags>\"           : Optional tags for the X axis."
     echo "   --ytags \"<tags>\"           : Optional tags for the Y axis."
+    echo "   --xnorm \"<x norm values>\"  : Opt. normalization filter values X."
+    echo "   --ynorm \"<y norm values>\"  : Opt. normalization filter values Y."
+    echo "   --x-labels-rotate \"<angle>\": Optional rotate angle for X labels."
+    echo "   --help                       : Print this help screen."
     exit 1
 }
 
@@ -929,6 +1038,7 @@ moufoplot()
     if [ $? -ne 0 ]; then exit 1; fi
     sanity_checks
     if [ $? -ne 0 ]; then exit 1; fi
+    get_normalize_values
 
 
     if [ "${plot_type}" == "heatmap" ];then
