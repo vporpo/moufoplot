@@ -40,34 +40,6 @@ count_parts()
     RETVAL=${parts_cnt}
 }
 
-# Input: DIR
-# Output: The number of parts that each file has in DIR
-# Example: check_parts data/  (where data contains files like <benc*>_<opt*>_<i*>_<d*>)
-#          Returns 4
-check_parts()
-{
-    printf "Checking file formats in ${DIR} ..."
-    local DIR="${1}"
-    local first_file=`ls -1 ${DIR}|head -n 1`
-    count_parts ${first_file}
-    local last_cnt=${RETVAL}
-    local files=`ls -1 ${DIR}`
-    local f
-    for f in ${files}; do
-	# echo $f
-	count_parts ${f}
-	local cnt=${RETVAL}
-	# echo $cnt
-	if [ ${cnt} -ne ${last_cnt} ]; then
-	    echo "ERROR!!!"
-	    echo "FILE: ${DIR}/${f} has ${cnt} parts !!! Iet should have ${last_cnt} parts!!!"
-	    exit 1
-	fi
-	last_cnt=${cnt}
-    done
-    RETVAL=${last_cnt}
-    printf " parts:%s\n" "${RETVAL}"
-}
 
 # Input: DIR PART_NUM
 # Output: all the unique values in PART_NUM
@@ -247,7 +219,7 @@ is_number()
     value=${1}
     grepped_val=`echo ${1} | egrep -o "(-|)([[:digit:]]+\.*[[:digit:]]*)"`
     if [ "${value}" == "${grepped_val}" ]; then
-	RETVAL="ye"
+	RETVAL="yes"
     else
 	RETVAL="no"
     fi
@@ -259,7 +231,7 @@ is_integer()
     value=${1}
     grepped_val=`echo ${1} | egrep -o "(-|)([[:digit:]])+"`
     if [ "${value}" == "${grepped_val}" ]; then
-	RETVAL="ye"
+	RETVAL="yes"
     else
 	RETVAL="no"
     fi
@@ -317,6 +289,7 @@ gp_bar_options()
     echo "unset ylabel" >> $FILE
     echo "set grid y" >>$FILE
     # echo "set grid x" >>$FILE
+    echo "${ytics_command}" >> $FILE
 
     echo "set xtics rotate by ${x_tics_rotate} offset character 0,0" >> $FILE
     if [ "${x_format}" != "" ];then
@@ -342,9 +315,15 @@ gp_bar_options()
 
     echo "set size $size" >> $FILE
 
-    if [ ${Y_RANGE_ENABLED} -eq 1 ]; then
-	echo "set yrange[${yrange_row[$row]}] ">> $FILE
+    # if [ ${Y_RANGE_ENABLED} -eq 1 ]; then
+    # 	echo "set yrange[${yrange_row[$row]}] ">> $FILE
+    # fi
+    if [ "${y_range}" != "" ]; then
+	echo "set yrange[${y_range_min}:${y_range_max}]">> $FILE
     fi
+
+
+
     # echo "set xrange[0:]" >> $FILE
 
     # Bargraph specific
@@ -444,7 +423,7 @@ gp_line_options()
     echo "unset ylabel" >> $FILE
     echo "set grid y" >>$FILE
     # echo "set grid x" >>$FILE
-
+    echo "${ytics_command}" >> $FILE
     echo "set xtics rotate by ${x_tics_rotate} offset character 0,0" >> $FILE
     if [ "${x_format}" != "" ];then
 	echo "set format x \"${x_format}\"" >> $FILE
@@ -469,9 +448,13 @@ gp_line_options()
 
     echo "set size $size" >> $FILE
 
-    if [ ${Y_RANGE_ENABLED} -eq 1 ]; then
-	echo "set yrange[${yrange_row[$row]}] ">> $FILE
+    # if [ ${Y_RANGE_ENABLED} -eq 1 ]; then
+    # 	echo "set yrange[${yrange_row[$row]}] ">> $FILE
+    # fi
+    if [ "${y_range}" != "" ]; then
+	echo "set yrange[${y_range_min}:${y_range_max}]">> $FILE
     fi
+
     echo "set xrange[0:]" >> $FILE
 
 
@@ -713,6 +696,47 @@ reset_ifs()
     fi
 }
 
+find_min_max()
+{
+    local file_val=${1}
+    if [ "${max_value}" == "" ];then
+	max_value=${file_val}
+    else
+	local isgt=`greater_than ${file_val} ${max_value}`
+	if [ ${isgt} -eq 1 ];then
+	    max_value=${file_val}
+	fi
+    fi
+    if [ "${min_value}" == "" ];then
+	min_value=${file_val}
+    else
+	local islt=`less_than ${file_val} ${max_value}`
+	if [ ${islt} -eq 1 ];then
+	    min_value=${file_val}
+	fi
+    fi
+}
+
+pretty_tics()
+{
+    if [ "${y_tics}" != "" ];then
+	local y_dist=`echo "(${max_value} - ${min_value}) / ${y_tics}"|bc -l`
+	local is_y_dist_gt3=`greater_than ${y_dist} 3`
+	if [ "${is_y_dist_gt3}" == "1" ];then
+	    local y_dist=${y_dist/.*}
+	fi
+	ytics_command="set ytics ${y_dist}"
+	echo "YTICS: ${ytics_command}"
+    fi
+}
+
+yrange_tics()
+{
+    if [ "${y_range_step}" != "" ];then
+	ytics_command="set ytics ${y_range_step}"
+    fi
+}
+
 # Input: "X_VALUES" "Y_VLUES" FILENAME
 # Output: creates FILENAME and puts in it all the data.
 # Description: Create the data file for a figure. 
@@ -772,8 +796,11 @@ create_data_file()
 	    if [ "${x_norm_array[${xi}]}" != "" ];then
 		normalize_value=`echo ${x_norm_array[${xi}]}*1.0|bc -l`
 	    fi
-
 	    file_val=`echo ${file_val}/${normalize_value}|bc -l`
+
+	    # Find minimum, maximum value (to use it in pretty ytics)
+	    find_min_max ${file_val}
+
 	    data="${data} ${file_val}"
 	    xi=$((xi + 1))
 	done
@@ -784,6 +811,9 @@ create_data_file()
     printf " Done.\n"
     # Dump data
     echo -e $data |tee ${out_file}
+    
+    pretty_tics
+    yrange_tics
 }
 
 
@@ -846,18 +876,16 @@ check_if_arguments_exist()
     reset_ifs
 }
 
-setup_val_array()
+
+greater_than()
 {
-    printf "Setting up the data array..."
-    local parts_cnt=${1}
-    local i=0
-    while [ $i -lt ${parts_cnt} ];do
-	get_all_values_in_part "$DIR" ${i}
-	val_array[$i]=${RETVAL}
-	i=$((i+1))
-    done
-    printf " Done!\n"
+    echo "${1} > ${2}"|bc -l
 }
+less_than()
+{
+    echo "${1} < ${2}"|bc -l
+}
+
 
 sanity_checks()
 {
@@ -912,24 +940,79 @@ sanity_checks()
 	echo "ERROR: size of y: ${size_param_y} in size parameter ${size_param} is not a number."
 	exit 1
     fi
-    isgt0=`echo "${size_param_x} > 0.0"|bc -l`
+    isgt0=`greater_than ${size_param_x} 0`
     if [ ${isgt0} -eq 0 ]; then
 	echo "ERROR: Wrong X size: ${size_param_x} of param:${size_param}. Must be > 0."
 	exit 1
     fi
-    isgt0=`echo "${size_param_y} > 0.0"|bc -l`
+    isgt0=`greater_than ${size_param_y} 0`
     if [ ${isgt0} -eq 0 ]; then
 	echo "ERROR: Wrong Y size ${size_param_y} of param:${size_param}. Must be > 0."
 	exit 1
     fi
 
 
-    
+    # X,Y tics
+    if [ "${x_tics}" != "" ];then
+	is_integer ${x_tics}
+	local is=${RETVAL}
+	if [ "${is}" != "yes" ]; then
+	    echo "ERROR: X tics: ${x_tics} must be a positive integer."
+	    exit 1
+	fi
+	if [ ${x_tics} -le 0 ];then
+	    echo "ERROR: X tics: ${x_tics} must be a positive integer."
+	    exti 1
+	fi
+    fi
 
-# These take a long time and I don't think they are even necessary
-# check_parts ${DIR}
-# parts_cnt=${RETVAL}
-# setup_val_array ${parts_cnt}
+    if [ "${y_tics}" != "" ];then
+	is_integer ${y_tics}
+	local is=${RETVAL}
+	if [ "${is}" != "yes" ]; then
+	    echo "ERROR: Y tics: ${y_tics} must be a positive integer."
+	    exit 1
+	fi
+	if [ ${y_tics} -le 0 ];then
+	    echo "ERROR: Y tics: ${y_tics} must be a positive integer."
+	    exti 1
+	fi
+    fi
+
+    # yrange
+    y_range_min=${y_range_array[0]}
+    y_range_max=${y_range_array[1]}
+    y_range_step=${y_range_array[2]}
+    is_number ${y_range_min}
+    local is=${RETVAL}
+    if [ "${is}" == "no" ];then
+	echo "ERROR: in yrange: ${y_range}. ${y_range_min} is not a number."
+	exit 1
+    fi
+    is_number ${y_range_max}
+    local is=${RETVAL}
+    if [ "${is}" == "no" ];then
+	echo "ERROR: in yrange: ${y_range}. ${y_range_max} is not a number."
+	exit 1
+    fi
+
+    if [ ${y_range_max} -le ${y_range_min} ];then
+	echo "ERROR: in yrange:${y_range}. Should be ${y_range_max} > ${y_range_min}."
+	exit 1
+    fi
+
+    if [ "${y_range_step}" != "" ];then
+	if [ "${y_tics}" != "" ];then
+	    echo "ERROR: Conflicting options --ytics ${y_tics} and --yrange ${y_range}."
+	    exit 1
+	fi
+	is_number ${y_range_step}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: in yrange: ${y_range}. ${y_range_step} is not a number."
+	    exit 1
+	fi
+    fi
 
 }
 
@@ -1139,10 +1222,26 @@ parse_size()
     fi
 }
 
+parse_yrange()
+{
+    local ni=0
+    set_ifs ","
+    for num in ${y_range}; do
+	y_range_array[${ni}]=${num}
+	ni=$(($ni + 1))
+    done
+    reset_ifs
+    if [ ${ni} -lt 2 ];then
+	echo "ERROR: yrange: ${y_range} should be a pair: num1,num2"
+	exit 1
+    fi
+}
+
+
 parse_arguments()
 {
     local args=`getopt -o "hd:x:y:f:t:" \
-	-l "help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,xformat:,yformat:" \
+	-l "help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,xformat:,yformat:,ytics:,yrange:" \
 	-n "getopt.sh" -- "$@"`
     local args_array=($args)
     if [ $? -ne 0 ]||[ "${args_array[0]}" == "--" ] ;then
@@ -1174,6 +1273,8 @@ parse_arguments()
 	    "--size"|"-size") size_param="$2";shift;;
 	    "--xformat"|"-xformat") x_format="$2";shift;;
 	    "--yformat"|"-yformat") y_format="$2";shift;;
+	    "--ytics"|"-ytics") y_tics="$2";shift;;
+	    "--yrange"|"-yrange") y_range="$2";shift;;
 	    "--") break;
 	esac
 	shift
@@ -1211,6 +1312,9 @@ parse_arguments()
     parse_size
     if [ $? -ne 0 ]; then exit 1; fi    
 
+    parse_yrange
+    if [ $? -ne 0 ]; then exit 1; fi    
+
     echo "+--------------------------------+"
     echo "|         MoufoPlot              |"
     echo "+--------------------------------+"
@@ -1233,6 +1337,8 @@ parse_arguments()
     echo "| Size: ${size_param}"
     echo "| Xformat: ${x_format}"
     echo "| Yformat: ${y_format}"
+    echo "| Ytics: ${y_tics}"
+    echo "| Yrange: ${y_range}"
     echo "+-------------------------------+"
 }
 
@@ -1263,6 +1369,8 @@ usage()
     echo "   --size NUMxNUM               : (Opt) Dimensions of the graph."
     echo "   --xformat \"format\"         : (Opt) Format of the x tags."
     echo "   --yformat \"format\"         : (Opt) Format of the y tags."
+    echo "   --ytics NUM                  : (Opt) Number of tics on Y."
+    echo "   --yrange MIN,MAX,STEP        : (Opt) Range of Y tics."
     echo "   --help                       : Print this help screen."
     exit 1
 }
