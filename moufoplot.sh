@@ -158,12 +158,15 @@ get_match ()
     local filename=`eval ${grep_cmd}`
     local count_files=`echo $filename|wc -w`
     if [ ${count_files} -ne 1 ]&&[ "${exit_on_multiple_matches}" == "" ]; then
-	echo -e "\nERROR: Filter: ${matches} matches ${count_files} files in ${DIR} !!!"
-    	echo -e "FILES: $filename"
-
-    	# echo "This is usually caused by some parameters being exclusive."
-	# echo "Example: d3 is exclusive to jpeg_i1: jpeg_i1_d3 but NO mpeg_i1_d3."
-    	exit 1
+	if [ "${ignore_filter}" == "YES" ]&&[ ${count_files} -eq 0 ];then
+	    echo -e "\nWARNING: Filter: ${matches} matches ${count_files} files in ${DIR} !!!"
+	    RETVAL=""
+	    return
+	else
+	    echo -e "\nERROR: Filter: ${matches} matches ${count_files} files in ${DIR} !!!"
+    	    echo -e "FILES: $filename"
+    	    exit 1
+	fi
     fi
     # echo $filename
     out="${filename} ${out}"
@@ -198,10 +201,17 @@ get_file_value()
 {
     local file=$1
     local data=`cat ${file}`
+
     # echo "Reading value from ${file}... ${data}"
     if [ "$data" == "" ]; then
-	echo "ERROR: file ${file} is empty!!!"
-	exit 1
+	if [ "${ignore_filter}" == "YES" ];then
+	    echo "WARNING: ignoring empty ${file}."
+	    RETVAL=0
+	    return
+	else
+	    echo "ERROR: file ${file} is empty!!!"
+	    exit 1
+	fi
     fi
     is_number "${data}"
     local isnum=${RETVAL}
@@ -749,7 +759,7 @@ find_min_max()
 	max_value=${file_val}
     else
 	local isgt=`greater_than ${file_val} ${max_value}`
-	if [ ${isgt} -eq 1 ];then
+	if [ "${isgt}" == "1" ];then
 	    max_value=${file_val}
 	fi
     fi
@@ -757,7 +767,7 @@ find_min_max()
 	min_value=${file_val}
     else
 	local islt=`less_than ${file_val} ${max_value}`
-	if [ ${islt} -eq 1 ];then
+	if [ "${islt}" == "1" ];then
 	    min_value=${file_val}
 	fi
     fi
@@ -835,14 +845,22 @@ create_data_file()
 	    local opts="${x} ${y} ${others}"
 	    get_match "${DIR}" "$opts"
 	    local file=${RETVAL}
-	    get_file_value "${DIR}/${file}"
+	    if [ "${ignore_filter}" == "YES" ]&&[ "${RETVAL}" == "" ];then
+		RETVAL=0
+	    else
+		get_file_value "${DIR}/${file}"
+	    fi
 	    local file_val=${RETVAL}
 
 	    # Normalization on the X axis
 	    if [ "${x_norm_array[${xi}]}" != "" ];then
 		normalize_value=`echo "${x_norm_array[${xi}]} * 1.0"|bc -l`
 	    fi
-	    file_val=`echo "${file_val} / ${normalize_value}"|bc -l`
+	    if [ "${ignore_filter}" == "YES" ]&&[ "${file_val}" == "0" ];then
+		file_val=0
+	    else
+		file_val=`echo "${file_val} / ${normalize_value}"|bc -l`
+	    fi
 	    # Find minimum, maximum value (to use it in pretty ytics)
 	    find_min_max ${file_val}
 
@@ -924,11 +942,21 @@ check_if_arguments_exist()
 
 greater_than()
 {
-    echo "${1} > ${2}"|bc -l
+    local result=`echo "${1} > ${2}"|bc -l`
+    if [ ${PIPESTATUS} -eq 0 ];then
+	echo ${result}
+    else
+	echo "ERROR"
+    fi
 }
 less_than()
 {
-    echo "${1} < ${2}"|bc -l
+    local result=`echo "${1} < ${2}"|bc -l`
+    if [ ${PIPESTATUS} -eq 0 ];then
+	echo ${result}
+    else
+	echo "ERROR"
+    fi
 }
 
 
@@ -1044,7 +1072,8 @@ sanity_checks()
 	    exit 1
 	fi
 
-	if [ ${y_range_max} -le ${y_range_min} ];then
+	local isgt=`greater_than ${y_range_max} ${y_range_min}`
+	if [ "${isgt}" == "0" ];then
 	    echo "ERROR: in yrange:${y_range}. Should be ${y_range_max} > ${y_range_min}."
 	    exit 1
 	fi
@@ -1316,8 +1345,24 @@ parse_yrange()
 parse_colors()
 {
     if [ "${user_colors}" == "" ];then
-        # black,  dark_blue, green, light_blue, red, light_orange, purple,
-	color_array=("#000000" "#000099" "#009900" "#6699ff" "#990000" "#ffcc00" "#990099" "#999900" "#dddddd" "#555555" "#00ff00" "#00ffff" "#ff0000" "#ff00ff" "ffff00")
+	color_array[0]="#000000" #(black)
+	color_array[1]="#000000" #(black)
+	color_array[2]="#000000" # black
+	color_array[3]="#FFFF00" # light yellow
+	color_array[4]="#0000AA" # dark blue
+	color_array[5]="#00BB00" # light green
+	color_array[6]="#AA0000" # red
+	color_array[7]="#6699ff" # light blue
+	color_array[8]="#ffcc00" # light orange
+	color_array[9]="#990099" # purple
+	color_array[10]="#999900"
+	color_array[11]="#dddddd"
+	color_array[12]="#555555"
+	color_array[13]="#00ff00"
+	color_array[14]="#00ffff"
+	color_array[15]="#ff0000"
+	color_array[16]="#ff00ff"
+	color_array[17]="ffff00"
         # dark blue, light orange, dark green, light pink, dark brown, light grey
         #color_array=("#000066" "#ffcc00" "#336600" "#ff66ff" "#660000" "#999999")
     else
@@ -1333,8 +1378,8 @@ parse_colors()
 
 parse_arguments()
 {
-    local short_args="hd:x:y:f:t:c:"
-    local long_args="help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:"
+    local short_args="hd:x:y:f:t:c:i"
+    local long_args="help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
     getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -1370,6 +1415,7 @@ parse_arguments()
 	    "--ytics"|"-ytics") y_tics="$2";shift;;
 	    "--yrange"|"-yrange") y_range="$2";shift;;
 	    "--colors"|"-colors"|"-c") user_colors="$2";shift;;
+	    "--ignore"|"-ignore"|"-i") ignore_filter="YES";;
 	    "--") break;
 	esac
 	shift
@@ -1413,6 +1459,9 @@ parse_arguments()
     parse_colors
     if [ $? -ne 0 ]; then exit 1; fi    
 
+    get_normalize_values
+    if [ $? -ne 0 ]; then exit 1; fi
+
 
     echo "+--------------------------------+"
     echo "|         MoufoPlot              |"
@@ -1439,6 +1488,7 @@ parse_arguments()
     echo "| Ytics: ${y_tics}"
     echo "| Yrange: ${y_range}"
     echo "| Colors: ${user_colors}"
+    echo "| Ignore Filter ERROR: ${ignore_filter}"
     echo "+-------------------------------+"
 }
 
@@ -1472,6 +1522,7 @@ usage()
     echo "   --ytics NUM                  : (Opt) Number of tics on Y."
     echo "   --yrange MIN,MAX,STEP        : (Opt) Range of Y tics."
     echo "   --colors,-c #color1,#color2..: (Opt) User defined colors."
+    echo "   --ignore,-i                  : (Opt) Ignore Filter ERROR."
     echo "   --help                       : Print this help screen."
     exit 1
 }
@@ -1486,10 +1537,6 @@ moufoplot()
 
     sanity_checks
     if [ $? -ne 0 ]; then exit 1; fi
-
-    if [ $? -ne 0 ]; then exit 1; fi
-    get_normalize_values
-
 
     if [ "${plot_type}" == "heatmap" ];then
 	create_heatmap_data_file "${x_vals}" "${y_vals}" "${data_file}" "${others}"
