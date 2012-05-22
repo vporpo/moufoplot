@@ -180,9 +180,27 @@ get_file_value()
 {
     local file=$1
     local data=`cat ${file}`
+    # echo "Reading value from ${file}... ${data}"
     if [ "$data" == "" ]; then
 	echo "ERROR: file ${file} is empty!!!"
 	exit 1
+    fi
+    is_number "${data}"
+    local isnum=${RETVAL}
+    if [ "${isnum}" == "no" ];then
+	is_exponential_notation "${data}"
+	local isexp=${RETVAL}
+	if [ "${isexp}" == "no" ];then
+	    echo "ERROR: file: ${file}: ${data} is not a number OR an exponential."
+	    exit 1
+	else
+	    # number is in exponential notation. we have to convert it to float
+	    local first=`echo ${data} | egrep -o "[0-9]+(\.[0-9]+|)" | head -n 1`
+	    local last=`echo ${data} | egrep -o "([Ee]\+[0-9]+|)" |egrep -o "[0-9]+"`
+	    # echo "data: ${data}, first: ${first}, last: ${last}"
+	    local float_val=`echo "${first} * 10 ^ ${last}" |bc -l`
+	    data=${float_val}
+	fi
     fi
     # echo ${data}
     RETVAL=${data}
@@ -213,11 +231,21 @@ normalize()
     echo "Done!"
 }
 
+is_exponential_notation()
+{
+    value=${1}
+    grepped_val=`echo ${1} | egrep -o "[0-9]+(\.[0-9]+|)([Ee]\+[0-9]+|)" | head -n 1`
+    if [ "${value}" == "${grepped_val}" ]; then
+	RETVAL="yes"
+    else
+	RETVAL="no"
+    fi
+}
 
 is_number()
 {
     value=${1}
-    grepped_val=`echo ${1} | egrep -o "(-|)([[:digit:]]+\.*[[:digit:]]*)"`
+    grepped_val=`echo ${1} | egrep -o "(-|)([[:digit:]]+\.*[[:digit:]]*)" | head -n 1`
     if [ "${value}" == "${grepped_val}" ]; then
 	RETVAL="yes"
     else
@@ -250,7 +278,7 @@ gp_bar_options()
     local Y_RANGE_ENABLED=1
     local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
     local size_x=0.4
-    local size_y=0.7
+    local size_y=0.5
     # local KEYSTUFF="inside top"
     local KEYSTUFF="tmargin"
     local LW=4
@@ -384,7 +412,7 @@ gp_line_options()
     local Y_RANGE_ENABLED=1
     local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
     local size_x=0.4
-    local size_y=0.7
+    local size_y=0.5
     # local KEYSTUFF="inside top"
     local KEYSTUFF="tmargin"
     local LW=4
@@ -545,7 +573,7 @@ gp_heatmap_options()
 # the yrange for each row starting from row 0 
     local Y_RANGE_ENABLED=1
     local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
-    local size_x=0.5
+    local size_x=0.4
     local size_y=0.5
 #bottom_margin=`echo "${size_y}/2.0" |bc -l`
     local bottom_margin=0.01
@@ -794,10 +822,9 @@ create_data_file()
 
 	    # Normalization on the X axis
 	    if [ "${x_norm_array[${xi}]}" != "" ];then
-		normalize_value=`echo ${x_norm_array[${xi}]}*1.0|bc -l`
+		normalize_value=`echo "${x_norm_array[${xi}]} * 1.0"|bc -l`
 	    fi
-	    file_val=`echo ${file_val}/${normalize_value}|bc -l`
-
+	    file_val=`echo "${file_val} / ${normalize_value}"|bc -l`
 	    # Find minimum, maximum value (to use it in pretty ytics)
 	    find_min_max ${file_val}
 
@@ -928,27 +955,29 @@ sanity_checks()
     fi
 
     # size is number
-    is_number ${size_param_x}
-    local is=${RETVAL}
-    if [ "${is}" == "no" ];then
-	echo "ERROR: size of x: ${size_param_x} in size parameter ${size_param} is not a number."
-	exit 1
-    fi
-    is_number ${size_param_y}
-    local is=${RETVAL}
-    if [ "${is}" == "no" ];then
-	echo "ERROR: size of y: ${size_param_y} in size parameter ${size_param} is not a number."
-	exit 1
-    fi
-    isgt0=`greater_than ${size_param_x} 0`
-    if [ ${isgt0} -eq 0 ]; then
-	echo "ERROR: Wrong X size: ${size_param_x} of param:${size_param}. Must be > 0."
-	exit 1
-    fi
-    isgt0=`greater_than ${size_param_y} 0`
-    if [ ${isgt0} -eq 0 ]; then
-	echo "ERROR: Wrong Y size ${size_param_y} of param:${size_param}. Must be > 0."
-	exit 1
+    if [ "${size_param}" != "" ];then
+	is_number ${size_param_x}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: size of x: ${size_param_x} in size parameter ${size_param} is not a number."
+	    exit 1
+	fi
+	is_number ${size_param_y}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: size of y: ${size_param_y} in size parameter ${size_param} is not a number."
+	    exit 1
+	fi
+	isgt0=`greater_than ${size_param_x} 0`
+	if [ "${isgt0}" == "0" ]; then
+	    echo "ERROR: Wrong X size: ${size_param_x} of param:${size_param}. Must be > 0."
+	    exit 1
+	fi
+	isgt0=`greater_than ${size_param_y} 0`
+	if [ "${isgt0}" == "0" ]; then
+	    echo "ERROR: Wrong Y size ${size_param_y} of param:${size_param}. Must be > 0."
+	    exit 1
+	fi
     fi
 
 
@@ -980,40 +1009,67 @@ sanity_checks()
     fi
 
     # yrange
-    y_range_min=${y_range_array[0]}
-    y_range_max=${y_range_array[1]}
-    y_range_step=${y_range_array[2]}
-    is_number ${y_range_min}
-    local is=${RETVAL}
-    if [ "${is}" == "no" ];then
-	echo "ERROR: in yrange: ${y_range}. ${y_range_min} is not a number."
-	exit 1
-    fi
-    is_number ${y_range_max}
-    local is=${RETVAL}
-    if [ "${is}" == "no" ];then
-	echo "ERROR: in yrange: ${y_range}. ${y_range_max} is not a number."
-	exit 1
-    fi
-
-    if [ ${y_range_max} -le ${y_range_min} ];then
-	echo "ERROR: in yrange:${y_range}. Should be ${y_range_max} > ${y_range_min}."
-	exit 1
-    fi
-
-    if [ "${y_range_step}" != "" ];then
-	if [ "${y_tics}" != "" ];then
-	    echo "ERROR: Conflicting options --ytics ${y_tics} and --yrange ${y_range}."
-	    exit 1
-	fi
-	is_number ${y_range_step}
+    if [ "${y_range}" != "" ];then
+	y_range_min=${y_range_array[0]}
+	y_range_max=${y_range_array[1]}
+	y_range_step=${y_range_array[2]}
+	is_number ${y_range_min}
 	local is=${RETVAL}
 	if [ "${is}" == "no" ];then
-	    echo "ERROR: in yrange: ${y_range}. ${y_range_step} is not a number."
+	    echo "ERROR: in yrange: ${y_range}. ${y_range_min} is not a number."
 	    exit 1
+	fi
+	is_number ${y_range_max}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: in yrange: ${y_range}. ${y_range_max} is not a number."
+	    exit 1
+	fi
+
+	if [ ${y_range_max} -le ${y_range_min} ];then
+	    echo "ERROR: in yrange:${y_range}. Should be ${y_range_max} > ${y_range_min}."
+	    exit 1
+	fi
+
+	if [ "${y_range_step}" != "" ];then
+	    if [ "${y_tics}" != "" ];then
+		echo "ERROR: Conflicting options --ytics ${y_tics} and --yrange ${y_range}."
+		exit 1
+	    fi
+	    is_number ${y_range_step}
+	    local is=${RETVAL}
+	    if [ "${is}" == "no" ];then
+		echo "ERROR: in yrange: ${y_range}. ${y_range_step} is not a number."
+		exit 1
+	    fi
 	fi
     fi
 
+    # colors
+    if [ "${user_colors}" != "" ];then
+	set_ifs ","
+	local color
+	for color in ${user_colors}; do
+	    local grepped_color=`echo ${color} | egrep -o "#[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]"`
+	    if [ "${grepped_color}" != "${color}" ]; then
+		echo "ERROR: in color ${color} of ${user_colors}."
+		exit 1
+	    fi
+	done
+
+
+	local x
+	local xi=0
+	for x in ${x_vals}; do
+	    xi=$(($xi+1))
+	done
+	if [ ${xi} -gt ${#color_array[@]} ];then
+	    echo "ERROR: Too few colors specified. At least ${xi} are required!"
+	    exit 1
+	fi
+
+	reset_ifs
+    fi
 }
 
 
@@ -1224,27 +1280,47 @@ parse_size()
 
 parse_yrange()
 {
-    local ni=0
-    set_ifs ","
-    for num in ${y_range}; do
-	y_range_array[${ni}]=${num}
-	ni=$(($ni + 1))
-    done
-    reset_ifs
-    if [ ${ni} -lt 2 ];then
-	echo "ERROR: yrange: ${y_range} should be a pair: num1,num2"
-	exit 1
+    if [ "${y_range}" != "" ];then
+	local ni=0
+	set_ifs ","
+	for num in ${y_range}; do
+	    y_range_array[${ni}]=${num}
+	    ni=$(($ni + 1))
+	done
+	reset_ifs
+	if [ ${ni} -lt 2 ];then
+	    echo "ERROR: yrange: ${y_range} should be a pair: num1,num2"
+	    exit 1
+	fi
     fi
 }
 
+parse_colors()
+{
+    if [ "${user_colors}" == "" ];then
+        # black,  dark_blue, green, light_blue, red, light_orange, purple,
+	color_array=("#000000" "#000099" "#009900" "#6699ff" "#990000" "#ffcc00" "#990099" "#999900" "#dddddd" "#555555" "#00ff00" "#00ffff" "#ff0000" "#ff00ff" "ffff00")
+        # dark blue, light orange, dark green, light pink, dark brown, light grey
+        #color_array=("#000066" "#ffcc00" "#336600" "#ff66ff" "#660000" "#999999")
+    else
+	set_ifs ","
+	local i=2
+	for c in ${user_colors}; do
+	    color_array[${i}]="${c}"
+	    i=$((i + 1))
+	done
+	reset_ifs
+    fi
+}
 
 parse_arguments()
 {
-    local args=`getopt -o "hd:x:y:f:t:" \
-	-l "help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,xformat:,yformat:,ytics:,yrange:" \
-	-n "getopt.sh" -- "$@"`
+    local short_args="hd:x:y:f:t:c:"
+    local long_args="help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:"
+    local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
-    if [ $? -ne 0 ]||[ "${args_array[0]}" == "--" ] ;then
+    getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
+    if [ $? != 0 ]||[ "${args_array[0]}" == "--" ] ;then
 	echo "Bad argument(s), printing help and exiting."
 	usage
 	exit 1
@@ -1275,6 +1351,7 @@ parse_arguments()
 	    "--yformat"|"-yformat") y_format="$2";shift;;
 	    "--ytics"|"-ytics") y_tics="$2";shift;;
 	    "--yrange"|"-yrange") y_range="$2";shift;;
+	    "--colors"|"-colors"|"-c") user_colors="$2";shift;;
 	    "--") break;
 	esac
 	shift
@@ -1315,6 +1392,10 @@ parse_arguments()
     parse_yrange
     if [ $? -ne 0 ]; then exit 1; fi    
 
+    parse_colors
+    if [ $? -ne 0 ]; then exit 1; fi    
+
+
     echo "+--------------------------------+"
     echo "|         MoufoPlot              |"
     echo "+--------------------------------+"
@@ -1332,13 +1413,14 @@ parse_arguments()
     echo "| y tags: ${y_tags}"
     echo "| x norm filters: ${x_norm}"
     echo "| y norm filters: ${y_norm}"
-    echo "| x label rotate: ${x_tics_rotate}"
+    echo "| x tags rotate: ${x_tics_rotate}"
     echo "| Legend: ${legend_params}"
     echo "| Size: ${size_param}"
     echo "| Xformat: ${x_format}"
     echo "| Yformat: ${y_format}"
     echo "| Ytics: ${y_tics}"
     echo "| Yrange: ${y_range}"
+    echo "| Colors: ${user_colors}"
     echo "+-------------------------------+"
 }
 
@@ -1362,7 +1444,7 @@ usage()
     echo "   --ytags \"<tags>\"           : (Opt) Tags for the Y axis."
     echo "   --xnorm \"<x norm values>\"  : (Opt) Normalization filter X."
     echo "   --ynorm \"<y norm values>\"  : (Opt) Normalization filter Y."
-    echo "   --x-labels-rotate \"<angle>\": (Opt) Rotate angle for X labels."
+    echo "   --xrotate \"<angle>\"        : (Opt) Rotate angle for X tags."
     echo "   --legend \"<parameters>\"    : (Opt) Control legend attrib."
     echo "         Parameters: on/off, in/out, top/bottom, right/left,"
     echo "                     horizontal/vertical"
@@ -1371,27 +1453,22 @@ usage()
     echo "   --yformat \"format\"         : (Opt) Format of the y tags."
     echo "   --ytics NUM                  : (Opt) Number of tics on Y."
     echo "   --yrange MIN,MAX,STEP        : (Opt) Range of Y tics."
+    echo "   --colors,-c #color1,#color2..: (Opt) User defined colors."
     echo "   --help                       : Print this help screen."
     exit 1
 }
 
-setup_colors()
-{
-    # black,  dark_blue, green, light_blue, red, light_orange, purple,
-    color_array=("#000000" "#000099" "#009900" "#6699ff" "#990000" "#ffcc00" "#990099" "#999900" "#dddddd" "#555555" "#00ff00" "#00ffff" "#ff0000" "#ff00ff" "ffff00")
-    # dark blue, light orange, dark green, light pink, dark brown, light grey
-    #color_array=("#000066" "#ffcc00" "#336600" "#ff66ff" "#660000" "#999999")
-}
 
 moufoplot()
 {
     IFS_CNT=0
     IFS_CHAR=','
-    setup_colors
     parse_arguments "$@"
-
     if [ $? -ne 0 ]; then exit 1; fi
+
     sanity_checks
+    if [ $? -ne 0 ]; then exit 1; fi
+
     if [ $? -ne 0 ]; then exit 1; fi
     get_normalize_values
 
