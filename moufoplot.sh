@@ -1182,12 +1182,17 @@ parse_legend()
     local IN=3
     local TOP=4
     local BOTTOM=5
-    local RIGHT=6
-    local LEFT=7
-    local VERTICAL=8
-    local HORIZONTAL=9
-    local BOX=10
-    local NOBOX=11
+    local CENTER=6
+    local RIGHT=7
+    local LEFT=8
+    local VERTICAL=9
+    local HORIZONTAL=10
+    local BOX=11
+    local NOBOX=12
+    local LJUST=13
+    local RJUST=14
+    local SMALL=15
+
 
 
     
@@ -1202,12 +1207,16 @@ parse_legend()
 	    "in") mask[${IN}]=1;;
 	    "top") mask[${TOP}]=1;;
 	    "bottom") mask[${BOTTOM}]=1;;
+	    "center") mask[${CENTER}]=1;;
 	    "right") mask[${RIGHT}]=1;;
-	    "left") mask[${left}]=1;;
+	    "left") mask[${LEFT}]=1;;
 	    "vertical") mask[${VERTICAL}]=1;;
 	    "horizontal") mask[${HORIZONTAL}]=1;;
 	    "box") mask[${BOX}]=1;;
 	    "nobox") mask[${NOBOX}]=1;;
+	    "ljust") mask[${LJUST}]=1;;
+	    "rjust") mask[${RJUST}]=1;;
+	    "small") mask[${SMALL}]=1;;
 	    *) echo "Unknown legend option: ${p}"; exit 1;;
 	esac
     done
@@ -1218,7 +1227,7 @@ parse_legend()
     fi
 
     local key_default="set key tmargin"
-    local key_start="set key"
+    local key_start="set key samplen 1"
     key_command=${key_start}
     if [ "${mask[${OFF}]}" == "1" ];then
 	key_command="${key_command} off"
@@ -1247,32 +1256,48 @@ parse_legend()
 	fi
 
 
-	# Position 
-	if [ "${mask[${OUT}]}" == "1" ]&&[ "${mask[${TOP}]}" == "1" ];then
-	    key_command="${key_command} tmargin"
+	# Position
+	if [ "${mask[${IN}]}" == "1" ];then
+	    key_command="${key_command} inside"
 	fi
-	if [ "${mask[${OUT}]}" == "1" ]&&[ "${mask[${BOTTOM}]}" == "1" ];then
-	    key_command="${key_command} bmargin"
-	fi
-	if [ "${mask[${OUT}]}" == "1" ]&&[ "${mask[${RIGHT}]}" == "1" ];then
-	    key_command="${key_command} rmargin"
-	fi
-	if [ "${mask[${OUT}]}" == "1" ]&&[ "${mask[${LEFT}]}" == "1" ];then
-	    key_command="${key_command} lmargin"
+	if [ "${mask[${OUT}]}" == "1" ];then
+	    key_command="${key_command} outside"
 	fi
 
-	if [ "${mask[${IN}]}" == "1" ]&&[ "${mask[${TOP}]}" == "1" ];then
+
+	if [ "${mask[${TOP}]}" == "1" ];then
 	    key_command="${key_command} top"
 	fi
-	if [ "${mask[${IN}]}" == "1" ]&&[ "${mask[${BOTTOM}]}" == "1" ];then
+	if [ "${mask[${BOTTOM}]}" == "1" ];then
 	    key_command="${key_command} bottom"
 	fi
-	if [ "${mask[${IN}]}" == "1" ]&&[ "${mask[${RIGHT}]}" == "1" ];then
-	    key_command="${key_command} Right"
+	if [ "${mask[${CENTER}]}" == "1" ];then
+	    key_command="${key_command} center"
 	fi
-	if [ "${mask[${IN}]}" == "1" ]&&[ "${mask[${LEFT}]}" == "1" ];then
+
+
+	if [ "${mask[${LEFT}]}" == "1" ];then
+	    key_command="${key_command} lmargin"
+	fi
+	if [ "${mask[${RIGHT}]}" == "1" ];then
+	    key_command="${key_command} rmargin"
+	fi
+
+	# Sample size
+	if [ "${mask[${SMALL}]}" == "1" ];then
+	    key_command="${key_command} samplen 1"
+	fi
+
+
+
+	# Justification
+	if [ "${mask[${LJUST}]}" == "1" ];then
 	    key_command="${key_command} Left"
 	fi
+	if [ "${mask[${RJUST}]}" == "1" ];then
+	    key_command="${key_command} Right"
+	fi
+
 
 
 	# Default 
