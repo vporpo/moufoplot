@@ -856,7 +856,7 @@ create_data_file()
 	    if [ "${x_norm_array[${xi}]}" != "" ];then
 		normalize_value=`echo "${x_norm_array[${xi}]} * 1.0"|bc -l`
 	    fi
-	    if [ "${ignore_filter}" == "YES" ]&&[ "${file_val}" == "0" ];then
+	    if [ "${ignore_filter}" == "YES" ]&&[ "${file_val}" == "0" ]||[ "${ignore_filter}" == "YES" ]&&[ "${normalize_value}" == "0" ];then
 		file_val=0
 	    else
 		file_val=`echo "${file_val} / ${normalize_value}"|bc -l`
