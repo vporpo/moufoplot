@@ -385,7 +385,11 @@ gp_bar_options()
     # Bargraph specific
     echo "set boxwidth 1 relative" >> $FILE
     echo "set style data histograms" >> $FILE
-    echo "set style histogram cluster gap 1" >> $FILE
+    if [ "${cluster_gap}" != "" ]; then
+	echo "set style histogram cluster gap ${cluster_gap}" >> $FILE
+    else
+	echo "set style histogram cluster gap 2" >> $FILE
+    fi
     echo "set style fill solid 1.0 border lt \"black\"" >> $FILE
     echo "set grid ytics ls 10 lt rgb \"black\"" >> $FILE
 
@@ -411,10 +415,18 @@ gp_bar_options()
     local x
     local cmn=2
     set_ifs "${IFS_CHAR}"
+    local xi=0
     for x in ${x_vals}; do
+	# skip masked
+	if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
+	    xi=$((${xi} + 1))
+	    continue
+	fi
+
 	local color=${color_array[$cmn]}
 	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) title columnheader(${cmn}) fc rgb \"${color}\","
 	cmn=$((cmn+1))
+	xi=$((${xi} + 1))
     done
     reset_ifs
     echo "${plot_cmd%?}" >> $FILE
@@ -532,11 +544,19 @@ gp_line_options()
     local x_set_array=(${x_set})
     local x
     local cmn=2
+    local xi=0
     set_ifs "${IFS_CHAR}"
     for x in ${x_vals}; do
+	# skip masked
+	if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
+	    xi=$((${xi} + 1))
+	    continue
+	fi
+
 	local color=${color_array[$cmn]}
 	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) with linespoints title columnheader(${cmn}) lw $LW lc rgb \"${color}\","
 	cmn=$((cmn+1))
+	xi=$((${xi} + 1))
     done
     reset_ifs
     echo "${plot_cmd%?}" >> $FILE
@@ -557,29 +577,45 @@ create_tics()
     if [ "${xORy}" == "x" ];then
 	local x
 	local xtics_cmd="set xtics ("
-	local i=0
+	local skipped=0
+	local xi=0
 	for x in ${x_vals}; do
-	    if [ "${y_tags}" != "" ]; then
-		local tag="${xtags_array[${i}]}"
+	    # skip X masked data
+	    if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
+		xi=$((${xi} + 1))
+		skipped=$((${skipped} + 1))
+		continue
+	    fi
+
+	    if [ "${x_tags}" != "" ]; then
+		local tag="${xtags_array[${xi}]}"
 	    else
 		local tag=${x}
 	    fi
-	    xtics_cmd="${xtics_cmd}\"${tag}\" ${i},"
-	    i=$((i + 1))
+	    xtics_cmd="${xtics_cmd}\"${tag}\" $((${xi}-${skipped})),"
+	    xi=$((${xi} + 1))
 	done
 	RETVAL="${xtics_cmd%?})"
     else
 	local y
 	local ytics_cmd="set ytics ("
-	local i=0
+	local yi=0
+	local skipped=0
 	for y in ${y_vals}; do
+            # skip Y masked data
+	    if [ "${y_mask}" != "" ]&&[ "${y_mask_array[${yi}]}" == "0" ];then
+		yi=$((${yi} + 1))
+		skipped=$((${skipped} + 1))
+		continue
+	    fi
+
 	    if [ "${y_tags}" != "" ]; then
-		local tag="${ytags_array[${i}]}"
+		local tag="${ytags_array[${yi}]}"
 	    else
 		local tag=${y}
 	    fi
-	    ytics_cmd="${ytics_cmd}\"${tag}\" ${i},"
-	    i=$((i + 1))
+	    ytics_cmd="${ytics_cmd}\"${tag}\" $((${yi} - ${skipped})),"
+	    i=$((${yi} + 1))
 	done
 	RETVAL="${ytics_cmd%?})"
     fi
@@ -819,8 +855,15 @@ create_data_file()
 	else
 	    local xtag=${x}
 	fi
+
+        # skip masked data
+	if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
+	    xi=$((${xi} + 1))
+	    continue
+	fi
+
 	data="${data} ${xtag}"
-	xi=$((xi + 1))
+	xi=$((${xi} + 1))
     done
     data="${data}\n"
 
@@ -828,6 +871,13 @@ create_data_file()
     local yi=0    
     local normalize_value=1.0
     for y in ${y_array}; do
+        # skip Y masked data
+	if [ "${y_mask}" != "" ]&&[ "${y_mask_array[${yi}]}" == "0" ];then
+	    yi=$((${yi} + 1))
+	    continue
+	fi
+
+
 	if [ "${y_tags}" != "" ];then
 	    local ytag=${ytags_array[${yi}]}
 	else
@@ -842,6 +892,12 @@ create_data_file()
 	data="${data}${ytag}"
 	local xi=0
 	for x in ${x_array}; do
+	    # skip X masked data
+	    if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
+		xi=$((${xi} + 1))
+		continue
+	    fi
+
 	    local opts="${x} ${y} ${others}"
 	    get_match "${DIR}" "$opts"
 	    local file=${RETVAL}
@@ -865,10 +921,10 @@ create_data_file()
 	    find_min_max ${file_val}
 
 	    data="${data} ${file_val}"
-	    xi=$((xi + 1))
+	    xi=$((${xi} + 1))
 	done
 	data="${data}\n"
-	yi=$((yi + 1))
+	yi=$((${yi} + 1))
     done
     reset_ifs
     printf " Done.\n"
@@ -895,17 +951,31 @@ create_heatmap_data_file()
 
     local data=""
     set_ifs "${IFS_CHAR}" # Let ',' be the separator character
+    local yi=0
     for y in ${y_array}; do
+        # skip Y masked data
+	if [ "${y_mask}" != "" ]&&[ "${y_mask_array[${yi}]}" == "0" ];then
+	    yi=$((${yi} + 1))
+	    continue
+	fi
+	local xi=0
 	for x in ${x_array}; do
+	    # skip X masked data
+	    if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
+		xi=$((${xi} + 1))
+		continue
+	    fi
+
 	    local opts="${x} ${y} ${others}"
 	    get_match "$DIR" "$opts"
 	    local file=${RETVAL}
 	    get_file_value "${DIR}/${file}"
 	    local file_val=${RETVAL}
 	    data="${data}${file_val} "
-	    xi=$((xi + 1))
+	    xi=$((${xi} + 1))
 	done
 	data="${data}\n"
+	yi=$((${yi} + 1))
     done
     reset_ifs
     echo "${out_file}"
@@ -1116,6 +1186,47 @@ sanity_checks()
 	fi
 
 	reset_ifs
+    fi
+
+    # cluster gap
+    if [ "${cluster_gap}" != "" ];then
+	is_number ${cluster_gap}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: cluster gap: ${cluster_gap} must be a number!"
+	    exit 1
+	fi
+	local isgt=`greater_than ${cluster_gap} 0`
+	if [ "${isgt}" == "0" ];then
+	    echo "ERROR: cluster gap: ${cluster_gap} must be a positive number!"
+	    exit 1
+	fi
+    fi
+
+    # xmap
+    if [ "${x_map}" != "" ];then
+	local i=0
+	local maxi=${#x_map_array[@]}
+	while [ ${i} -le ${maxi} ];do
+	    local xbit=${x_map_array[${i}]}
+	    if [ "${xbit}" != "1" ]&&[ "${xbit}" != "0" ];then
+		echo "ERROR: in xmap: ${x_map}. The ${i}'th bit: ${xbit} must be 0 or 1."
+		exit 1
+	    fi
+	done
+    fi
+
+    # ymap
+    if [ "${y_map}" != "" ];then
+	local i=0
+	local maxi=${#y_map_array[@]}
+	while [ ${i} -le ${maxi} ];do
+	    local ybit=${y_map_array[${i}]}
+	    if [ "${ybit}" != "1" ]&&[ "${ybit}" != "0" ];then
+		echo "ERROR: in ymap: ${y_map}. The ${i}'th bit: ${ybit} must be 0 or 1."
+		exit 1
+	    fi
+	done
     fi
 }
 
@@ -1401,10 +1512,41 @@ parse_colors()
     fi
 }
 
+parse_xmask()
+{
+    if [ "${x_mask}" != "" ];then
+	local x
+	local i=0
+	set_ifs ", "
+	for x in ${x_mask}; do
+	    x_mask_array[${i}]=${x}
+	    i=$(($i + 1))
+	done
+	reset_ifs
+    fi
+}
+
+parse_ymask()
+{
+    if [ "${y_mask}" != "" ];then
+	local y
+	local i=0
+	set_ifs ", "
+	for y in ${y_mask}; do
+	    y_mask_array[${i}]=${y}
+	    i=$(($i + 1))
+	done
+	reset_ifs
+    fi
+}
+
+
 parse_arguments()
 {
     local short_args="hd:x:y:f:t:c:i"
-    local long_args="help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore"
+    local long_args="help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,\
+xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,\
+xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
     getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -1441,6 +1583,9 @@ parse_arguments()
 	    "--yrange"|"-yrange") y_range="$2";shift;;
 	    "--colors"|"-colors"|"-c") user_colors="$2";shift;;
 	    "--ignore"|"-ignore"|"-i") ignore_filter="YES";;
+	    "--gap"|"-gap") cluster_gap="$2";shift;;
+	    "--xmask"|"-xmask") x_mask="$2";shift;;
+	    "--ymask"|"-ymask") y_mask="$2";shift;;
 	    "--") break;
 	esac
 	shift
@@ -1487,6 +1632,11 @@ parse_arguments()
     get_normalize_values
     if [ $? -ne 0 ]; then exit 1; fi
 
+    parse_xmask
+    if [ $? -ne 0 ]; then exit 1; fi
+
+    parse_ymask
+    if [ $? -ne 0 ]; then exit 1; fi
 
     echo "+--------------------------------+"
     echo "|         MoufoPlot              |"
@@ -1514,6 +1664,9 @@ parse_arguments()
     echo "| Yrange: ${y_range}"
     echo "| Colors: ${user_colors}"
     echo "| Ignore Filter ERROR: ${ignore_filter}"
+    echo "| Cluster GAP: ${cluster_gap}"
+    echo "| xmask: ${x_mask}"
+    echo "| ymask: ${y_mask}"
     echo "+-------------------------------+"
 }
 
@@ -1539,14 +1692,17 @@ usage()
     echo "   --ynorm \"<y norm values>\"  : (Opt) Normalization filter Y."
     echo "   --xrotate \"<angle>\"        : (Opt) Rotate angle for X tags."
     echo "   --legend \"<parameters>\"    : (Opt) Control legend attrib."
-    echo "         Parameters: on/off, in/out, top/bottom, right/left,"
-    echo "                     horizontal/vertical"
+    echo "         Parameters: on/off, in/out, top/bottom/center, right/left,"
+    echo "                     horizontal/vertical, ljust,rjust, small, box"
     echo "   --size NUMxNUM               : (Opt) Dimensions of the graph."
     echo "   --xformat \"format\"         : (Opt) Format of the x tags."
     echo "   --yformat \"format\"         : (Opt) Format of the y tags."
     echo "   --ytics NUM                  : (Opt) Number of tics on Y."
     echo "   --yrange MIN,MAX,STEP        : (Opt) Range of Y tics."
     echo "   --colors,-c #color1,#color2..: (Opt) User defined colors."
+    echo "   --gap <number>               : (Opt) The gap between clusters."
+    echo "   --xmask <bitmap>             : (Opt) Disable X bars with 0."
+    echo "   --ymask <bitmap>             : (Opt) Disable X bars with 0."
     echo "   --ignore,-i                  : (Opt) Ignore Filter ERROR."
     echo "   --help                       : Print this help screen."
     exit 1
