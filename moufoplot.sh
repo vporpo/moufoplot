@@ -896,13 +896,6 @@ create_data_file()
     local yi=0    
     local normalize_value=1.0
     for y in ${y_array}; do
-        # skip Y masked data
-	if [ "${y_mask}" != "" ]&&[ "${y_mask_array[${yi}]}" == "0" ];then
-	    yi=$((${yi} + 1))
-	    continue
-	fi
-
-
 	if [ "${ytags_array[${yi}]}" != "" ];then
 	    local ytag=${ytags_array[${yi}]}
 	else
@@ -914,17 +907,14 @@ create_data_file()
 	    normalize_value=`echo ${y_norm_array[${yi}]}*1.0|bc -l`
 	fi
 
-	data="${data}${ytag}"
-
+	# skip Y tag (masked Y)
+	if [ "${y_mask_array[${yi}]}" != "0" ];then
+	    data="${data}${ytag}"
+	fi
 
 	local sumx="0"
 	local xi=0
 	for x in ${x_array}; do
-	    # skip X masked data
-	    if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
-		xi=$((${xi} + 1))
-		continue
-	    fi
 
 	    if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ];then # x/y avg
 		local opts="${x} ${y} ${others}"
@@ -957,12 +947,19 @@ create_data_file()
 	    # Find minimum, maximum value (to use it in pretty ytics)
 	    find_min_max ${file_val}
 
-	    data="${data} ${file_val}"
+	    # skip X,Y masked data
+	    if [ "${x_mask_array[${xi}]}" != "0" ]&&[ "${y_mask_array[${yi}]}" != "0" ];then
+		data="${data} ${file_val}"
+	    fi
 	    sumx="${sumx} + ${file_val}"
 	    ysum[${xi}]="${ysum[${xi}]} + ${file_val}"
 	    xi=$((${xi} + 1))
 	done
-	data="${data}\n"
+
+	# skip Y newline (masked Y)
+	if [ "${y_mask_array[${yi}]}" != "0" ];then
+	    data="${data}\n"
+	fi
 	yi=$((${yi} + 1))
     done
     reset_ifs
@@ -1635,7 +1632,7 @@ parse_ymask()
     fi
 }
 
-parse_xmask()
+parse_xavg()
 {
     if [ "${x_avg}" != "" ];then
 	local x
@@ -1649,7 +1646,7 @@ parse_xmask()
     fi
 }
 
-parse_ymask()
+parse_yavg()
 {
     if [ "${y_avg}" != "" ];then
 	local y
@@ -1763,6 +1760,12 @@ xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,xavg:,yavg:"
     parse_ymask
     if [ $? -ne 0 ]; then exit 1; fi
 
+    parse_xavg
+    if [ $? -ne 0 ]; then exit 1; fi
+
+    parse_yavg
+    if [ $? -ne 0 ]; then exit 1; fi
+
     echo "+--------------------------------+"
     echo "|         MoufoPlot              |"
     echo "+--------------------------------+"
@@ -1790,7 +1793,32 @@ xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,xavg:,yavg:"
     echo "| Colors: ${user_colors}"
     echo "| Ignore Filter ERROR: ${ignore_filter}"
     echo "| Cluster GAP: ${cluster_gap}"
+
+    local xmk
+    local xmi=0
+    printf "|        "
+    for xmk in ${x_mask};do
+	printf "%1d " ${xmi}
+	xmi=$((${xmi}+1))
+	if [ ${xmi} -eq 10 ];then
+	    xmi=0
+	fi
+    done
+    printf "\n"
     echo "| xmask: ${x_mask}"
+
+    local ymk
+    local ymi=0
+    printf "|        "
+    for ymk in ${y_mask};do
+	printf "%1d " ${ymi}
+	ymi=$((${ymi}+1))
+	if [ ${ymi} -eq 10 ];then
+	    ymi=0
+	fi
+    done
+    printf "\n"
+
     echo "| ymask: ${y_mask}"
     echo "| xavg: ${x_avg}"
     echo "| yavg: ${y_avg}"
