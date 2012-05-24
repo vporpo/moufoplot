@@ -938,6 +938,10 @@ create_data_file()
 		else
 		    file_val=`echo "${file_val} / ${normalize_value}"|bc -l`
 		fi
+
+		if [ "${percent}" != "" ];then
+		    file_val=`echo "${file_val} * 100" |bc -l`
+		fi
 	    else
 		if [ ${yi} -eq ${max_y} ];then
 		    file_val=`echo "(${ysum[${xi}]}) / ${max_y}" | bc -l`
@@ -946,6 +950,8 @@ create_data_file()
 		    file_val=`echo "(${sumx})/${max_x}" | bc -l`
 		fi
 	    fi
+
+
 	    # Find minimum, maximum value (to use it in pretty ytics)
 	    find_min_max ${file_val}
 
@@ -1027,6 +1033,9 @@ create_heatmap_data_file()
 		local file=${RETVAL}
 		get_file_value "${DIR}/${file}"
 		local file_val=${RETVAL}
+		if [ "${percent}" != "" ];then
+		    file_val=`echo "${file_val} * 100" |bc -l`
+		fi
 	    else
 		if [ ${yi} -eq ${max_y} ];then
 		    file_val=`echo "(${sumy[${xi}]}) / ${max_y}" | bc -l`
@@ -1711,13 +1720,25 @@ parse_yavg()
     fi
 }
 
+do_percent()
+{
+    if [ "${percent}" != "" ];then
+	if [ "${y_format}" == "" ];then
+	    y_format="%.0f%%"
+	fi
+	if [ "${y_range}" == "" ];then
+	    y_range="0,100,20"
+	fi
+    fi
+}
 
 parse_arguments()
 {
     local short_args="hd:x:y:f:t:c:i"
     local long_args="help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,\
 xlabel:,ylabel:,wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,\
-xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,xavg:,yavg:"
+xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,xavg:,yavg:,\
+percent"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
     getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -1759,6 +1780,7 @@ xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,xavg:,yavg:"
 	    "--ymask"|"-ymask") y_mask="$2";shift;;
 	    "--xavg"|"-xavg") x_avg="$2";shift;;
 	    "--yavg"|"-yavg") y_avg="$2";shift;;
+	    "--percent"|"-percent%") percent="YES";;
 	    "--") break;
 	esac
 	shift
@@ -1817,6 +1839,8 @@ xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,xavg:,yavg:"
     parse_yavg
     if [ $? -ne 0 ]; then exit 1; fi
 
+    do_percent
+
     echo "+--------------------------------+"
     echo "|         MoufoPlot              |"
     echo "+--------------------------------+"
@@ -1873,6 +1897,7 @@ xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,xavg:,yavg:"
     echo "| ymask: ${y_mask}"
     echo "| xavg: ${x_avg}"
     echo "| yavg: ${y_avg}"
+    echo "| percent: ${percent}"
     echo "+-------------------------------+"
 }
 
