@@ -844,10 +844,35 @@ create_data_file()
 
     printf "Creating data file ${data_file} ..."
     set_ifs "${IFS_CHAR}" # Let ',' be the separator character
+    
+    local max_x=0
+    for x in ${x_array}; do
+	max_x=$((${max_x} + 1))
+    done
+    local max_y=0
+    for y in ${y_array}; do
+	max_y=$((${max_y} + 1))
+    done
+    if [ "${x_avg}" != "" ];then
+	x_array="${x_array},avg"
+	x_vals=${x_array}
+    fi
+    local ysum
+    if [ "${y_avg}" != "" ];then
+    	y_array="${y_array},avg"
+	y_vals=${y_array}
+	local yi=0
+	while [ ${yi} -lt ${max_y} ];do
+	    ysum[${yi}]="0"
+	    yi=$((${yi} + 1))
+	done
+    fi
+
+
 
     local data="NULL"
 
-
+    
     local xi=0
     for x in ${x_array}; do
 	if [ "${x_tags}" != "" ];then
@@ -878,7 +903,7 @@ create_data_file()
 	fi
 
 
-	if [ "${y_tags}" != "" ];then
+	if [ "${ytags_array[${yi}]}" != "" ];then
 	    local ytag=${ytags_array[${yi}]}
 	else
 	    local ytag=${y}
@@ -890,6 +915,9 @@ create_data_file()
 	fi
 
 	data="${data}${ytag}"
+
+
+	local sumx="0"
 	local xi=0
 	for x in ${x_array}; do
 	    # skip X masked data
@@ -898,29 +926,40 @@ create_data_file()
 		continue
 	    fi
 
-	    local opts="${x} ${y} ${others}"
-	    get_match "${DIR}" "$opts"
-	    local file=${RETVAL}
-	    if [ "${ignore_filter}" == "YES" ]&&[ "${RETVAL}" == "" ];then
-		RETVAL=0
-	    else
-		get_file_value "${DIR}/${file}"
-	    fi
-	    local file_val=${RETVAL}
+	    if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ];then # x/y avg
+		local opts="${x} ${y} ${others}"
+		get_match "${DIR}" "$opts"
+		local file=${RETVAL}
+		if [ "${ignore_filter}" == "YES" ]&&[ "${RETVAL}" == "" ];then
+		    RETVAL=0
+		else
+		    get_file_value "${DIR}/${file}"
+		fi
+		local file_val=${RETVAL}
 
-	    # Normalization on the X axis
-	    if [ "${x_norm_array[${xi}]}" != "" ];then
-		normalize_value=`echo "${x_norm_array[${xi}]} * 1.0"|bc -l`
-	    fi
-	    if [ "${ignore_filter}" == "YES" ]&&[ "${file_val}" == "0" ]||[ "${ignore_filter}" == "YES" ]&&[ "${normalize_value}" == "0" ];then
-		file_val=0
+	        # Normalization on the X axis
+		if [ "${x_norm_array[${xi}]}" != "" ];then
+		    normalize_value=`echo "${x_norm_array[${xi}]} * 1.0"|bc -l`
+		fi
+		if [ "${ignore_filter}" == "YES" ]&&[ "${file_val}" == "0" ]||[ "${ignore_filter}" == "YES" ]&&[ "${normalize_value}" == "0" ];then
+		    file_val=0
+		else
+		    file_val=`echo "${file_val} / ${normalize_value}"|bc -l`
+		fi
 	    else
-		file_val=`echo "${file_val} / ${normalize_value}"|bc -l`
+		if [ ${yi} -eq ${max_y} ];then
+		    file_val=`echo "(${ysum[${xi}]}) / ${max_y}" | bc -l`
+		fi
+		if [ ${xi} -eq ${max_x} ];then
+		    file_val=`echo "(${sumx})/${max_x}" | bc -l`
+		fi
 	    fi
 	    # Find minimum, maximum value (to use it in pretty ytics)
 	    find_min_max ${file_val}
 
 	    data="${data} ${file_val}"
+	    sumx="${sumx} + ${file_val}"
+	    ysum[${xi}]="${ysum[${xi}]} + ${file_val}"
 	    xi=$((${xi} + 1))
 	done
 	data="${data}\n"
@@ -1228,6 +1267,62 @@ sanity_checks()
 	    fi
 	done
     fi
+
+   # xavg
+    if [ "${x_avg}" != "" ];then
+	local i=0
+	local maxi=${#x_avg_array[@]}
+	while [ ${i} -lt ${maxi} ];do
+	    local x=${x_avg_array[${i}]}
+	    is_integer ${y_tics}
+	    local is=${RETVAL}
+	    if [ "${is}" != "yes" ]; then
+		echo "ERROR: in xavg: ${x_avg}. ${x} must be an integer."
+		exit 1
+	    fi
+	    local min=0
+	    local max=0
+	    local xv
+	    for xv in ${x_vals};do
+		max=$((${max} + 1))
+	    done
+
+	    if [ ${x} -lt ${min} ]||[ ${x} -gt ${max} ];then
+		echo "ERROR: in xavg: ${x_avg}. Must be: ${min} < ${x} < ${max}."
+		exit 1
+	    fi
+	    i=$((${i} + 1))
+	done
+    fi
+
+   # yavg
+    if [ "${y_avg}" != "" ];then
+	local i=0
+	local maxi=${#y_avg_array[@]}
+	while [ ${i} -lt ${maxi} ];do
+	    local y=${y_avg_array[${i}]}
+	    is_integer ${y_tics}
+	    local is=${RETVAL}
+	    if [ "${is}" != "yes" ]; then
+		echo "ERROR: in yavg: ${y_avg}. ${y} must be an integer."
+		exit 1
+	    fi
+	    local min=0
+	    local max=0
+	    local yv
+	    for yv in ${y_vals};do
+		max=$((${max} + 1))
+	    done
+
+	    if [ ${y} -lt ${min} ]||[ ${y} -gt ${max} ];then
+		echo "ERROR: in yavg: ${y_avg}. Must be: ${min} < ${y} < ${max}."
+		exit 1
+	    fi
+	    i=$((${i} + 1))
+	done
+    fi
+
+
 }
 
 
@@ -1540,13 +1635,41 @@ parse_ymask()
     fi
 }
 
+parse_xmask()
+{
+    if [ "${x_avg}" != "" ];then
+	local x
+	local i=0
+	set_ifs ", "
+	for x in ${x_avg}; do
+	    x_avg_array[${i}]=${x}
+	    i=$(($i + 1))
+	done
+	reset_ifs
+    fi
+}
+
+parse_ymask()
+{
+    if [ "${y_avg}" != "" ];then
+	local y
+	local i=0
+	set_ifs ", "
+	for y in ${y_avg}; do
+	    y_avg_array[${i}]=${y}
+	    i=$(($i + 1))
+	done
+	reset_ifs
+    fi
+}
+
 
 parse_arguments()
 {
     local short_args="hd:x:y:f:t:c:i"
     local long_args="help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,\
 xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,\
-xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:"
+xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,xavg:,yavg:"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
     getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -1586,6 +1709,8 @@ xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:"
 	    "--gap"|"-gap") cluster_gap="$2";shift;;
 	    "--xmask"|"-xmask") x_mask="$2";shift;;
 	    "--ymask"|"-ymask") y_mask="$2";shift;;
+	    "--xavg"|"-xavg") x_avg="$2";shift;;
+	    "--yavg"|"-yavg") y_avg="$2";shift;;
 	    "--") break;
 	esac
 	shift
@@ -1667,6 +1792,8 @@ xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:"
     echo "| Cluster GAP: ${cluster_gap}"
     echo "| xmask: ${x_mask}"
     echo "| ymask: ${y_mask}"
+    echo "| xavg: ${x_avg}"
+    echo "| yavg: ${y_avg}"
     echo "+-------------------------------+"
 }
 
@@ -1703,6 +1830,8 @@ usage()
     echo "   --gap <number>               : (Opt) The gap between clusters."
     echo "   --xmask <bitmap>             : (Opt) Disable X bars with 0."
     echo "   --ymask <bitmap>             : (Opt) Disable X bars with 0."
+    echo "   --xavg <array of X>          : (Opt) Avg over selected X."
+    echo "   --yavg <array of Y>          : (Opt) Avg over selected Y."
     echo "   --ignore,-i                  : (Opt) Ignore Filter ERROR."
     echo "   --help                       : Print this help screen."
     exit 1
