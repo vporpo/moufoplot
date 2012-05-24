@@ -401,11 +401,11 @@ gp_bar_options()
     # local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
     # echo "set ylabel \"${ytitle}\""  >> $FILE
     # echo "set xlabel \"${xtitle}\""  >> $FILE
-    if [ "${xtitle}XX" == "XX" ]; then
-	echo "set ylabel \"${ytitle}\""  >> $FILE
-    fi
-    if [ "${ytitle}XX" == "XX" ]; then
+    if [ "${xtitle}" != "" ]; then
 	echo "set xlabel \"${xtitle}\""  >> $FILE
+    fi
+    if [ "${ytitle}" != "" ]; then
+	echo "set ylabel \"${ytitle}\""  >> $FILE
     fi
 
 
@@ -532,11 +532,11 @@ gp_line_options()
     # local y_vals_array=(${y_vals})
     # local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
     # local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    if [ "${xtitle}XX" == "XX" ]; then
-	echo "set ylabel \"${ytitle}\""  >> $FILE
-    fi
-    if [ "${ytitle}XX" == "XX" ]; then
+    if [ "${xtitle}" != "" ]; then
 	echo "set xlabel \"${xtitle}\""  >> $FILE
+    fi
+    if [ "${ytitle}" == "" ]; then
+	echo "set ylabel \"${ytitle}\""  >> $FILE
     fi
 
     # PLOT
@@ -738,11 +738,11 @@ gp_heatmap_options()
     # echo "set ylabel \"${ytitle}\""  >> $FILE
     # echo "set xlabel \"${xtitle}\""  >> $FILE
 
-    if [ "${xtitle}XX" == "XX" ]; then
-	echo "set ylabel \"${ytitle}\""  >> $FILE
-    fi
-    if [ "${ytitle}XX" == "XX" ]; then
+    if [ "${xtitle}" != "" ]; then
 	echo "set xlabel \"${xtitle}\""  >> $FILE
+    fi
+    if [ "${ytitle}" != "" ]; then
+	echo "set ylabel \"${ytitle}\""  >> $FILE
     fi
 
     create_tics "x"
@@ -1431,7 +1431,7 @@ parse_legend()
     local LJUST=13
     local RJUST=14
     local SMALL=15
-
+    local AT=16
 
 
     
@@ -1456,7 +1456,15 @@ parse_legend()
 	    "ljust") mask[${LJUST}]=1;;
 	    "rjust") mask[${RJUST}]=1;;
 	    "small") mask[${SMALL}]=1;;
-	    *) echo "Unknown legend option: ${p}"; exit 1;;
+	    *) 
+		local atgrep=`echo ${p}|egrep -o "at(([0-9]+)|([0-9]+\.[0-9]+))x(([0-9]+)|([0-9]+\.[0-9]+))"`
+		if [ "${p}" == "${atgrep}" ]; then
+		    local atcoord=`echo ${atgrep}|sed 's/at//'|sed 's/x/,/'`
+		    mask[${AT}]=1
+		else
+		    echo "Unknown legend option: ${p}"
+		    exit 1
+		fi
 	esac
     done
     reset_ifs
@@ -1496,6 +1504,11 @@ parse_legend()
 
 
 	# Position
+	if [ "${mask[${AT}]}" == "1" ];then
+	    key_command="${key_command} at ${atcoord}"
+	fi
+
+
 	if [ "${mask[${IN}]}" == "1" ];then
 	    key_command="${key_command} inside"
 	fi
@@ -1526,6 +1539,8 @@ parse_legend()
 	if [ "${mask[${SMALL}]}" == "1" ];then
 	    key_command="${key_command} samplen 1"
 	fi
+
+
 
 
 
@@ -1701,7 +1716,7 @@ parse_arguments()
 {
     local short_args="hd:x:y:f:t:c:i"
     local long_args="help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,\
-xlabel:,ylabel:wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,\
+xlabel:,ylabel:,wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,\
 xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,xavg:,yavg:"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
@@ -1883,8 +1898,8 @@ usage()
     echo "   --ynorm \"<y norm values>\"  : (Opt) Normalization filter Y."
     echo "   --xrotate \"<angle>\"        : (Opt) Rotate angle for X tags."
     echo "   --legend \"<parameters>\"    : (Opt) Control legend attrib."
-    echo "         Parameters: on/off, in/out, top/bottom/center, right/left,"
-    echo "                     horizontal/vertical, ljust,rjust, small, box"
+    echo "         Params: on/off, in/out, top/bottom/center, right/left,"
+    echo "                 horizontal/vertical, ljust,rjust, small, box, atMxN"
     echo "   --size NUMxNUM               : (Opt) Dimensions of the graph."
     echo "   --xformat \"format\"         : (Opt) Format of the x tags."
     echo "   --yformat \"format\"         : (Opt) Format of the y tags."
