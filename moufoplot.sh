@@ -609,13 +609,13 @@ create_tics()
 		continue
 	    fi
 
-	    if [ "${y_tags}" != "" ]; then
+	    if [ "${ytags_array[${yi}]}" != "" ]; then
 		local tag="${ytags_array[${yi}]}"
 	    else
 		local tag=${y}
 	    fi
 	    ytics_cmd="${ytics_cmd}\"${tag}\" $((${yi} - ${skipped})),"
-	    i=$((${yi} + 1))
+	    yi=$((${yi} + 1))
 	done
 	RETVAL="${ytics_cmd%?})"
     fi
@@ -844,7 +844,9 @@ create_data_file()
 
     printf "Creating data file ${data_file} ..."
     set_ifs "${IFS_CHAR}" # Let ',' be the separator character
-    
+
+
+    # avg
     local max_x=0
     for x in ${x_array}; do
 	max_x=$((${max_x} + 1))
@@ -985,32 +987,66 @@ create_heatmap_data_file()
     local y
     local fig_options=`get_all_parts_of_file "${fig_file}"`
 
+    # avg
+    local max_x=0
+    for x in ${x_array}; do
+	max_x=$((${max_x} + 1))
+    done
+    local max_y=0
+    for y in ${y_array}; do
+	max_y=$((${max_y} + 1))
+    done
+    if [ "${x_avg}" != "" ];then
+	x_array="${x_array},avg"
+	x_vals=${x_array}
+    fi
+    local sumy
+    if [ "${y_avg}" != "" ];then
+    	y_array="${y_array},avg"
+	y_vals=${y_array}
+	local yi=0
+	while [ ${yi} -lt ${max_y} ];do
+	    sumy[${yi}]="0"
+	    yi=$((${yi} + 1))
+	done
+    fi
+
+
+
     local data=""
     set_ifs "${IFS_CHAR}" # Let ',' be the separator character
     local yi=0
     for y in ${y_array}; do
-        # skip Y masked data
-	if [ "${y_mask}" != "" ]&&[ "${y_mask_array[${yi}]}" == "0" ];then
-	    yi=$((${yi} + 1))
-	    continue
-	fi
+	local sumx="0"
 	local xi=0
 	for x in ${x_array}; do
-	    # skip X masked data
-	    if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
-		xi=$((${xi} + 1))
-		continue
+
+	    if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ];then # x/y avg
+		local opts="${x} ${y} ${others}"
+		get_match "$DIR" "$opts"
+		local file=${RETVAL}
+		get_file_value "${DIR}/${file}"
+		local file_val=${RETVAL}
+	    else
+		if [ ${yi} -eq ${max_y} ];then
+		    file_val=`echo "(${sumy[${xi}]}) / ${max_y}" | bc -l`
+		fi
+		if [ ${xi} -eq ${max_x} ];then
+		    file_val=`echo "(${sumx})/${max_x}" | bc -l`
+		fi
+	    fi
+	    if [ "${x_mask_array[${xi}]}" != "0" ]&&[ "${y_mask_array[${yi}]}" != "0" ];then
+		data="${data}${file_val} "
 	    fi
 
-	    local opts="${x} ${y} ${others}"
-	    get_match "$DIR" "$opts"
-	    local file=${RETVAL}
-	    get_file_value "${DIR}/${file}"
-	    local file_val=${RETVAL}
-	    data="${data}${file_val} "
+	    sumx="${sumx} + ${file_val}"
+	    sumy[${xi}]="${sumy[${xi}]} + ${file_val}"
 	    xi=$((${xi} + 1))
 	done
-	data="${data}\n"
+
+	if [ "${y_mask_array[${yi}]}" != "0" ];then
+	    data="${data}\n"
+	fi
 	yi=$((${yi} + 1))
     done
     reset_ifs
