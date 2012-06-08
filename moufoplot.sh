@@ -408,6 +408,7 @@ gp_bar_options()
     fi
 
 
+
     # PLOT
     local plot_cmd="plot "
     local x_set_array=(${x_set})
@@ -555,18 +556,56 @@ gp_stkbar_options()
     local cmn=2
     set_ifs "${IFS_CHAR}"
     local xi=0
-    for x in ${x_vals}; do
-	# skip masked
-	if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
-	    xi=$((${xi} + 1))
-	    continue
-	fi
+    local z
 
-	local color=${color_array[$cmn]}
-	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) with histograms title columnheader(${cmn}) lt 1 lw 2 lc rgb \"${color}\","
-	cmn=$((cmn+1))
-	xi=$((${xi} + 1))
-    done
+    if [ "${z_vals}" == "" ];then
+	for x in ${x_vals}; do
+	# skip masked
+	    if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
+		xi=$((${xi} + 1))
+		continue
+	    fi
+
+	    local color=${color_array[$cmn]}
+	    plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) with histograms title columnheader(${cmn}) lt 1 lw 2 lc rgb \"${color}\","
+	    cmn=$((cmn+1))
+	    xi=$((${xi} + 1))
+	done
+    else
+	local zi=0
+	for z in ${z_vals}; do
+	    local cmn=2
+
+	    if [ "${ztags_array[${zi}]}" != "" ];then
+		local ztag=${ztags_array[${zi}]}
+		ztag=`echo ${ztag}|sed 's/ /_/g'` # Remove spaces
+	    else
+		local ztag=${z}
+		ztag=`echo ${ztag}|sed 's/ /_/g'` # Remove spaces
+	    fi
+
+	    plot_cmd="${plot_cmd} newhistogram \"${ztag}\", "
+	    for x in ${x_vals}; do
+		# skip masked
+		if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
+		    xi=$((${xi} + 1))
+		    continue
+		fi
+
+		local color=${color_array[$cmn]}
+		if [ ${zi} -eq 0 ];then
+		    local title_stuff="title columnheader(${cmn})"
+		else
+		    local title_stuff="notitle"
+		fi
+		plot_cmd="${plot_cmd} \"${DATA_FILE}\" index ${zi} using ${cmn}:xtic(1) with histograms ${title_stuff} lt 1 lw 2 lc rgb \"${color}\","
+
+		cmn=$((cmn+1))
+		xi=$((${xi} + 1))
+	    done
+	    zi=$((${zi} + 1))
+	done
+    fi
     reset_ifs
     echo "${plot_cmd%?}" >> $FILE
     gnuplot ${gpfname}
@@ -672,6 +711,8 @@ gp_line_options()
 	echo "set ylabel \"${ytitle}\""  >> $FILE
     fi
 
+
+
     # PLOT
     local plot_cmd="plot "
     local x_set_array=(${x_set})
@@ -725,7 +766,7 @@ create_tics()
 	    xi=$((${xi} + 1))
 	done
 	RETVAL="${xtics_cmd%?})"
-    else
+    elif [ "${xORy}" == "y" ];then
 	local y
 	local ytics_cmd="set ytics ("
 	local yi=0
@@ -747,7 +788,7 @@ create_tics()
 	    yi=$((${yi} + 1))
 	done
 	RETVAL="${ytics_cmd%?})"
-    fi
+     fi
     reset_ifs 
 }
 
@@ -874,13 +915,14 @@ gp_heatmap_options()
     fi
 
     create_tics "x"
-    xtics_cmd="${RETVAL}"
+    local xtics_cmd="${RETVAL}"
     echo "${xtics_cmd}" >> $FILE
 
     create_tics "y"
-    ytics_cmd="${RETVAL}"
+    local ytics_cmd="${RETVAL}"
     echo "${ytics_cmd}" >> $FILE
 
+ 
 	# PLOT
     local plot_cmd="plot "
     plot_cmd="${plot_cmd} \"${DATA_FILE}\" matrix with image"
@@ -960,12 +1002,14 @@ yrange_tics()
 # Description: Create the data file for a figure. 
 create_data_file()
 {
-    local x_array=$1
-    local y_array=$2
-    local out_file=$3
-    local others=$4
+    local x_array=${x_vals}
+    local y_array=${y_vals}
+    local out_file=$1
+    local others=$2
+    local z_array=${z_vals}
     local x
     local y
+    local z
     local fig_options=`get_all_parts_of_file "${fig_file}"`
 
     printf "Creating data file ${data_file} ..."
@@ -1020,91 +1064,107 @@ create_data_file()
     done
     data="${data}\n"
 
+    if [ "${z_array}" == "" ];then
+	z_array="NO-ZAXIS"
+	local no_z=1
+    fi
 
-    local yi=0    
-    local normalize_value=1.0
-    for y in ${y_array}; do
-	if [ "${ytags_array[${yi}]}" != "" ];then
-	    local ytag=${ytags_array[${yi}]}
-	    ytag=`echo ${ytag}|sed 's/ /-/g'` # Remove spaces
-	else
-	    local ytag=${y}
-	    ytag=`echo ${ytag}|sed 's/ /-/g'` # Remove spaces
+    local zi=0
+    for z in ${z_array};do
+	if [ "${no_z}" == "1" ];then
+	    z=""
 	fi
+
+	data="${data}# ${z}\n"
+	local yi=0    
+	local normalize_value=1.0
+	for y in ${y_array}; do
+	    if [ "${ytags_array[${yi}]}" != "" ];then
+		local ytag=${ytags_array[${yi}]}
+		ytag=`echo ${ytag}|sed 's/ /_/g'` # Remove spaces
+	    else
+		local ytag=${y}
+		ytag=`echo ${ytag}|sed 's/ /_/g'` # Remove spaces
+	    fi
 
         # Normalization on the Y axis
-	if [ "${y_norm_array[${yi}]}" != "" ];then
-	    normalize_value=`echo ${y_norm_array[${yi}]}*1.0|bc -l`
-	fi
+	    if [ "${y_norm_array[${yi}]}" != "" ];then
+		normalize_value=`echo ${y_norm_array[${yi}]}*1.0|bc -l`
+	    fi
 
 	# skip Y tag (masked Y)
-	if [ "${y_mask_array[${yi}]}" != "0" ];then
-	    data="${data}${ytag}"
-	fi
+	    if [ "${y_mask_array[${yi}]}" != "0" ];then
+		data="${data}${ytag}"
+	    fi
 
-	local sumx="0"
-	local xi=0
-	for x in ${x_array}; do
+	    local sumx="0"
+	    local xi=0
+	    for x in ${x_array}; do
 
-	    if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ];then # x/y avg
-		local opts="${x} ${y} ${others}"
-		get_match "${DIR}" "$opts"
-		local file=${RETVAL}
-		if [ "${ignore_filter}" == "YES" ]&&[ "${RETVAL}" == "" ];then
-		    RETVAL=0
-		else
-		    get_file_value "${DIR}/${file}"
-		fi
-		local file_val=${RETVAL}
+		if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ];then # x/y avg
+		    local opts="${x} ${y} ${z} ${others}"
+		    get_match "${DIR}" "$opts"
+		    local file=${RETVAL}
+		    if [ "${ignore_filter}" == "YES" ]&&[ "${RETVAL}" == "" ];then
+			RETVAL=0
+		    else
+			get_file_value "${DIR}/${file}"
+		    fi
+		    local file_val=${RETVAL}
 
 	        # Normalization on the X axis
-		if [ "${x_norm_array[${xi}]}" != "" ];then
-		    normalize_value=`echo "${x_norm_array[${xi}]} * 1.0"|bc -l`
-		fi
-		if [ "${ignore_filter}" == "YES" ]&&[ "${file_val}" == "0" ]||[ "${ignore_filter}" == "YES" ]&&[ "${normalize_value}" == "0" ];then
-		    file_val=0
-		else
-		    file_val=`echo "${file_val} / ${normalize_value}"|bc -l`
-		fi
+		    if [ "${x_norm_array[${xi}]}" != "" ];then
+			normalize_value=`echo "${x_norm_array[${xi}]} * 1.0"|bc -l`
+		    fi
+		    if [ "${ignore_filter}" == "YES" ]&&[ "${file_val}" == "0" ]||[ "${ignore_filter}" == "YES" ]&&[ "${normalize_value}" == "0" ];then
+			file_val=0
+		    else
+			file_val=`echo "${file_val} / ${normalize_value}"|bc -l`
+		    fi
 
-		if [ "${percent}" != "" ];then
-		    file_val=`echo "${file_val} * 100" |bc -l`
+		    if [ "${percent}" != "" ];then
+			file_val=`echo "${file_val} * 100" |bc -l`
+		    fi
+		else
+		    if [ ${yi} -eq ${max_y} ];then
+			file_val=`echo "(${ysum[${xi}]}) / ${avg_max_y}" | bc -l`
+		    fi
+		    if [ ${xi} -eq ${max_x} ];then
+			file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
+		    fi
 		fi
-	    else
-		if [ ${yi} -eq ${max_y} ];then
-		    file_val=`echo "(${ysum[${xi}]}) / ${avg_max_y}" | bc -l`
-		fi
-		if [ ${xi} -eq ${max_x} ];then
-		    file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
-		fi
-	    fi
 
 
 	    # Find minimum, maximum value (to use it in pretty ytics)
-	    find_min_max ${file_val}
+		find_min_max ${file_val}
 
 	    # skip X,Y masked data
-	    if [ "${x_mask_array[${xi}]}" != "0" ]&&[ "${y_mask_array[${yi}]}" != "0" ];then
-		data="${data} ${file_val}"
-	    fi
+		if [ "${x_mask_array[${xi}]}" != "0" ]&&[ "${y_mask_array[${yi}]}" != "0" ];then
+		    data="${data} ${file_val}"
+		fi
 
-	    in_array ${xi} "${x_avg_array[@]}"
-	    if [ $? -eq 0 ];then
-		sumx="${sumx} + ${file_val}"
-	    fi
+		in_array ${xi} "${x_avg_array[@]}"
+		if [ $? -eq 0 ];then
+		    sumx="${sumx} + ${file_val}"
+		fi
 
-	    in_array ${yi} "${y_avg_array[@]}"
-	    if [ $? -eq 0 ];then
-		ysum[${xi}]="${ysum[${xi}]} + ${file_val}"
-	    fi
-	    xi=$((${xi} + 1))
-	done
+		in_array ${yi} "${y_avg_array[@]}"
+		if [ $? -eq 0 ];then
+		    ysum[${xi}]="${ysum[${xi}]} + ${file_val}"
+		fi
+		xi=$((${xi} + 1))
+	    done
 
 	# skip Y newline (masked Y)
-	if [ "${y_mask_array[${yi}]}" != "0" ];then
-	    data="${data}\n"
+	    if [ "${y_mask_array[${yi}]}" != "0" ];then
+		data="${data}\n"
+	    fi
+	    yi=$((${yi} + 1))
+	done
+	if [ "${z_mask_array[${zi}]}" != "0" ];then
+	    data="${data}\n\n"
 	fi
-	yi=$((${yi} + 1))
+	zi=$((${zi} + 1 ))
     done
     reset_ifs
     printf " Done.\n"
@@ -1131,10 +1191,10 @@ in_array()
 # Description: Create the data file for a heatmap. 
 create_heatmap_data_file()
 {
-    local x_array=$1
-    local y_array=$2
-    local out_file=$3
-    local others=$4
+    local x_array=${x_vals}
+    local y_array=${y_vals}
+    local out_file=$1
+    local others=$2
     local x
     local y
     local fig_options=`get_all_parts_of_file "${fig_file}"`
@@ -1357,6 +1417,7 @@ sanity_checks()
 	    exti 1
 	fi
     fi
+
 
     # yrange
     if [ "${y_range}" != "" ];then
@@ -1857,6 +1918,22 @@ parse_ymask()
     fi
 }
 
+parse_zmask()
+{
+    if [ "${z_mask}" != "" ];then
+	local z
+	local i=0
+	set_ifs ", "
+	for z in ${z_mask}; do
+	    z_mask_array[${i}]=${z}
+	    i=$(($i + 1))
+	done
+	reset_ifs
+    fi
+}
+
+
+
 parse_xavg()
 {
     if [ "${x_avg}" != "" ];then
@@ -1899,10 +1976,10 @@ do_percent()
 
 parse_arguments()
 {
-    local short_args="hd:x:y:f:t:c:i"
-    local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,filter:,title:,\
-xlabel:,ylabel:,wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,\
-xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,xavg:,yavg:,\
+    local short_args="hd:x:y:z:f:t:c:i"
+    local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,title:,\
+xlabel:,ylabel:,wdata:,xtags:,ytags:,ztags:,xnorm:,ynorm:,xrotate:,legend:,size:,\
+xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,zmask:,xavg:,yavg:,\
 percent,barw:,viewer:"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
@@ -1918,10 +1995,12 @@ percent,barw:,viewer:"
 	    "--dir"|"-dir"|"-d") DIR="$2";shift;;
 	    "--xvals"|"-xvals"|"-x") x_vals="$2";shift;;
 	    "--yvals"|"-yvals"|"-y") y_vals="$2";shift;;
+	    "--zvals"|"-zvals"|"-z") z_vals="$2";shift;;
 	    "--filter"|"-filter"|"-f") others="$2";shift;;
 	    "--title"|"-title"|"-t") main_title="$2";shift;;
 	    "--xtags"|"-xtags") x_tags="$2";shift;;
 	    "--ytags"|"-ytags") y_tags="$2";shift;;
+	    "--ztags"|"-ztags") z_tags="$2";shift;;
 	    "--xlabel"|"-xlabel") x_title="$2";shift;;
 	    "--ylabel"|"-ylabel") y_title="$2";shift;;
 	    "--help"|"-help"|"-h") usage; exit 1;;
@@ -1944,6 +2023,7 @@ percent,barw:,viewer:"
 	    "--gap"|"-gap") cluster_gap="$2";shift;;
 	    "--xmask"|"-xmask") x_mask="$2";shift;;
 	    "--ymask"|"-ymask") y_mask="$2";shift;;
+	    "--zmask"|"-zmask") z_mask="$2";shift;;
 	    "--xavg"|"-xavg") x_avg="$2";shift;;
 	    "--yavg"|"-yavg") y_avg="$2";shift;;
 	    "--percent"|"-percent") percent="YES";;
@@ -1974,6 +2054,11 @@ percent,barw:,viewer:"
     for y in ${y_tags}; do
 	ytags_array[${yi}]="${y}"
 	yi=$((yi + 1))
+    done
+    local zi=0
+    for z in ${z_tags}; do
+	ztags_array[${zi}]="${z}"
+	zi=$((zi + 1))
     done
     reset_ifs
 
@@ -2018,13 +2103,15 @@ percent,barw:,viewer:"
     echo "| DIR:${DIR}"
     echo "| x: ${x_vals}"
     echo "| y: ${y_vals}"
+    echo "| z: ${z_vals}"
     echo "| filter: ${others}"
     echo "| Title: ${main_title}"
     echo "| x label: ${x_title}"
     echo "| y label: ${y_title}"
     echo "| Data file: ${data_file}"
-    echo "| x tags: ${x_tags}"
-    echo "| y tags: ${y_tags}"
+    echo "| xtags: ${x_tags}"
+    echo "| ytags: ${y_tags}"
+    echo "| ztags: ${z_tags}"
     echo "| x norm filters: ${x_norm}"
     echo "| y norm filters: ${y_norm}"
     echo "| x tags rotate: ${x_tics_rotate}"
@@ -2062,7 +2149,20 @@ percent,barw:,viewer:"
 	fi
     done
     printf "\n"
+    echo "| ymask: ${y_mask}"
 
+    local zmk
+    local zmi=0
+    printf "|        "
+    for zmk in ${z_mask};do
+	printf "%1d " ${zmi}
+	zmi=$((${zmi}+1))
+	if [ ${zmi} -eq 10 ];then
+	    zmi=0
+	fi
+    done
+    printf "\n"
+    echo "| zmask: ${z_mask}"
 
 
     local argfname=`echo ${data_file}|sed s'/\///g'`
@@ -2070,7 +2170,7 @@ percent,barw:,viewer:"
     epsfile="${argfname}.eps"
 
 
-    echo "| ymask: ${y_mask}"
+
     echo "| xavg: ${x_avg}"
     echo "| yavg: ${y_avg}"
     echo "| percent: ${percent}"
@@ -2094,6 +2194,7 @@ usage()
     echo "   --dir,-d \"<DIR>\"           : The result files Directory."
     echo "   --xvals,-x \"<x values>\"    : The identifiers of the X values."
     echo "   --yvals,-y \"<y values>\"    : The identifiers of the Y values."
+    echo "   --zvals,-z \"<z values>\"    : The identifiers of the Z values."
     echo "   --filter,-f \"<filter vals>\": The filtering identifiers."
     echo "   --title, -t \"<title>\"      : (Opt) Graph title."
     echo "   --xlabel \"<x label>\"       : (Opt) Label of the X axis."
@@ -2101,6 +2202,7 @@ usage()
     echo "   --w-data \"<file path>\"     : (Opt) Path of data file."
     echo "   --xtags \"<tags>\"           : (Opt) Tags for the X axis."
     echo "   --ytags \"<tags>\"           : (Opt) Tags for the Y axis."
+    echo "   --ztags \"<tags>\"           : (Opt) Tags for the Z axis."
     echo "   --xnorm \"<x norm values>\"  : (Opt) Normalization filter X."
     echo "   --ynorm \"<y norm values>\"  : (Opt) Normalization filter Y."
     echo "   --xrotate \"<angle>\"        : (Opt) Rotate angle for X tags."
@@ -2115,7 +2217,8 @@ usage()
     echo "   --colors,-c #color1,#color2..: (Opt) User defined colors."
     echo "   --gap <number>               : (Opt) The gap between clusters."
     echo "   --xmask <bitmap>             : (Opt) Disable X bars with 0."
-    echo "   --ymask <bitmap>             : (Opt) Disable X bars with 0."
+    echo "   --ymask <bitmap>             : (Opt) Disable Y bars with 0."
+    echo "   --zmask <bitmap>             : (Opt) Disable Z bars with 0."
     echo "   --xavg <array of X>          : (Opt) Avg over selected X."
     echo "   --yavg <array of Y>          : (Opt) Avg over selected Y."
     echo "   --ignore,-i                  : (Opt) Ignore Filter ERROR."
@@ -2133,16 +2236,16 @@ findviewer()
     fi
     local viewer
     RETVAL=""
-    setifs ","
+    set_ifs ","
     for viewer in ${pdfviewers}; do
 	which ${viewer} 2> /dev/null 1> /dev/null
 	if [ $? -eq 0 ];then
 	    RETVAL=${viewer}
-	    resetifs
+	    reset_ifs
 	    return
 	fi
     done
-    resetifs
+    reset_ifs
 }
 
 
@@ -2157,16 +2260,16 @@ moufoplot()
     if [ $? -ne 0 ]; then exit 1; fi
 
     if [ "${plot_type}" == "heatmap" ];then
-	create_heatmap_data_file "${x_vals}" "${y_vals}" "${data_file}" "${others}"
+	create_heatmap_data_file "${data_file}" "${others}"
 	gp_heatmap_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
     elif [ "${plot_type}" == "bargraph" ];then
-	create_data_file "${x_vals}" "${y_vals}" "${data_file}" "${others}"
+	create_data_file "${data_file}" "${others}"
 	gp_bar_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
     elif [ "${plot_type}" == "linegraph" ];then
-	create_data_file "${x_vals}" "${y_vals}" "${data_file}" "${others}"
+	create_data_file "${data_file}" "${others}"
 	gp_line_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
     elif [ "${plot_type}" == "stacked" ];then
-	create_data_file "${x_vals}" "${y_vals}" "${data_file}" "${others}"
+	create_data_file "${data_file}" "${others}"
 	gp_stkbar_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
     fi
 
