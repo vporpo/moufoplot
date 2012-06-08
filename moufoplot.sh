@@ -327,7 +327,7 @@ gp_bar_options()
 
 
     local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
-    local gpfname="${argfname}.gp"
+    # local gpfname="${argfname}.gp"
     # echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
     local FILE="${gpfname}"
 
@@ -337,7 +337,6 @@ gp_bar_options()
 	local size="$size_x,$size_y"
     fi
 
-    local epsfile="${argfname}.eps"
     echo "set term postscript eps enhanced color" > $FILE 
 
     echo "set output \"${epsfile}\"" >>$FILE
@@ -431,10 +430,6 @@ gp_bar_options()
     reset_ifs
     echo "${plot_cmd%?}" >> $FILE
     gnuplot ${gpfname}
-
-    # VIEW PDF
-    echo "View ${epsfile}"
-    okular ${epsfile}
 }
 
 gp_stkbar_options()
@@ -471,7 +466,7 @@ gp_stkbar_options()
 
 
     local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
-    local gpfname="${argfname}.gp"
+    # local gpfname="${argfname}.gp"
     # echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
     local FILE="${gpfname}"
 
@@ -481,7 +476,6 @@ gp_stkbar_options()
 	local size="$size_x,$size_y"
     fi
 
-    local epsfile="${argfname}.eps"
     echo "set term postscript eps enhanced color" > $FILE 
 
     echo "set output \"${epsfile}\"" >>$FILE
@@ -577,9 +571,6 @@ gp_stkbar_options()
     echo "${plot_cmd%?}" >> $FILE
     gnuplot ${gpfname}
 
-    # VIEW PDF
-    echo "View ${epsfile}"
-    okular ${epsfile}
 }
 
 gp_line_options()
@@ -616,7 +607,7 @@ gp_line_options()
 
 
     local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
-    local gpfname="${argfname}.gp"
+    # local gpfname="${argfname}.gp"
     # echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
     local FILE="${gpfname}"
 
@@ -626,7 +617,6 @@ gp_line_options()
 	local size="$size_x,$size_y"
     fi
 
-    local epsfile="${argfname}.eps"
     echo "set term postscript eps enhanced color" > $FILE 
 
     echo "set output \"${epsfile}\"" >>$FILE
@@ -704,10 +694,6 @@ gp_line_options()
     reset_ifs
     echo "${plot_cmd%?}" >> $FILE
     gnuplot ${gpfname}
-
-    # VIEW PDF
-    echo "View ${epsfile}"
-    okular ${epsfile}
 }
 
 
@@ -807,7 +793,7 @@ gp_heatmap_options()
 
 
     local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
-    local gpfname="${argfname}.gp"
+    # local gpfname="${argfname}.gp"
     # echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, $gpcol, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
     local FILE="${gpfname}"
     if [ "${size_param}" != "" ];then
@@ -816,7 +802,6 @@ gp_heatmap_options()
 	local size="$size_x,$size_y"
     fi
 
-    local epsfile="${argfname}.eps"
     echo "set term postscript eps enhanced color" > $FILE 
     echo "set output \"${epsfile}\"" >>$FILE
     echo "set boxwidth $boxwidth" >> $FILE
@@ -902,8 +887,6 @@ gp_heatmap_options()
     echo "${plot_cmd}" >> $FILE
 
     gnuplot ${gpfname}
-    echo "View ${epsfile}"
-    okular ${epsfile}
 }
 
 # set IFS to the given value and save the previous one
@@ -1920,7 +1903,7 @@ parse_arguments()
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,filter:,title:,\
 xlabel:,ylabel:,wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,\
 xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,xavg:,yavg:,\
-percent,barw:"
+percent,barw:,viewer:"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
     getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -1965,6 +1948,7 @@ percent,barw:"
 	    "--yavg"|"-yavg") y_avg="$2";shift;;
 	    "--percent"|"-percent") percent="YES";;
 	    "--barw"|"-barw") bar_width="$2";shift;;
+	    "--viewer"|"-viewer") eps_viewer="$2";shift;;
 	    "--") break;
 	esac
 	shift
@@ -2079,12 +2063,23 @@ percent,barw:"
     done
     printf "\n"
 
+
+
+    local argfname=`echo ${data_file}|sed s'/\///g'`
+    gpfname="${argfname}.gp"
+    epsfile="${argfname}.eps"
+
+
     echo "| ymask: ${y_mask}"
     echo "| xavg: ${x_avg}"
     echo "| yavg: ${y_avg}"
     echo "| percent: ${percent}"
     echo "| bar width: ${bar_width}"
+    echo "| .gp  file: ${gpfname}"
+    echo "| .eps file: ${epsfile}"
+    echo "| viewer: ${eps_viewer}"
     echo "+-------------------------------+"
+
 }
 
 
@@ -2125,8 +2120,29 @@ usage()
     echo "   --yavg <array of Y>          : (Opt) Avg over selected Y."
     echo "   --ignore,-i                  : (Opt) Ignore Filter ERROR."
     echo "   --percent                    : (Opt) Change Y axis to show % vals."
+    echo "   --viewer <eps viewer>        : (Opt) Prefer to use EPS VIEWER."
     echo "   --help                       : Print this help screen."
     exit 1
+}
+
+findviewer()
+{
+    local pdfviewers="evince,okular,kpdf,gv,inkscape,gimp"
+    if [ "${eps_viewer}" != "" ];then
+	pdfviewers="${eps_viewer},${pdfviewers}"
+    fi
+    local viewer
+    RETVAL=""
+    setifs ","
+    for viewer in ${pdfviewers}; do
+	which ${viewer} 2> /dev/null 1> /dev/null
+	if [ $? -eq 0 ];then
+	    RETVAL=${viewer}
+	    resetifs
+	    return
+	fi
+    done
+    resetifs
 }
 
 
@@ -2152,6 +2168,17 @@ moufoplot()
     elif [ "${plot_type}" == "stacked" ];then
 	create_data_file "${x_vals}" "${y_vals}" "${data_file}" "${others}"
 	gp_stkbar_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
+    fi
+
+    # View EPS file
+    findviewer
+    local viewer=${RETVAL}
+    if [ "${viewer}" != "" ];then
+	echo "View ${epsfile} using ${viewer}"
+	local viewcmd="${viewer} ${epsfile}"
+	eval ${viewcmd}
+    else
+	echo "WARNING: No EPS viewer found. Cannot Display ${epsfile}."
     fi
 }
 
