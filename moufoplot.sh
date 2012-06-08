@@ -437,7 +437,150 @@ gp_bar_options()
     okular ${epsfile}
 }
 
+gp_stkbar_options()
+{
+    local DATA_FILE="${1}"
+    local x_vals="${2}"
+    local y_vals="${3}"
+    local title="${4}"
+    local xtitle="${5}"
+    local ytitle="${6}"
 
+# the yrange for each row starting from row 0 
+    local Y_RANGE_ENABLED=1
+    local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
+    local size_x=0.4
+    local size_y=0.5
+    # local KEYSTUFF="inside top"
+    local KEYSTUFF="tmargin"
+    local LW=4
+    local POINTSIZE=2
+    local LEG_X=0
+    local LEG_Y=0
+
+    local FONTSIZE="38"
+
+    local KEYFONTSIZE="34"
+    local KEYFONTSPACING="3.7"
+    local TICSFONTSIZE="30"
+
+    local XLABELOFFSET="0,-2.0"
+    local YLABELOFFSET="-3.0,0"
+    local LABELFONTSIZE=$FONTSIZE
+    local LABELFONTSIZE="28"
+
+
+    local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
+    local gpfname="${argfname}.gp"
+    # echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
+    local FILE="${gpfname}"
+
+    if [ "${size_param}" != "" ];then
+	local size="${size_param_x},${size_param_y}"
+    else
+	local size="$size_x,$size_y"
+    fi
+
+    local epsfile="${argfname}.eps"
+    echo "set term postscript eps enhanced color" > $FILE 
+
+    echo "set output \"${epsfile}\"" >>$FILE
+
+    echo "unset ylabel" >> $FILE
+    echo "set grid y" >>$FILE
+    # echo "set grid x" >>$FILE
+    echo "${ytics_command}" >> $FILE
+
+    echo "set xtics rotate by ${x_tics_rotate} offset character 0,0" >> $FILE
+    if [ "${x_format}" != "" ];then
+	echo "set format x \"${x_format}\"" >> $FILE
+    fi
+    if [ "${y_format}" != "" ];then
+	echo "set format y \"${y_format}\"" >> $FILE
+    fi
+
+# echo "set ytics 1" >>$FILE
+    echo " " >> $FILE
+    # echo "set key $KEYSTUFF" >> $FILE
+    echo "${key_command}" >> $FILE
+    echo " " >> $FILE
+    # echo "set tics font \"Times,$TICSFONTSIZE\""  >> $FILE
+    # echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
+
+    # echo "set title \"{${fname}}\" font \"Times,$FONTSIZE\" " >> $FILE
+    # local title=${DATA_FILE##*/}
+    if [ "${title}XX" != "XX" ];then
+	echo "set title \"${title}\" " >> $FILE
+    fi
+
+    echo "set size $size" >> $FILE
+
+    # if [ ${Y_RANGE_ENABLED} -eq 1 ]; then
+    # 	echo "set yrange[${yrange_row[$row]}] ">> $FILE
+    # fi
+    if [ "${y_range}" != "" ]; then
+	echo "set yrange[${y_range_min}:${y_range_max}]">> $FILE
+    fi
+
+
+
+    # echo "set xrange[0:]" >> $FILE
+
+    # Bargraph specific
+    echo "set boxwidth ${bar_width} relative" >> $FILE
+    echo "set style data histograms" >> $FILE
+    echo "set style histogram rowstacked" >> $FILE
+    # if [ "${cluster_gap}" != "" ]; then
+    # 	echo "set style histogram cluster gap ${cluster_gap}" >> $FILE
+    # else
+    # 	echo "set style histogram cluster gap 2" >> $FILE
+    # fi
+    echo "set style fill solid 1.0 border lt \"black\"" >> $FILE
+    echo "set grid ytics ls 10 lt rgb \"black\"" >> $FILE
+
+
+    # x,y titles
+    # local x_vals_array=(${x_vals})
+    # local y_vals_array=(${y_vals})
+    # local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    # local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    # echo "set ylabel \"${ytitle}\""  >> $FILE
+    # echo "set xlabel \"${xtitle}\""  >> $FILE
+    if [ "${xtitle}" != "" ]; then
+	echo "set xlabel \"${xtitle}\""  >> $FILE
+    fi
+    if [ "${ytitle}" != "" ]; then
+	echo "set ylabel \"${ytitle}\""  >> $FILE
+    fi
+
+
+    # PLOT
+    local plot_cmd="plot "
+    local x_set_array=(${x_set})
+    local x
+    local cmn=2
+    set_ifs "${IFS_CHAR}"
+    local xi=0
+    for x in ${x_vals}; do
+	# skip masked
+	if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
+	    xi=$((${xi} + 1))
+	    continue
+	fi
+
+	local color=${color_array[$cmn]}
+	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) with histograms title columnheader(${cmn}) lt 1 lw 2 lc rgb \"${color}\","
+	cmn=$((cmn+1))
+	xi=$((${xi} + 1))
+    done
+    reset_ifs
+    echo "${plot_cmd%?}" >> $FILE
+    gnuplot ${gpfname}
+
+    # VIEW PDF
+    echo "View ${epsfile}"
+    okular ${epsfile}
+}
 
 gp_line_options()
 {
@@ -900,8 +1043,10 @@ create_data_file()
     for y in ${y_array}; do
 	if [ "${ytags_array[${yi}]}" != "" ];then
 	    local ytag=${ytags_array[${yi}]}
+	    ytag=`echo ${ytag}|sed 's/ /-/g'` # Remove spaces
 	else
 	    local ytag=${y}
+	    ytag=`echo ${ytag}|sed 's/ /-/g'` # Remove spaces
 	fi
 
         # Normalization on the Y axis
@@ -1391,7 +1536,17 @@ sanity_checks()
 	avg_max_y=${maxi}
     fi
 
-
+    # bar width
+    if [ "${bar_width}" != "" ];then
+	is_number ${bar_width}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: bar width: ${bar_width} must be a number!"
+	    exit 1
+	fi
+    else
+	bar_width=0.2  		# Default bar width
+    fi
 }
 
 
@@ -1762,10 +1917,10 @@ do_percent()
 parse_arguments()
 {
     local short_args="hd:x:y:f:t:c:i"
-    local long_args="help,bar,hmap,line,dir:,xvals:,yvals:,filter:,title:,\
+    local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,filter:,title:,\
 xlabel:,ylabel:,wdata:,xtags:,ytags:,xnorm:,ynorm:,xrotate:,legend:,size:,\
 xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,xavg:,yavg:,\
-percent"
+percent,barw:"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
     getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -1790,6 +1945,7 @@ percent"
 	    "--bar"|"-bar") plot_type="bargraph";;
 	    "--hmap"|"-hmap") plot_type="heatmap";;
 	    "--line"|"-line") plot_type="linegraph";;
+	    "--stack"|"-stack") plot_type="stacked";;
 	    "--wdata"|"-wdata") data_file="$2";shift;;
 	    "--xnorm"|"-xnorm") x_norm="$2";shift;;
 	    "--ynorm"|"-ynorm") y_norm="$2";shift;;
@@ -1807,7 +1963,8 @@ percent"
 	    "--ymask"|"-ymask") y_mask="$2";shift;;
 	    "--xavg"|"-xavg") x_avg="$2";shift;;
 	    "--yavg"|"-yavg") y_avg="$2";shift;;
-	    "--percent"|"-percent%") percent="YES";;
+	    "--percent"|"-percent") percent="YES";;
+	    "--barw"|"-barw") bar_width="$2";shift;;
 	    "--") break;
 	esac
 	shift
@@ -1926,6 +2083,7 @@ percent"
     echo "| xavg: ${x_avg}"
     echo "| yavg: ${y_avg}"
     echo "| percent: ${percent}"
+    echo "| bar width: ${bar_width}"
     echo "+-------------------------------+"
 }
 
@@ -1934,7 +2092,8 @@ usage()
 {
     script_name=${0##*/}
     echo "Usage: ${script_name} <OPTIONS>"
-    echo "   --bar                        : (DEF) Generate bar-graphs."
+    echo "   --bar                        : (DEF) Generate histograms."
+    echo "   --stack                      : Generate stacked histograms."
     echo "   --line                       : Generate line-graphs."
     echo "   --hmap                       : Generate heat-map graphs."
     echo "   --dir,-d \"<DIR>\"           : The result files Directory."
@@ -1965,6 +2124,7 @@ usage()
     echo "   --xavg <array of X>          : (Opt) Avg over selected X."
     echo "   --yavg <array of Y>          : (Opt) Avg over selected Y."
     echo "   --ignore,-i                  : (Opt) Ignore Filter ERROR."
+    echo "   --percent                    : (Opt) Change Y axis to show % vals."
     echo "   --help                       : Print this help screen."
     exit 1
 }
@@ -1989,8 +2149,10 @@ moufoplot()
     elif [ "${plot_type}" == "linegraph" ];then
 	create_data_file "${x_vals}" "${y_vals}" "${data_file}" "${others}"
 	gp_line_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
+    elif [ "${plot_type}" == "stacked" ];then
+	create_data_file "${x_vals}" "${y_vals}" "${data_file}" "${others}"
+	gp_stkbar_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
     fi
-
 }
 
 moufoplot "$@"
