@@ -424,7 +424,7 @@ gp_bar_options()
 	fi
 
 	local color=${color_array[$cmn]}
-	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) title columnheader(${cmn}) fc rgb \"${color}\","
+	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) with histograms title columnheader(${cmn}) lt 1 lw 2 lc rgb \"${color}\","
 	cmn=$((cmn+1))
 	xi=$((${xi} + 1))
     done
@@ -944,10 +944,10 @@ create_data_file()
 		fi
 	    else
 		if [ ${yi} -eq ${max_y} ];then
-		    file_val=`echo "(${ysum[${xi}]}) / ${max_y}" | bc -l`
+		    file_val=`echo "(${ysum[${xi}]}) / ${avg_max_y}" | bc -l`
 		fi
 		if [ ${xi} -eq ${max_x} ];then
-		    file_val=`echo "(${sumx})/${max_x}" | bc -l`
+		    file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
 		fi
 	    fi
 
@@ -959,8 +959,16 @@ create_data_file()
 	    if [ "${x_mask_array[${xi}]}" != "0" ]&&[ "${y_mask_array[${yi}]}" != "0" ];then
 		data="${data} ${file_val}"
 	    fi
-	    sumx="${sumx} + ${file_val}"
-	    ysum[${xi}]="${ysum[${xi}]} + ${file_val}"
+
+	    in_array ${xi} "${x_avg_array[@]}"
+	    if [ $? -eq 0 ];then
+		sumx="${sumx} + ${file_val}"
+	    fi
+
+	    in_array ${yi} "${y_avg_array[@]}"
+	    if [ $? -eq 0 ];then
+		ysum[${xi}]="${ysum[${xi}]} + ${file_val}"
+	    fi
 	    xi=$((${xi} + 1))
 	done
 
@@ -979,6 +987,16 @@ create_data_file()
     yrange_tics
 }
 
+
+in_array()
+{
+    local hay needle=${1}
+    shift
+    for hay; do
+        [[ ${hay} == ${needle} ]] && return 0
+    done
+    return 1
+}
 
 # Input: "X_VALUES" "Y_VLUES" FILENAME
 # Output: creates FILENAME and puts in it all the data.
@@ -1038,18 +1056,25 @@ create_heatmap_data_file()
 		fi
 	    else
 		if [ ${yi} -eq ${max_y} ];then
-		    file_val=`echo "(${sumy[${xi}]}) / ${max_y}" | bc -l`
+		    file_val=`echo "(${sumy[${xi}]}) / ${avg_max_y}" | bc -l`
 		fi
 		if [ ${xi} -eq ${max_x} ];then
-		    file_val=`echo "(${sumx})/${max_x}" | bc -l`
+		    file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
 		fi
 	    fi
 	    if [ "${x_mask_array[${xi}]}" != "0" ]&&[ "${y_mask_array[${yi}]}" != "0" ];then
 		data="${data}${file_val} "
 	    fi
 
-	    sumx="${sumx} + ${file_val}"
-	    sumy[${xi}]="${sumy[${xi}]} + ${file_val}"
+	    in_array ${xi} "${x_avg_array[@]}"
+	    if [ $? -eq 0 ];then
+		sumx="${sumx} + ${file_val}"
+	    fi
+
+	    in_array ${yi} "${y_avg_array[@]}"
+	    if [ $? -eq 0 ];then
+		sumy[${xi}]="${sumy[${xi}]} + ${file_val}"
+	    fi
 	    xi=$((${xi} + 1))
 	done
 
@@ -1335,6 +1360,7 @@ sanity_checks()
 	    fi
 	    i=$((${i} + 1))
 	done
+	avg_max_x=${maxi}
     fi
 
    # yavg
@@ -1362,6 +1388,7 @@ sanity_checks()
 	    fi
 	    i=$((${i} + 1))
 	done
+	avg_max_y=${maxi}
     fi
 
 
@@ -1727,7 +1754,7 @@ do_percent()
 	    y_format="%.0f%%"
 	fi
 	if [ "${y_range}" == "" ];then
-	    y_range="0,100,20"
+	    y_range="0,100,10"
 	fi
     fi
 }
@@ -1818,9 +1845,6 @@ percent"
     parse_size
     if [ $? -ne 0 ]; then exit 1; fi    
 
-    parse_yrange
-    if [ $? -ne 0 ]; then exit 1; fi    
-
     parse_colors
     if [ $? -ne 0 ]; then exit 1; fi    
 
@@ -1840,6 +1864,10 @@ percent"
     if [ $? -ne 0 ]; then exit 1; fi
 
     do_percent
+
+    parse_yrange
+    if [ $? -ne 0 ]; then exit 1; fi    
+
 
     echo "+--------------------------------+"
     echo "|         MoufoPlot              |"
