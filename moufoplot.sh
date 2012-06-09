@@ -430,7 +430,7 @@ gp_bar_options()
 	    fi
 
 	    local color=${color_array[$cmn]}
-	    plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}:xtic(1) with histograms title columnheader(${cmn}) lt 1 lw 2 lc rgb \"${color}\","
+	    plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}:xtic(1) with histograms title columnheader(${cmn}) lt 1 lw ${bar_line_width} lc rgb \"${color}\","
 	    cmn=$((cmn+1))
 	    xi=$((${xi} + 1))
 	done
@@ -461,7 +461,7 @@ gp_bar_options()
 		else
 		    local title_stuff="notitle"
 		fi
-		plot_cmd="${plot_cmd} \"${data_file}\" index ${zi} using ${cmn}:xtic(1) with histograms ${title_stuff} lt 1 lw 2 lc rgb \"${color}\","
+		plot_cmd="${plot_cmd} \"${data_file}\" index ${zi} using ${cmn}:xtic(1) with histograms ${title_stuff} lt 1 lw ${bar_line_width} lc rgb \"${color}\","
 
 		cmn=$((cmn+1))
 		xi=$((${xi} + 1))
@@ -1190,8 +1190,8 @@ less_than()
 sanity_checks()
 {
     if [ ! -d "${DIR}" ]; then
-	echo "ERROR: Directory: \"${DIR}\" does not exist!"
-	exit 1;
+	echo "ERROR: Directory \"${dir}\" does not exist ! (wrong --dir ???)"
+	exit 1
     fi
 
     if [ "${data_file}" == "" ] || [ "${data_dir}" == "/" ];then
@@ -1861,11 +1861,18 @@ do_percent()
 
 parse_arguments()
 {
+    # DIR
+    if [ "${DIR}" == "" ];then
+	DIR="${PWD}"
+	echo "WARNING: No -dir given, assuming \"${DIR}\" "
+    fi
+
+
     local short_args="hd:x:y:z:f:t:c:i"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,title:,\
 xlabel:,ylabel:,wdata:,xtags:,ytags:,ztags:,xnorm:,ynorm:,ynormv:,xrotate:,legend:,size:,\
 xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,zmask:,xavg:,yavg:,\
-percent,barw:,viewer:"
+percent,barw:,barlw:,viewer:"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
     getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -1914,6 +1921,7 @@ percent,barw:,viewer:"
 	    "--yavg"|"-yavg") y_avg="$2";shift;;
 	    "--percent"|"-percent") percent="YES";;
 	    "--barw"|"-barw") bar_width="$2";shift;;
+	    "--barlw"|"-barlw") bar_line_width="$2";shift;;
 	    "--viewer"|"-viewer") eps_viewer="$2";shift;;
 	    "--") break;
 	esac
@@ -1981,6 +1989,8 @@ percent,barw:,viewer:"
 
     parse_yrange
     if [ $? -ne 0 ]; then exit 1; fi    
+
+
 
 
     echo "+--------------------------------+"
@@ -2059,11 +2069,15 @@ percent,barw:,viewer:"
     epsfile="${argfname}.eps"
 
 
+    if [ "${bar_line_width}" == "" ];then
+	bar_line_width=1
+    fi
 
     echo "| xavg: ${x_avg}"
     echo "| yavg: ${y_avg}"
     echo "| percent: ${percent}"
     echo "| bar width: ${bar_width}"
+    echo "| bar line width: ${bar_line_width}"
     echo "| .gp  file: ${gpfname}"
     echo "| .eps file: ${epsfile}"
     echo "| viewer: ${eps_viewer}"
@@ -2114,6 +2128,8 @@ usage()
     echo "   --ignore,-i                  : (Opt) Ignore Filter ERROR."
     echo "   --percent                    : (Opt) Change Y axis to show % vals."
     echo "   --viewer <eps viewer>        : (Opt) Prefer to use EPS VIEWER."
+    echo "   --barw <bar width>           : (Opt) Set the bar width size."
+    echo "   --barlw <bar line width>     : (Opt) Set the bar line width."
     echo "   --help                       : Print this help screen."
     exit 1
 }
