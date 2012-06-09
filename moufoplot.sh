@@ -1593,10 +1593,30 @@ sanity_checks()
     fi
 }
 
+get_normalize_values_nums()
+{
+    local ni
+    for yn in ${y_normv}; do
+	is_number ${yn}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: -ynormv ${y_normv}: ${yn} must be a number!"
+	    exit 1
+	fi
+	y_norm_array[${ni}]=${yn}
+	ni=$((${ni} + 1))
+    done
+}
+
 
 # Read -xnorm and -ynorm filters and find the values that correspond to them
 get_normalize_values()
 {
+    # If values are given, dont use filters
+    if [ "$y_normv" != "" ]||[ "$x_normv" != "" ];then
+	return
+    fi
+
     # Normalize
     set_ifs ","
     printf "Getting X normalization values from filters... "
@@ -1978,7 +1998,7 @@ parse_arguments()
 {
     local short_args="hd:x:y:z:f:t:c:i"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,title:,\
-xlabel:,ylabel:,wdata:,xtags:,ytags:,ztags:,xnorm:,ynorm:,xrotate:,legend:,size:,\
+xlabel:,ylabel:,wdata:,xtags:,ytags:,ztags:,xnorm:,ynorm:,ynormv:,xrotate:,legend:,size:,\
 xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,zmask:,xavg:,yavg:,\
 percent,barw:,viewer:"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
@@ -2011,6 +2031,7 @@ percent,barw:,viewer:"
 	    "--wdata"|"-wdata") data_file="$2";shift;;
 	    "--xnorm"|"-xnorm") x_norm="$2";shift;;
 	    "--ynorm"|"-ynorm") y_norm="$2";shift;;
+	    "--ynormv"|"-ynormv") y_normv="$2";shift;;
 	    "--xrotate"|"-xrotate") x_tics_rotate="$2";shift;;
 	    "--legend"|"-legend") legend_params="$2";shift;;
 	    "--size"|"-size") size_param="$2";shift;;
@@ -2074,6 +2095,8 @@ percent,barw:,viewer:"
     parse_colors
     if [ $? -ne 0 ]; then exit 1; fi    
 
+    get_normalize_values_nums
+    if [ $? -ne 0 ]; then exit 1; fi
     get_normalize_values
     if [ $? -ne 0 ]; then exit 1; fi
 
@@ -2114,6 +2137,7 @@ percent,barw:,viewer:"
     echo "| ztags: ${z_tags}"
     echo "| x norm filters: ${x_norm}"
     echo "| y norm filters: ${y_norm}"
+    echo "| y norm values: ${y_normv}"
     echo "| x tags rotate: ${x_tics_rotate}"
     echo "| Legend: ${legend_params}"
     echo "| Size: ${size_param}"
@@ -2203,8 +2227,9 @@ usage()
     echo "   --xtags \"<tags>\"           : (Opt) Tags for the X axis."
     echo "   --ytags \"<tags>\"           : (Opt) Tags for the Y axis."
     echo "   --ztags \"<tags>\"           : (Opt) Tags for the Z axis."
-    echo "   --xnorm \"<x norm values>\"  : (Opt) Normalization filter X."
-    echo "   --ynorm \"<y norm values>\"  : (Opt) Normalization filter Y."
+    echo "   --xnorm \"<x norm filters>\" : (Opt) Normalization filter X."
+    echo "   --ynorm \"<y norm filters>\" : (Opt) Normalization filter Y."
+    echo "   --ynormv \"<y norm values>\" : (Opt) Normalization values Y."
     echo "   --xrotate \"<angle>\"        : (Opt) Rotate angle for X tags."
     echo "   --legend \"<parameters>\"    : (Opt) Control legend attrib."
     echo "         Params: on/off, in/out, top/bottom/center, right/left,"
