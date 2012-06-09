@@ -293,14 +293,10 @@ is_integer()
     fi
 }
 
+h
 gp_bar_options()
 {
-    local DATA_FILE="${1}"
-    local x_vals="${2}"
-    local y_vals="${3}"
-    local title="${4}"
-    local xtitle="${5}"
-    local ytitle="${6}"
+    local rowstacked=${1}
 
 # the yrange for each row starting from row 0 
     local Y_RANGE_ENABLED=1
@@ -326,9 +322,9 @@ gp_bar_options()
     local LABELFONTSIZE="28"
 
 
-    local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
+    local argfname=`echo ${data_file}|sed s'/\///g'`
     # local gpfname="${argfname}.gp"
-    # echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
+    # echo "Generating ${gpfname} data_file:${data_file}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$x_title, y:$y_title, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
     local FILE="${gpfname}"
 
     if [ "${size_param}" != "" ];then
@@ -346,7 +342,7 @@ gp_bar_options()
     # echo "set grid x" >>$FILE
     echo "${ytics_command}" >> $FILE
 
-    echo "set xtics rotate by ${x_tics_rotate} offset character 0,0" >> $FILE
+    echo "set xtics rotate by ${x_tics_rotate} offset character 0,0 nomirror" >> $FILE
     if [ "${x_format}" != "" ];then
 	echo "set format x \"${x_format}\"" >> $FILE
     fi
@@ -362,10 +358,10 @@ gp_bar_options()
     # echo "set tics font \"Times,$TICSFONTSIZE\""  >> $FILE
     # echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
 
-    # echo "set title \"{${fname}}\" font \"Times,$FONTSIZE\" " >> $FILE
-    # local title=${DATA_FILE##*/}
-    if [ "${title}XX" != "XX" ];then
-	echo "set title \"${title}\" " >> $FILE
+    # echo "set main_title \"{${fname}}\" font \"Times,$FONTSIZE\" " >> $FILE
+    # local main_title=${data_file##*/}
+    if [ "${main_title}XX" != "XX" ];then
+	echo "set title \"${main_title}\" " >> $FILE
     fi
 
     echo "set size $size" >> $FILE
@@ -382,154 +378,23 @@ gp_bar_options()
     # echo "set xrange[0:]" >> $FILE
 
     # Bargraph specific
-    echo "set boxwidth 1 relative" >> $FILE
+    if [ "${bar_width}" != "" ];then
+	echo "set boxwidth ${bar_width} relative" >> $FILE
+    fi
     echo "set style data histograms" >> $FILE
-    if [ "${cluster_gap}" != "" ]; then
-	echo "set style histogram cluster gap ${cluster_gap}" >> $FILE
-    else
-	echo "set style histogram cluster gap 2" >> $FILE
-    fi
-    echo "set style fill solid 1.0 border lt \"black\"" >> $FILE
-    echo "set grid ytics ls 10 lt rgb \"black\"" >> $FILE
+    # offset is relative to xlabel
 
 
-    # x,y titles
-    # local x_vals_array=(${x_vals})
-    # local y_vals_array=(${y_vals})
-    # local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    # local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    # echo "set ylabel \"${ytitle}\""  >> $FILE
-    # echo "set xlabel \"${xtitle}\""  >> $FILE
-    if [ "${xtitle}" != "" ]; then
-	echo "set xlabel \"${xtitle}\""  >> $FILE
-    fi
-    if [ "${ytitle}" != "" ]; then
-	echo "set ylabel \"${ytitle}\""  >> $FILE
-    fi
-
-
-
-    # PLOT
-    local plot_cmd="plot "
-    local x_set_array=(${x_set})
-    local x
-    local cmn=2
-    set_ifs "${IFS_CHAR}"
-    local xi=0
-    for x in ${x_vals}; do
-	# skip masked
-	if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
-	    xi=$((${xi} + 1))
-	    continue
+    if [ "${rowstacked}" == "" ];then
+	if [ "${cluster_gap}" != "" ]; then
+    	    echo "set style histogram cluster gap ${cluster_gap} title offset 0,0.2" >> $FILE
+	else
+    	    echo "set style histogram cluster gap 1 title offset 0,0.2" >> $FILE
 	fi
-
-	local color=${color_array[$cmn]}
-	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) with histograms title columnheader(${cmn}) lt 1 lw 2 lc rgb \"${color}\","
-	cmn=$((cmn+1))
-	xi=$((${xi} + 1))
-    done
-    reset_ifs
-    echo "${plot_cmd%?}" >> $FILE
-    gnuplot ${gpfname}
-}
-
-gp_stkbar_options()
-{
-    local DATA_FILE="${1}"
-    local x_vals="${2}"
-    local y_vals="${3}"
-    local title="${4}"
-    local xtitle="${5}"
-    local ytitle="${6}"
-
-# the yrange for each row starting from row 0 
-    local Y_RANGE_ENABLED=1
-    local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
-    local size_x=0.4
-    local size_y=0.5
-    # local KEYSTUFF="inside top"
-    local KEYSTUFF="tmargin"
-    local LW=4
-    local POINTSIZE=2
-    local LEG_X=0
-    local LEG_Y=0
-
-    local FONTSIZE="38"
-
-    local KEYFONTSIZE="34"
-    local KEYFONTSPACING="3.7"
-    local TICSFONTSIZE="30"
-
-    local XLABELOFFSET="0,-2.0"
-    local YLABELOFFSET="-3.0,0"
-    local LABELFONTSIZE=$FONTSIZE
-    local LABELFONTSIZE="28"
-
-
-    local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
-    # local gpfname="${argfname}.gp"
-    # echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
-    local FILE="${gpfname}"
-
-    if [ "${size_param}" != "" ];then
-	local size="${size_param_x},${size_param_y}"
     else
-	local size="$size_x,$size_y"
+    	echo "set style histogram ${rowstacked} title offset 0,0.2" >> $FILE
     fi
 
-    echo "set term postscript eps enhanced color" > $FILE 
-
-    echo "set output \"${epsfile}\"" >>$FILE
-
-    echo "unset ylabel" >> $FILE
-    echo "set grid y" >>$FILE
-    # echo "set grid x" >>$FILE
-    echo "${ytics_command}" >> $FILE
-
-    echo "set xtics rotate by ${x_tics_rotate} offset character 0,0" >> $FILE
-    if [ "${x_format}" != "" ];then
-	echo "set format x \"${x_format}\"" >> $FILE
-    fi
-    if [ "${y_format}" != "" ];then
-	echo "set format y \"${y_format}\"" >> $FILE
-    fi
-
-# echo "set ytics 1" >>$FILE
-    echo " " >> $FILE
-    # echo "set key $KEYSTUFF" >> $FILE
-    echo "${key_command}" >> $FILE
-    echo " " >> $FILE
-    # echo "set tics font \"Times,$TICSFONTSIZE\""  >> $FILE
-    # echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
-
-    # echo "set title \"{${fname}}\" font \"Times,$FONTSIZE\" " >> $FILE
-    # local title=${DATA_FILE##*/}
-    if [ "${title}XX" != "XX" ];then
-	echo "set title \"${title}\" " >> $FILE
-    fi
-
-    echo "set size $size" >> $FILE
-
-    # if [ ${Y_RANGE_ENABLED} -eq 1 ]; then
-    # 	echo "set yrange[${yrange_row[$row]}] ">> $FILE
-    # fi
-    if [ "${y_range}" != "" ]; then
-	echo "set yrange[${y_range_min}:${y_range_max}]">> $FILE
-    fi
-
-
-
-    # echo "set xrange[0:]" >> $FILE
-
-    # Bargraph specific
-    echo "set boxwidth ${bar_width} relative" >> $FILE
-    echo "set style data histograms" >> $FILE
-    echo "set style histogram rowstacked" >> $FILE
-    # if [ "${cluster_gap}" != "" ]; then
-    # 	echo "set style histogram cluster gap ${cluster_gap}" >> $FILE
-    # else
-    # 	echo "set style histogram cluster gap 2" >> $FILE
-    # fi
     echo "set style fill solid 1.0 border lt \"black\"" >> $FILE
     echo "set grid ytics ls 10 lt rgb \"black\"" >> $FILE
 
@@ -537,13 +402,11 @@ gp_stkbar_options()
     # x,y titles
     # local x_vals_array=(${x_vals})
     # local y_vals_array=(${y_vals})
-    # local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    # local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    # echo "set ylabel \"${ytitle}\""  >> $FILE
-    # echo "set xlabel \"${xtitle}\""  >> $FILE
-    if [ "${xtitle}" != "" ]; then
-	echo "set xlabel \"${xtitle}\""  >> $FILE
-    fi
+    # local x_title=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    # local y_title=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
+    # echo "set ylabel \"${y_title}\""  >> $FILE
+    # echo "set xlabel \"${x_title}\""  >> $FILE
+    echo "set xlabel \" ${x_title}\" offset 0,-0.4"  >> $FILE
     if [ "${ytitle}" != "" ]; then
 	echo "set ylabel \"${ytitle}\""  >> $FILE
     fi
@@ -567,7 +430,7 @@ gp_stkbar_options()
 	    fi
 
 	    local color=${color_array[$cmn]}
-	    plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) with histograms title columnheader(${cmn}) lt 1 lw 2 lc rgb \"${color}\","
+	    plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}:xtic(1) with histograms title columnheader(${cmn}) lt 1 lw 2 lc rgb \"${color}\","
 	    cmn=$((cmn+1))
 	    xi=$((${xi} + 1))
 	done
@@ -598,7 +461,7 @@ gp_stkbar_options()
 		else
 		    local title_stuff="notitle"
 		fi
-		plot_cmd="${plot_cmd} \"${DATA_FILE}\" index ${zi} using ${cmn}:xtic(1) with histograms ${title_stuff} lt 1 lw 2 lc rgb \"${color}\","
+		plot_cmd="${plot_cmd} \"${data_file}\" index ${zi} using ${cmn}:xtic(1) with histograms ${title_stuff} lt 1 lw 2 lc rgb \"${color}\","
 
 		cmn=$((cmn+1))
 		xi=$((${xi} + 1))
@@ -1589,7 +1452,9 @@ sanity_checks()
 	    exit 1
 	fi
     else
-	bar_width=0.2  		# Default bar width
+	if [ "${plot_type}" == "stacked" ]; then
+	    bar_width=0.6  		# Default bar width
+	fi
     fi
 }
 
@@ -2270,6 +2135,8 @@ findviewer()
 	    return
 	fi
     done
+    echo "WARNING: No EPS viewer found in (${pdfviewers}) to display ${epsfile}."
+    echo "Try using: --viewer " 
     reset_ifs
 }
 
@@ -2289,13 +2156,13 @@ moufoplot()
 	gp_heatmap_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
     elif [ "${plot_type}" == "bargraph" ];then
 	create_data_file "${data_file}" "${others}"
-	gp_bar_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
+	gp_bar_options
     elif [ "${plot_type}" == "linegraph" ];then
 	create_data_file "${data_file}" "${others}"
 	gp_line_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
     elif [ "${plot_type}" == "stacked" ];then
 	create_data_file "${data_file}" "${others}"
-	gp_stkbar_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
+	gp_bar_options "rowstacked"
     fi
 
     # View EPS file
@@ -2305,8 +2172,6 @@ moufoplot()
 	echo "View ${epsfile} using ${viewer}"
 	local viewcmd="${viewer} ${epsfile}"
 	eval ${viewcmd}
-    else
-	echo "WARNING: No EPS viewer found. Cannot Display ${epsfile}."
     fi
 }
 
