@@ -794,14 +794,30 @@ gp_heatmap_options()
     gnuplot ${gpfname}
 }
 
+init_ifs()
+{
+    IFS_PREV=" "
+}
+
+debug_stack()
+{
+    local i=0
+    while [ ${i} -lt ${IFS_CNT} ]; do
+	printf "|%s" "${IFS_STACK[${i}]}"
+	i=$((${i} + 1))
+    done
+    printf "|\n"
+}
 # set IFS to the given value and save the previous one
 set_ifs()
 {
     local CURRENT_IFS="${1}"
     IFS="${CURRENT_IFS}"
-    IFS_STACK[${IFS_CNT}]="${CURRENT_IFS}"
+    IFS_STACK[${IFS_CNT}]="${IFS_PREV}"
+    IFS_PREV="${CURRENT_IFS}"
     IFS_CNT=$((IFS_CNT + 1))
     # echo "set_ifs: ->${CURRENT_IFS}<-, stack_cnt:${IFS_CNT}"
+    # debug_stack
 }
 
 # reset IFS to the last one
@@ -813,8 +829,11 @@ reset_ifs()
 	IFS=${IFS_CURRENT}
 	IFS_CNT=${IFS_CNT_PREV}
 	# echo "reset_ifs: ->${IFS_CURRENT}<-, stack_cnt:${IFS_CNT}"
+	IFS_PREV="${IFS_CURRENT}"
+	# debug_stack
     else
 	echo "Too many reset_ifs !!!"
+	debug_stack
 	exit 1
     fi
 }
@@ -963,7 +982,6 @@ create_data_file()
 	    local sumx="0"
 	    local xi=0
 	    for x in ${x_array}; do
-
 		if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ];then # x/y avg
 		    local opts="${x} ${y} ${z} ${others}"
 		    get_match "${DIR}" "$opts"
@@ -2191,5 +2209,6 @@ moufoplot()
     fi
 }
 
+init_ifs
 moufoplot "$@"
 
