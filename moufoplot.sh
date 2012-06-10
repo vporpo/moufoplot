@@ -199,10 +199,9 @@ get_not_x()
 #          Returns 34896523
 get_file_value()
 {
-    local file=$1
+    eval local file="$1"
     local data=`cat ${file}`
-
-    # echo "Reading value from ${file}... ${data}"
+    echo "Reading value from ${file}... ${data}"
     if [ "$data" == "" ]; then
 	if [ "${ignore_filter}" == "YES" ];then
 	    echo "WARNING: ignoring empty ${file}."
@@ -387,12 +386,12 @@ gp_bar_options()
 
     if [ "${rowstacked}" == "" ];then
 	if [ "${cluster_gap}" != "" ]; then
-    	    echo "set style histogram cluster gap ${cluster_gap} title offset 0,0.2" >> $FILE
+    	    echo "set style histogram cluster gap ${cluster_gap} title offset 0,${z_tags_offset}" >> $FILE
 	else
-    	    echo "set style histogram cluster gap 1 title offset 0,0.2" >> $FILE
+    	    echo "set style histogram cluster gap 1 title offset 0,${z_tags_offset}" >> $FILE
 	fi
     else
-    	echo "set style histogram ${rowstacked} title offset 0,0.2" >> $FILE
+    	echo "set style histogram ${rowstacked} title offset 0,${z_tags_offset}" >> $FILE
     fi
 
     echo "set style fill solid 1.0 border lt \"black\"" >> $FILE
@@ -406,9 +405,9 @@ gp_bar_options()
     # local y_title=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
     # echo "set ylabel \"${y_title}\""  >> $FILE
     # echo "set xlabel \"${x_title}\""  >> $FILE
-    echo "set xlabel \" ${x_title}\" offset 0,-0.4"  >> $FILE
-    if [ "${ytitle}" != "" ]; then
-	echo "set ylabel \"${ytitle}\""  >> $FILE
+    echo "set xlabel \" ${x_title}\" offset 0,${x_label_offset}"  >> $FILE
+    if [ "${y_title}" != "" ]; then
+	echo "set ylabel \"${y_title}\" offset ${y_label_offset},0"  >> $FILE
     fi
 
 
@@ -1474,6 +1473,32 @@ sanity_checks()
 	    bar_width=0.6  		# Default bar width
 	fi
     fi
+
+    # offsets
+    if [ "${x_label_offset}" != "" ];then
+	is_number ${x_label_offset}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: --xlabeloffset: ${x_label_offset} must be a number!"
+	    exit 1
+	fi
+    fi
+    if [ "${y_label_offset}" != "" ];then
+	is_number ${y_label_offset}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: --ylabeloffset: ${y_label_offset} must be a number!"
+	    exit 1
+	fi
+    fi
+    if [ "${z_tags_offset}" != "" ];then
+	is_number ${z_tags_offset}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: --ztagsoffset: ${z_tags_offset} must be a number!"
+	    exit 1
+	fi
+    fi
 }
 
 get_normalize_values_nums()
@@ -1877,12 +1902,27 @@ do_percent()
     fi
 }
 
+parse_offsets()
+{
+    if [ "${x_label_offset}" == "" ];then
+	x_label_offset=-0.8
+    fi
+
+    if [ "${y_label_offset}" == "" ];then
+	y_label_offset=0
+    fi
+
+    if [ "${z_tags_offset}" == "" ];then
+	z_tags_offset=`echo "- ${x_label_offset}/2" |bc -l`
+    fi
+}
+
 parse_arguments()
 {
     # DIR
     if [ "${DIR}" == "" ];then
 	DIR="${PWD}"
-	echo "WARNING: No -dir given, assuming \"${DIR}\" "
+	echo "WARNING: No --dir given, assuming \"${DIR}\" "
     fi
 
 
@@ -1890,7 +1930,7 @@ parse_arguments()
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,title:,\
 xlabel:,ylabel:,wdata:,xtags:,ytags:,ztags:,xnorm:,ynorm:,ynormv:,xrotate:,legend:,size:,\
 xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,zmask:,xavg:,yavg:,\
-percent,barw:,barlw:,viewer:"
+percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
     getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -1912,7 +1952,10 @@ percent,barw:,barlw:,viewer:"
 	    "--ytags"|"-ytags") y_tags="$2";shift;;
 	    "--ztags"|"-ztags") z_tags="$2";shift;;
 	    "--xlabel"|"-xlabel") x_title="$2";shift;;
+	    "--xlabeloffset"|"-xlabeloffset") x_label_offset="$2";shift;;
 	    "--ylabel"|"-ylabel") y_title="$2";shift;;
+	    "--ylabeloffset"|"-ylabeloffset") y_label_offset="$2";shift;;
+	    "--ztagsoffset"|"-ztagsoffset") z_tags_offset="$2";shift;;
 	    "--help"|"-help"|"-h") usage; exit 1;;
 	    "--bar"|"-bar") plot_type="bargraph";;
 	    "--hmap"|"-hmap") plot_type="heatmap";;
@@ -2008,8 +2051,7 @@ percent,barw:,barlw:,viewer:"
     parse_yrange
     if [ $? -ne 0 ]; then exit 1; fi    
 
-
-
+    parse_offsets
 
     echo "+--------------------------------+"
     echo "|         MoufoPlot              |"
@@ -2023,11 +2065,14 @@ percent,barw:,barlw:,viewer:"
     echo "| filter: ${others}"
     echo "| Title: ${main_title}"
     echo "| x label: ${x_title}"
+    echo "| x label offset: ${x_label_offset}"
     echo "| y label: ${y_title}"
+    echo "| y label offset: ${y_label_offset}"
     echo "| Data file: ${data_file}"
     echo "| xtags: ${x_tags}"
     echo "| ytags: ${y_tags}"
     echo "| ztags: ${z_tags}"
+    echo "| ztagsoff: ${z_tags_offset}"
     echo "| x norm filters: ${x_norm}"
     echo "| y norm filters: ${y_norm}"
     echo "| y norm values: ${y_normv}"
@@ -2119,11 +2164,14 @@ usage()
     echo "   --filter,-f \"<filter vals>\": The filtering identifiers."
     echo "   --title, -t \"<title>\"      : (Opt) Graph title."
     echo "   --xlabel \"<x label>\"       : (Opt) Label of the X axis."
+    echo "   --xlabeloff <x label offset> : (Opt) Set the offset of xlabel."
     echo "   --ylabel \"<y label>\"       : (Opt) Label of the Y axis."
+    echo "   --ylabeloff <y label offset> : (Opt) Set the offset of ylabel."
     echo "   --w-data \"<file path>\"     : (Opt) Path of data file."
     echo "   --xtags \"<tags>\"           : (Opt) Tags for the X axis."
     echo "   --ytags \"<tags>\"           : (Opt) Tags for the Y axis."
     echo "   --ztags \"<tags>\"           : (Opt) Tags for the Z axis."
+    echo "   --ztagsoff <z tags offset>   : (Opt) Set the offset of z tags."
     echo "   --xnorm \"<x norm filters>\" : (Opt) Normalization filter X."
     echo "   --ynorm \"<y norm filters>\" : (Opt) Normalization filter Y."
     echo "   --ynormv \"<y norm values>\" : (Opt) Normalization values Y."
@@ -2148,6 +2196,8 @@ usage()
     echo "   --viewer <eps viewer>        : (Opt) Prefer to use EPS VIEWER."
     echo "   --barw <bar width>           : (Opt) Set the bar width size."
     echo "   --barlw <bar line width>     : (Opt) Set the bar line width."
+
+
     echo "   --help                       : Print this help screen."
     exit 1
 }
