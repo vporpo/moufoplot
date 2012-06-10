@@ -1914,6 +1914,7 @@ parse_offsets()
 
     if [ "${z_tags_offset}" == "" ];then
 	z_tags_offset=`echo "- ${x_label_offset}/2" |bc -l`
+	z_tags_offset="0${z_tags_offset}" # leading 0 hack
     fi
 }
 
@@ -1928,9 +1929,9 @@ parse_arguments()
 
     local short_args="hd:x:y:z:f:t:c:i"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,title:,\
-xlabel:,ylabel:,wdata:,xtags:,ytags:,ztags:,xnorm:,ynorm:,ynormv:,xrotate:,legend:,size:,\
+xlabel:,ylabel:,data:,xtags:,ytags:,ztags:,xnorm:,ynorm:,ynormv:,xrotate:,legend:,size:,\
 xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,zmask:,xavg:,yavg:,\
-percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:"
+percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:,gp:,eps:"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
     getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -1961,7 +1962,6 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:"
 	    "--hmap"|"-hmap") plot_type="heatmap";;
 	    "--line"|"-line") plot_type="linegraph";;
 	    "--stack"|"-stack") plot_type="stacked";;
-	    "--wdata"|"-wdata") data_file="$2";shift;;
 	    "--xnorm"|"-xnorm") x_norm="$2";shift;;
 	    "--ynorm"|"-ynorm") y_norm="$2";shift;;
 	    "--ynormv"|"-ynormv") y_normv="$2";shift;;
@@ -1984,6 +1984,9 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:"
 	    "--barw"|"-barw") bar_width="$2";shift;;
 	    "--barlw"|"-barlw") bar_line_width="$2";shift;;
 	    "--viewer"|"-viewer") eps_viewer="$2";shift;;
+	    "--data"|"-data") data_file="$2";shift;;
+	    "--gp"|"-gp") gpfname="$2";shift;;
+	    "--eps"|"-eps") epsfile="$2";shift;;
 	    "--") break;
 	esac
 	shift
@@ -1993,7 +1996,7 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:"
 	plot_type="bargraph"
     fi
 
-    if [ "${data_file}XX" == "XX" ];then
+    if [ "${data_file}" == "" ];then
 	data_file="/tmp/moufoplot.data"
     fi
 
@@ -2068,7 +2071,6 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:"
     echo "| x label offset: ${x_label_offset}"
     echo "| y label: ${y_title}"
     echo "| y label offset: ${y_label_offset}"
-    echo "| Data file: ${data_file}"
     echo "| xtags: ${x_tags}"
     echo "| ytags: ${y_tags}"
     echo "| ztags: ${z_tags}"
@@ -2127,10 +2129,12 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:"
     echo "| zmask: ${z_mask}"
 
 
-    local argfname=`echo ${data_file}|sed s'/\///g'`
-    gpfname="${argfname}.gp"
-    epsfile="${argfname}.eps"
-
+    if [ "${gpfname}" == "" ];then
+	gpfname="moufoplot.gp"
+    fi
+    if [ "${epsfile}" == "" ];then
+	epsfile="${argfname}.eps"
+    fi
 
     if [ "${bar_line_width}" == "" ];then
 	bar_line_width=1
@@ -2141,8 +2145,9 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:"
     echo "| percent: ${percent}"
     echo "| bar width: ${bar_width}"
     echo "| bar line width: ${bar_line_width}"
-    echo "| .gp  file: ${gpfname}"
-    echo "| .eps file: ${epsfile}"
+    echo "| .data file: ${data_file}"
+    echo "| .gp   file: ${gpfname}"
+    echo "| .eps  file: ${epsfile}"
     echo "| viewer: ${eps_viewer}"
     echo "+-------------------------------+"
 
@@ -2167,7 +2172,9 @@ usage()
     echo "   --xlabeloff <x label offset> : (Opt) Set the offset of xlabel."
     echo "   --ylabel \"<y label>\"       : (Opt) Label of the Y axis."
     echo "   --ylabeloff <y label offset> : (Opt) Set the offset of ylabel."
-    echo "   --w-data \"<file path>\"     : (Opt) Path of data file."
+    echo "   --data \"<file path>\"       : (Opt) .data data file."
+    echo "   --gp \"<file path>\"         : (Opt) .gp gnuplot file."
+    echo "   --eps \"<file path>\"        : (Opt) .eps postscript file."
     echo "   --xtags \"<tags>\"           : (Opt) Tags for the X axis."
     echo "   --ytags \"<tags>\"           : (Opt) Tags for the Y axis."
     echo "   --ztags \"<tags>\"           : (Opt) Tags for the Z axis."
