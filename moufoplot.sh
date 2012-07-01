@@ -292,124 +292,149 @@ is_integer()
     fi
 }
 
-h
+gp_xy_format()
+{
+    if [ "${x_format}" != "" ];then
+	echo "set format x \"${x_format}\"" >> ${gpfname}
+    fi
+    if [ "${y_format}" != "" ];then
+	echo "set format y \"${y_format}\"" >> ${gpfname}
+    fi
+}
+
+gp_labels()
+{
+    echo "set xlabel \" ${x_title}\" offset 0,${x_label_offset}"  >> ${gpfname}
+    if [ "${y_title}" != "" ]; then
+	echo "set ylabel \"${y_title}\" offset ${y_label_offset},0"  >> ${gpfname}
+    fi
+}
+
+gp_size()
+{
+    local size="${size_param_x},${size_param_y}"
+    echo "set size ${size}" >> ${gpfname}
+}
+
+gp_terminal()
+{
+    echo "set term postscript eps enhanced color" > ${gpfname} 
+}
+
+gp_output()
+{
+    echo "set output \"${epsfile}\"" >>${gpfname}
+}
+
+gp_xtics_rotate()
+{
+    echo "set xtics rotate by ${x_tics_rotate} offset character 0,0 nomirror" >> ${gpfname}
+}
+
+gp_title()
+{
+    if [ "${title}" != "" ];then
+	echo "set title \"${title}\" " >> ${gpfname}
+    fi
+}
+
+gp_set_grid()
+{
+    echo "set grid y" >>${gpfname}
+    # echo "set grid x" >>${gpfname}
+}
+
+gp_key()
+{
+    echo "${key_command}" >> ${gpfname}
+}
+
+# pretty_tics
+gp_ytics()
+{
+    if [ "${y_range_step}" == "" ];then
+	# y_range_step=`echo "(${max_value} - ${min_value}) / ${y_tics}"|bc -l`
+	y_range_step=`echo "(${max_value} - 0) / ${y_tics}"|bc -l`
+	local is_y_dist_gt3=`greater_than ${y_range_step} 3`
+	if [ "${is_y_dist_gt3}" == "1" ];then
+	    y_range_step=${y_range_step/.*}
+	fi
+    fi
+    echo "set ytics ${y_range_step}" >> ${gpfname}
+}
+
+gp_yrange()
+{
+    if [ "${y_range}" != "" ]; then
+	echo "set yrange[${y_range_min}:${y_range_max}]">> ${gpfname}
+    else
+	if [ "${plot_type}" == "stacked" ];then
+	    local extra_ratio=0
+	else
+	    local extra_ratio=0.40
+	fi
+	local extra_tics=`echo "${y_tics} * ${extra_ratio}" | bc -l`
+	extra_tics=${extra_tics/.*}
+	local y_max=`echo "(${y_tics} + ${extra_tics})  * ${y_range_step}"|bc -l`
+	echo "set yrange[0:${y_max}]" >> ${gpfname}
+    fi
+}
+
+gp_fonts()
+{
+    local font_type="Times"
+    local title_font_size="18"
+    local legend_font_size="14"
+    local legend_font_spacing="0.9"
+    local tags_font_size="16"
+    local xlabel_font_size="16"
+    local ylabel_font_size="16"
+
+
+    echo "set tics font \"${font_type},${tags_font_size}\""  >> ${gpfname}
+    echo "set key font \"${font_type},${legend_font_size}\" spacing ${legend_font_spacing}">> ${gpfname}
+    echo "set title font \"${font_type},${title_font_size}\" " >> ${gpfname}
+    echo "set ylabel font \"${font_type},${ylabel_font_size}\" " >> ${gpfname}
+    echo "set xlabel font \"${font_type},${xlabel_font_size}\" " >>${gpfname}
+}
+
 gp_bar_options()
 {
     local rowstacked=${1}
-
-# the yrange for each row starting from row 0 
-    local Y_RANGE_ENABLED=1
-    local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
-    local size_x=0.4
-    local size_y=0.5
-    # local KEYSTUFF="inside top"
-    local KEYSTUFF="tmargin"
-    local LW=4
-    local POINTSIZE=2
-    local LEG_X=0
-    local LEG_Y=0
-
-    local FONTSIZE="38"
-
-    local KEYFONTSIZE="34"
-    local KEYFONTSPACING="3.7"
-    local TICSFONTSIZE="30"
-
-    local XLABELOFFSET="0,-2.0"
-    local YLABELOFFSET="-3.0,0"
-    local LABELFONTSIZE=$FONTSIZE
-    local LABELFONTSIZE="28"
-
-
-    local argfname=`echo ${data_file}|sed s'/\///g'`
-    # local gpfname="${argfname}.gp"
-    # echo "Generating ${gpfname} data_file:${data_file}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$x_title, y:$y_title, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
-    local FILE="${gpfname}"
-
-    if [ "${size_param}" != "" ];then
-	local size="${size_param_x},${size_param_y}"
-    else
-	local size="$size_x,$size_y"
-    fi
-
-    echo "set term postscript eps enhanced color" > $FILE 
-
-    echo "set output \"${epsfile}\"" >>$FILE
-
-    echo "unset ylabel" >> $FILE
-    echo "set grid y" >>$FILE
-    # echo "set grid x" >>$FILE
-    echo "${ytics_command}" >> $FILE
-
-    echo "set xtics rotate by ${x_tics_rotate} offset character 0,0 nomirror" >> $FILE
-    if [ "${x_format}" != "" ];then
-	echo "set format x \"${x_format}\"" >> $FILE
-    fi
-    if [ "${y_format}" != "" ];then
-	echo "set format y \"${y_format}\"" >> $FILE
-    fi
-
-# echo "set ytics 1" >>$FILE
-    echo " " >> $FILE
-    # echo "set key $KEYSTUFF" >> $FILE
-    echo "${key_command}" >> $FILE
-    echo " " >> $FILE
-    # echo "set tics font \"Times,$TICSFONTSIZE\""  >> $FILE
-    # echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
-
-    # echo "set main_title \"{${fname}}\" font \"Times,$FONTSIZE\" " >> $FILE
-    # local main_title=${data_file##*/}
-    if [ "${main_title}XX" != "XX" ];then
-	echo "set title \"${main_title}\" " >> $FILE
-    fi
-
-    echo "set size $size" >> $FILE
-
-    # if [ ${Y_RANGE_ENABLED} -eq 1 ]; then
-    # 	echo "set yrange[${yrange_row[$row]}] ">> $FILE
-    # fi
-    if [ "${y_range}" != "" ]; then
-	echo "set yrange[${y_range_min}:${y_range_max}]">> $FILE
-    fi
-
-
-
-    # echo "set xrange[0:]" >> $FILE
+    gp_terminal
+    gp_output
+    gp_size
+    gp_xtics_rotate
+    gp_set_grid
+    gp_xy_format
+    gp_key
+    gp_fonts
+    gp_title
+    gp_ytics
+    gp_yrange 
 
     # Bargraph specific
     if [ "${bar_width}" != "" ];then
-	echo "set boxwidth ${bar_width} relative" >> $FILE
+	echo "set boxwidth ${bar_width} relative" >> ${gpfname}
     fi
-    echo "set style data histograms" >> $FILE
+    echo "set style data histograms" >> ${gpfname}
     # offset is relative to xlabel
 
 
     if [ "${rowstacked}" == "" ];then
 	if [ "${cluster_gap}" != "" ]; then
-    	    echo "set style histogram cluster gap ${cluster_gap} title offset 0,${z_tags_offset}" >> $FILE
+    	    echo "set style histogram cluster gap ${cluster_gap} title offset 0,${z_tags_offset}" >> ${gpfname}
 	else
-    	    echo "set style histogram cluster gap 1 title offset 0,${z_tags_offset}" >> $FILE
+    	    echo "set style histogram cluster gap 1 title offset 0,${z_tags_offset}" >> ${gpfname}
 	fi
     else
-    	echo "set style histogram ${rowstacked} title offset 0,${z_tags_offset}" >> $FILE
+    	echo "set style histogram ${rowstacked} title offset 0,${z_tags_offset}" >> ${gpfname}
     fi
 
-    echo "set style fill solid 1.0 border lt \"black\"" >> $FILE
-    echo "set grid ytics ls 10 lt rgb \"black\"" >> $FILE
+    echo "set style fill solid 1.0 border lt \"black\"" >> ${gpfname}
+    echo "set grid ytics ls 10 lt rgb \"black\"" >> ${gpfname}
 
-
-    # x,y titles
-    # local x_vals_array=(${x_vals})
-    # local y_vals_array=(${y_vals})
-    # local x_title=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    # local y_title=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    # echo "set ylabel \"${y_title}\""  >> $FILE
-    # echo "set xlabel \"${x_title}\""  >> $FILE
-    echo "set xlabel \" ${x_title}\" offset 0,${x_label_offset}"  >> $FILE
-    if [ "${y_title}" != "" ]; then
-	echo "set ylabel \"${y_title}\" offset ${y_label_offset},0"  >> $FILE
-    fi
-
+    gp_labels
 
     # PLOT
     local plot_cmd="plot "
@@ -469,111 +494,26 @@ gp_bar_options()
 	done
     fi
     reset_ifs
-    echo "${plot_cmd%?}" >> $FILE
+    echo "${plot_cmd%?}" >> ${gpfname}
     gnuplot ${gpfname}
 
 }
 
 gp_line_options()
 {
-    local DATA_FILE=$1
-    local x_vals=$2
-    local y_vals=$3
-    local title=$4
-    local xtitle=$5
-    local ytitle=$6
-
-# the yrange for each row starting from row 0 
-    local Y_RANGE_ENABLED=1
-    local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
-    local size_x=0.4
-    local size_y=0.5
-    # local KEYSTUFF="inside top"
-    local KEYSTUFF="tmargin"
-    local LW=4
-    local POINTSIZE=2
-    local LEG_X=0
-    local LEG_Y=0
-
-    local FONTSIZE="38"
-
-    local KEYFONTSIZE="34"
-    local KEYFONTSPACING="3.7"
-    local TICSFONTSIZE="30"
-
-    local XLABELOFFSET="0,-2.0"
-    local YLABELOFFSET="-3.0,0"
-    local LABELFONTSIZE=$FONTSIZE
-    local LABELFONTSIZE="28"
-
-
-    local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
-    # local gpfname="${argfname}.gp"
-    # echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
-    local FILE="${gpfname}"
-
-    if [ "${size_param}" != "" ];then
-	local size="${size_param_x},${size_param_y}"
-    else
-	local size="$size_x,$size_y"
-    fi
-
-    echo "set term postscript eps enhanced color" > $FILE 
-
-    echo "set output \"${epsfile}\"" >>$FILE
-
-    echo "unset ylabel" >> $FILE
-    echo "set grid y" >>$FILE
-    # echo "set grid x" >>$FILE
-    echo "${ytics_command}" >> $FILE
-    echo "set xtics rotate by ${x_tics_rotate} offset character 0,0" >> $FILE
-    if [ "${x_format}" != "" ];then
-	echo "set format x \"${x_format}\"" >> $FILE
-    fi
-    if [ "${y_format}" != "" ];then
-	echo "set format y \"${y_format}\"" >> $FILE
-    fi
-
-# echo "set ytics 1" >>$FILE
-    echo " " >> $FILE
-    # echo "set key $KEYSTUFF" >> $FILE
-    echo "${key_command}" >> $FILE
-    echo " " >> $FILE
-    # echo "set tics font \"Times,$TICSFONTSIZE\""  >> $FILE
-    # echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
-
-    # echo "set title \"{${fname}}\" font \"Times,$FONTSIZE\" " >> $FILE
-    # local title=${DATA_FILE##*/}
-    if [ "${title}XX" != "XX" ];then
-	echo "set title \"${title}\" " >> $FILE
-    fi
-
-    echo "set size $size" >> $FILE
-
-    # if [ ${Y_RANGE_ENABLED} -eq 1 ]; then
-    # 	echo "set yrange[${yrange_row[$row]}] ">> $FILE
-    # fi
-    if [ "${y_range}" != "" ]; then
-	echo "set yrange[${y_range_min}:${y_range_max}]">> $FILE
-    fi
-
-    echo "set xrange[0:]" >> $FILE
-
-
- 
-    # x,y titles
-    # local x_vals_array=(${x_vals})
-    # local y_vals_array=(${y_vals})
-    # local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    # local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    if [ "${xtitle}" != "" ]; then
-	echo "set xlabel \"${xtitle}\""  >> $FILE
-    fi
-    if [ "${ytitle}" == "" ]; then
-	echo "set ylabel \"${ytitle}\""  >> $FILE
-    fi
-
-
+    gp_terminal
+    gp_output
+    gp_size
+    gp_xtics_rotate
+    gp_set_grid
+    gp_xy_format
+    gp_key
+    gp_fonts
+    gp_title
+    gp_ytics
+    gp_yrange
+    echo "set xrange[0:]" >> ${gpfname}
+    gp_labels
 
     # PLOT
     local plot_cmd="plot "
@@ -590,15 +530,50 @@ gp_line_options()
 	fi
 
 	local color=${color_array[$cmn]}
-	plot_cmd="${plot_cmd} \"${DATA_FILE}\" using ${cmn}:xtic(1) with linespoints title columnheader(${cmn}) lw $LW lc rgb \"${color}\","
+	plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}:xtic(1) with linespoints title columnheader(${cmn}) lw ${line_width} lc rgb \"${color}\","
 	cmn=$((cmn+1))
 	xi=$((${xi} + 1))
     done
     reset_ifs
-    echo "${plot_cmd%?}" >> $FILE
+    echo "${plot_cmd%?}" >> ${gpfname}
     gnuplot ${gpfname}
 }
 
+gp_hmap_options()
+{
+    gp_terminal
+    gp_output
+    gp_size
+    gp_xtics_rotate
+    gp_xy_format
+    gp_fonts
+
+    # Heatmap excluseive options
+    echo "set palette rgbformula 7,7,7" >> ${gpfname}
+    echo "set palette rgbformula 30,31,32" >> ${gpfname}
+    echo "set cblabel \"${z_label}\""  >> ${gpfname}
+    echo "unset cbtics" >> ${gpfname} # This removes tics from heat bar
+    echo "unset key" >> ${gpfname} # Otherwise the filename is displayed
+
+    gp_title
+    gp_labels
+
+    create_tics "x"
+    local xtics_cmd="${RETVAL}"
+    echo "${xtics_cmd}" >> ${gpfname}
+
+    create_tics "y"
+    local ytics_cmd="${RETVAL}"
+    echo "${ytics_cmd}" >> ${gpfname}
+
+ 
+	# PLOT
+    local plot_cmd="plot "
+    plot_cmd="${plot_cmd} \"${data_file}\" matrix with image"
+    echo "${plot_cmd}" >> ${gpfname}
+
+    gnuplot ${gpfname}
+}
 
 create_tics()
 {
@@ -654,144 +629,7 @@ create_tics()
     reset_ifs 
 }
 
-gp_heatmap_options()
-{
-    local DATA_FILE=$1
 
-    local rows=1
-    local columns=1
-    local x_vals=$2
-    local y_vals=$3
-    local title=$4
-    local xtitle=$5
-    local ytitle=$6
-
-# the yrange for each row starting from row 0 
-    local Y_RANGE_ENABLED=1
-    local yrange_row=(0: 0: 0: 0: 0: 0: 0:) # Lowest first
-    local size_x=0.4
-    local size_y=0.5
-#bottom_margin=`echo "${size_y}/2.0" |bc -l`
-    local bottom_margin=0.01
-    # local KEYSTUFF="inside top"
-    local KEYSTUFF="tmargin"
-    local LW=7
-    local POINTSIZE=3
-    local LEG_X=0
-    local LEG_Y=0
-    local boxwidth=0.2
-
-    # local yrange="0.5:"
-
-    local FONTSIZE="38"
-
-    local KEYFONTSIZE="34"
-    local KEYFONTSPACING="3.7"
-    local TICSFONTSIZE="30"
-
-    local XLABELOFFSET="0,-2.0"
-    local YLABELOFFSET="-3.0,0"
-    local LABELFONTSIZE=$FONTSIZE
-    local LABELFONTSIZE="28"
-
-
-    local argfname=`echo ${DATA_FILE}|sed s'/\///g'`
-    # local gpfname="${argfname}.gp"
-    # echo "Generating ${gpfname} DATA_FILE:${DATA_FILE}, $gpcol, boxwidth=$boxwidth, yrange_enabled=${Y_RANGE_ENABLED}, yrange=${yrange}, lw=$LW, x:$xtitle, y:$ytitle, legend=(${LEG_X},${LEG_Y}), legend:$KEYSTUFF."
-    local FILE="${gpfname}"
-    if [ "${size_param}" != "" ];then
-	local size="${size_param_x},${size_param_y}"
-    else
-	local size="$size_x,$size_y"
-    fi
-
-    echo "set term postscript eps enhanced color" > $FILE 
-    echo "set output \"${epsfile}\"" >>$FILE
-    echo "set boxwidth $boxwidth" >> $FILE
-    echo "unset ylabel" >> $FILE
-    # echo "set xtics 1" >>$FILE
-    echo "set xtics rotate by ${x_tics_rotate} offset character 0,0 " >> $FILE
-
-    if [ "${x_format}" != "" ];then
-	echo "set format x \"${x_format}\"" >> $FILE
-    fi
-    if [ "${y_format}" != "" ];then
-	echo "set format y \"${y_format}\"" >> $FILE
-    fi
-
-# echo "set ytics 1" >>$FILE
-    echo " " >> $FILE
-    # echo "set key $KEYSTUFF" >> $FILE
-    echo " " >> $FILE
-    # echo "set size  `echo \"$columns * $size_x\"|bc`,`echo \"$rows * $size_y + $bottom_margin\"|bc`" >> $FILE
-    # echo "set multiplot" >> $FILE
-    # echo "set tics font \"Times,$TICSFONTSIZE\""  >> $FILE
-    # echo "set key font \"Times,$KEYFONTSIZE\" spacing $KEYFONTSPACING">> $FILE
-
-    # Heatmap excluseive options
-    echo "set palette rgbformula 7,7,7" >> $FILE
-    echo "set palette rgbformula 30,31,32" >> $FILE
-    echo "set cblabel \"\""  >> $FILE
-    echo "unset cbtics" >> $FILE
-    echo "unset key" >> $FILE # Otherwise the filename is displayed
-    # echo "set xrange [-0.5: ]" >> $FILE
-    # echo "set yrange [-0.5: ]" >> $FILE
-
-
-    # local title=${DATA_FILE##*/}
-    # local title="TITLE"
-    # echo "set title \"{${title}}\" font \"Times,$FONTSIZE\" " >> $FILE
-    if [ "${title}XX" != "XX" ];then
-	echo "set title \"${title}\" " >> $FILE
-    fi
-    echo "set size $size" >> $FILE
-	# echo "set origin `echo \"$col * $size_x\"|bc`,`echo \"$row * $size_y + $bottom_margin\"|bc`" >> $FILE
-    # echo "set pointsize 3" >> $FILE
-    # echo "set style line 6 lt 7">> $FILE
-
-	# echo "set boxwidth 1 relative" >> $FILE
-	# echo "set style data histograms" >> $FILE
-
-	# echo "set style histogram cluster gap 1" >> $FILE
-	# echo "set style fill solid 1.0 border lt \"black\"" >> $FILE
-	# echo "set grid ytics ls 10 lt rgb \"black\"" >> $FILE
-
-
-
-    # x,y titles
-    # local x_vals_array=(${x_vals})
-    # local y_vals_array=(${y_vals})
-    # local xtitle=`echo ${x_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-    # local ytitle=`echo ${y_vals_array[0]} |egrep -o "[[:alpha:]-]+"`
-
-    # echo "set ylabel \"${ytitle}\" font \"Times,$LABELFONTSIZE\" offset $YLABELOFFSET" >> $FILE
-    # echo "set xlabel \"${xtitle}\" font \"Times,$LABELFONTSIZE\" offset $XLABELOFFSET" >>$FILE
-    # echo "set ylabel \"${ytitle}\""  >> $FILE
-    # echo "set xlabel \"${xtitle}\""  >> $FILE
-
-    if [ "${xtitle}" != "" ]; then
-	echo "set xlabel \"${xtitle}\""  >> $FILE
-    fi
-    if [ "${ytitle}" != "" ]; then
-	echo "set ylabel \"${ytitle}\""  >> $FILE
-    fi
-
-    create_tics "x"
-    local xtics_cmd="${RETVAL}"
-    echo "${xtics_cmd}" >> $FILE
-
-    create_tics "y"
-    local ytics_cmd="${RETVAL}"
-    echo "${ytics_cmd}" >> $FILE
-
- 
-	# PLOT
-    local plot_cmd="plot "
-    plot_cmd="${plot_cmd} \"${DATA_FILE}\" matrix with image"
-    echo "${plot_cmd}" >> $FILE
-
-    gnuplot ${gpfname}
-}
 
 init_ifs()
 {
@@ -858,35 +696,17 @@ find_min_max()
     fi
 }
 
-pretty_tics()
-{
-    if [ "${y_tics}" != "" ];then
-	local y_dist=`echo "(${max_value} - ${min_value}) / ${y_tics}"|bc -l`
-	local is_y_dist_gt3=`greater_than ${y_dist} 3`
-	if [ "${is_y_dist_gt3}" == "1" ];then
-	    local y_dist=${y_dist/.*}
-	fi
-	ytics_command="set ytics ${y_dist}"
-	echo "YTICS: ${ytics_command}"
-    fi
-}
 
-yrange_tics()
-{
-    if [ "${y_range_step}" != "" ];then
-	ytics_command="set ytics ${y_range_step}"
-    fi
-}
-
-# Input: "X_VALUES" "Y_VLUES" FILENAME
+# Input: filter (-f)
 # Output: creates FILENAME and puts in it all the data.
 # Description: Create the data file for a figure. 
 create_data_file()
 {
+    local rowstacked=${1}
+    local filter=${2}
+
     local x_array=${x_vals}
     local y_array=${y_vals}
-    local out_file=$1
-    local others=$2
     local z_array=${z_vals}
     local x
     local y
@@ -968,21 +788,22 @@ create_data_file()
 		ytag=`echo ${ytag}|sed 's/ /_/g'` # Remove spaces
 	    fi
 
-        # Normalization on the Y axis
+            # Normalization on the Y axis
 	    if [ "${y_norm_array[${yi}]}" != "" ];then
 		normalize_value=`echo ${y_norm_array[${yi}]}*1.0|bc -l`
 	    fi
 
-	# skip Y tag (masked Y)
+	    # skip Y tag (masked Y)
 	    if [ "${y_mask_array[${yi}]}" != "0" ];then
 		data="${data}${ytag}"
 	    fi
 
+	    local sum_x_all=0
 	    local sumx="0"
 	    local xi=0
 	    for x in ${x_array}; do
 		if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ];then # x/y avg
-		    local opts="${x} ${y} ${z} ${others}"
+		    local opts="${x} ${y} ${z} ${filter}"
 		    get_match "${DIR}" "$opts"
 		    local file=${RETVAL}
 		    if [ "${ignore_filter}" == "YES" ]&&[ "${RETVAL}" == "" ];then
@@ -992,7 +813,7 @@ create_data_file()
 		    fi
 		    local file_val=${RETVAL}
 
-	        # Normalization on the X axis
+	            # Normalization on the X axis
 		    if [ "${x_norm_array[${xi}]}" != "" ];then
 			normalize_value=`echo "${x_norm_array[${xi}]} * 1.0"|bc -l`
 		    fi
@@ -1013,12 +834,16 @@ create_data_file()
 			file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
 		    fi
 		fi
+		sum_x_all=`echo "${sum_x_all} + ${file_val}" | bc -l`
 
+		# Find minimum, maximum value (to use it in pretty ytics)
+		if [ "${rowstacked}" != "" ]; then
+			find_min_max ${sum_x_all}
+		else
+			find_min_max ${file_val}
+		fi
 
-	    # Find minimum, maximum value (to use it in pretty ytics)
-		find_min_max ${file_val}
-
-	    # skip X,Y masked data
+		# skip X,Y masked data
 		if [ "${x_mask_array[${xi}]}" != "0" ]&&[ "${y_mask_array[${yi}]}" != "0" ];then
 		    data="${data} ${file_val}"
 		fi
@@ -1032,10 +857,11 @@ create_data_file()
 		if [ $? -eq 0 ];then
 		    ysum[${xi}]="${ysum[${xi}]} + ${file_val}"
 		fi
+
 		xi=$((${xi} + 1))
 	    done
 
-	# skip Y newline (masked Y)
+	    # skip Y newline (masked Y)
 	    if [ "${y_mask_array[${yi}]}" != "0" ];then
 		data="${data}\n"
 	    fi
@@ -1049,10 +875,8 @@ create_data_file()
     reset_ifs
     printf " Done.\n"
     # Dump data
-    echo -e $data |tee ${out_file}
+    echo -e $data |tee ${data_file}
     
-    pretty_tics
-    yrange_tics
 }
 
 
@@ -1066,18 +890,21 @@ in_array()
     return 1
 }
 
-# Input: "X_VALUES" "Y_VLUES" FILENAME
+# Input: filter (-f)
 # Output: creates FILENAME and puts in it all the data.
 # Description: Create the data file for a heatmap. 
-create_heatmap_data_file()
+create_data_file_hmap()
 {
+    local filter=$1
     local x_array=${x_vals}
     local y_array=${y_vals}
-    local out_file=$1
-    local others=$2
+    local data_file=${data_file}
+
     local x
     local y
     local fig_options=`get_all_parts_of_file "${fig_file}"`
+
+    set_ifs "${IFS_CHAR}" # Let ',' be the separator character
 
     # avg
     local max_x=0
@@ -1106,7 +933,7 @@ create_heatmap_data_file()
 
 
     local data=""
-    set_ifs "${IFS_CHAR}" # Let ',' be the separator character
+
     local yi=0
     for y in ${y_array}; do
 	local sumx="0"
@@ -1114,7 +941,7 @@ create_heatmap_data_file()
 	for x in ${x_array}; do
 
 	    if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ];then # x/y avg
-		local opts="${x} ${y} ${others}"
+		local opts="${x} ${y} ${filter}"
 		get_match "$DIR" "$opts"
 		local file=${RETVAL}
 		get_file_value "${DIR}/${file}"
@@ -1152,9 +979,9 @@ create_heatmap_data_file()
 	yi=$((${yi} + 1))
     done
     reset_ifs
-    echo "${out_file}"
+    echo "${data_file}"
     echo "- - - - - - - - - - - -"
-    echo -e $data |tee ${out_file}
+    echo -e $data |tee ${data_file}
 }
 
 
@@ -1240,8 +1067,6 @@ sanity_checks()
 	    echo "ERROR: X label rotate must be an integer, not: ${x_tics_rotate}."
 	    exit 1
 	fi
-    else
-	x_tics_rotate=-60
     fi
 
     # size is number
@@ -1474,6 +1299,20 @@ sanity_checks()
 	fi
     fi
 
+
+    # line width
+    if [ "${line_width}" != "" ];then
+	is_number ${line_width}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: line width: ${line_width} must be a number!"
+	    exit 1
+	fi
+    else
+	line_width=3  		# Default line width
+    fi
+
+
     # offsets
     if [ "${x_label_offset}" != "" ];then
 	is_number ${x_label_offset}
@@ -1498,6 +1337,24 @@ sanity_checks()
 	    echo "ERROR: --ztagsoffset: ${z_tags_offset} must be a number!"
 	    exit 1
 	fi
+    fi
+}
+
+set_defaults()
+{
+    # set default size
+    if [ "${size_param}" == "" ];then
+	size_param_x=0.5
+	size_param_y=0.5
+    fi
+
+    if [ "${epsfile}" == "" ];then
+	epsfile="moufoplot.eps"
+    fi
+
+    # noappend
+    if [ "${no_append}" != "YES" ];then
+	no_append="NO"
     fi
 }
 
@@ -1596,7 +1453,16 @@ parse_legend()
     local SMALL=15
     local AT=16
 
+    # Default values:
+    if [ "${plot_type}" == "stacked" ];then
+	key_command="set key rmargin"
+    fi
 
+    if [ "${legend_params}" == "" ];then
+	if [ "${key_command}" != "" ];then
+	    return
+	fi
+    fi
     
     set_ifs ","
     local mask
@@ -1636,7 +1502,7 @@ parse_legend()
 	mask[${ON}]=1
     fi
 
-    local key_default="set key tmargin"
+    local key_default="set key inside top"
     local key_start="set key samplen 1"
     key_command=${key_start}
     if [ "${mask[${OFF}]}" == "1" ];then
@@ -1746,6 +1612,43 @@ parse_legend()
 }
 
 
+get_max_xtag_len()
+{
+    set_ifs ","
+    local max_xlen=0
+    if [ "${xtags_array}" == "" ];then
+	for x in ${y_vals}; do
+	    local xlen=`echo ${x} | wc -c`
+	    if [ ${xlen} -gt ${max_xlen} ];then
+		max_xlen=${xlen}
+	    fi
+	done
+    else
+	for x in ${y_tags}; do
+	    local xlen=`echo ${x} | wc -c`
+	    if [ ${xlen} -gt ${max_xlen} ];then
+		max_xlen=${xlen}
+	    fi
+	done
+    fi
+    RETVAL=${max_xlen}
+    reset_ifs
+}
+
+parse_xrotate()
+{
+    if [ "${x_tics_rotate}" == "" ];then
+	get_max_xtag_len
+	local xtag_len=${RETVAL}
+
+	if [ ${xtag_len} -le 3 ];then
+	    x_tics_rotate=0
+	else
+	    x_tics_rotate=-90
+	fi
+    fi
+}
+
 parse_size()
 {
     if [ "${size_param}" != "" ]; then
@@ -1764,6 +1667,9 @@ parse_size()
 	fi
 	size_param_x=${size_array[0]}
 	size_param_y=${size_array[1]}
+    else
+	size_param_x=0.5
+	size_param_y=0.55
     fi
 }
 
@@ -1789,8 +1695,8 @@ parse_colors()
     if [ "${user_colors}" == "" ];then
 	color_array[0]="#000000" #(black)
 	color_array[1]="#000000" #(black)
-	color_array[2]="#000000" # black
-	color_array[3]="#FFFF00" # light yellow
+	color_array[2]="#202000" # black
+	color_array[3]="#ffdd00" # light yellow
 	color_array[4]="#0000AA" # dark blue
 	color_array[5]="#00BB00" # light green
 	color_array[6]="#AA0000" # red
@@ -1890,7 +1796,7 @@ parse_yavg()
     fi
 }
 
-do_percent()
+parse_percent() 		# Must run before parse_legend
 {
     if [ "${percent}" != "" ];then
 	if [ "${y_format}" == "" ];then
@@ -1899,6 +1805,14 @@ do_percent()
 	if [ "${y_range}" == "" ];then
 	    y_range="0,100,10"
 	fi
+	key_command="set key rmargin"
+    fi
+}
+
+parse_yformat()			# After parse_percent
+{
+    if [ "${y_format}" == "" ];then
+	y_format="%4.2f"
     fi
 }
 
@@ -1918,6 +1832,38 @@ parse_offsets()
     fi
 }
 
+parse_tags()
+{
+    # Custom Labels (TAGS)
+    set_ifs ","
+    local xi=0
+    for x in ${x_tags}; do
+	xtags_array[${xi}]="${x}"
+	xi=$((xi+1))
+    done
+    local yi=0
+    for y in ${y_tags}; do
+	ytags_array[${yi}]="${y}"
+	yi=$((yi + 1))
+    done
+    local zi=0
+    for z in ${z_tags}; do
+	ztags_array[${zi}]="${z}"
+	zi=$((zi + 1))
+    done
+    reset_ifs
+}
+
+parse_vals()
+{
+    # Reverse x, y
+    if [ "${plot_type}" == "bargraph" ] || [ "${plot_type}" == "stacked" ];then
+	local x_vals_sv=${x_vals}
+	x_vals=${y_vals}
+	y_vals=${x_vals_sv}
+    fi
+}
+
 parse_arguments()
 {
     # DIR
@@ -1928,13 +1874,15 @@ parse_arguments()
 
 
     local short_args="hd:x:y:z:f:t:c:i"
-    local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,title:,\
-xlabel:,ylabel:,data:,xtags:,ytags:,ztags:,xnorm:,ynorm:,ynormv:,xrotate:,legend:,size:,\
-xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,zmask:,xavg:,yavg:,\
-percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:,gp:,eps:"
+    local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
+title:,xlabel:,ylabel:,data:,xtags:,ytags:,ztags:,xnorm:,ynorm:,ynormv:,xrotate:,\
+legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
+zmask:,xavg:,yavg:,percent,barw:,linew:,barlw:,viewer:,xlabeloffset:,\
+ylabeloffset:,ztagsoffset:,gp:,eps:,zlabel:,noappend"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
-    getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
+    # getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
+    getopt -Q -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
     if [ $? != 0 ]||[ "${args_array[0]}" == "--" ] ;then
 	echo "Bad argument(s), printing help and exiting."
 	usage
@@ -1948,7 +1896,7 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:,gp:,eps:"
 	    "--yvals"|"-yvals"|"-y") y_vals="$2";shift;;
 	    "--zvals"|"-zvals"|"-z") z_vals="$2";shift;;
 	    "--filter"|"-filter"|"-f") others="$2";shift;;
-	    "--title"|"-title"|"-t") main_title="$2";shift;;
+	    "--title"|"-title"|"-t") title="$2";shift;;
 	    "--xtags"|"-xtags") x_tags="$2";shift;;
 	    "--ytags"|"-ytags") y_tags="$2";shift;;
 	    "--ztags"|"-ztags") z_tags="$2";shift;;
@@ -1956,6 +1904,7 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:,gp:,eps:"
 	    "--xlabeloffset"|"-xlabeloffset") x_label_offset="$2";shift;;
 	    "--ylabel"|"-ylabel") y_title="$2";shift;;
 	    "--ylabeloffset"|"-ylabeloffset") y_label_offset="$2";shift;;
+	    "--zlabel"|"-zlabel") z_label="$2";shift;;
 	    "--ztagsoffset"|"-ztagsoffset") z_tags_offset="$2";shift;;
 	    "--help"|"-help"|"-h") usage; exit 1;;
 	    "--bar"|"-bar") plot_type="bargraph";;
@@ -1982,17 +1931,19 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:,gp:,eps:"
 	    "--yavg"|"-yavg") y_avg="$2";shift;;
 	    "--percent"|"-percent") percent="YES";;
 	    "--barw"|"-barw") bar_width="$2";shift;;
+	    "--linew"|"-linew") line_width="$2";shift;;
 	    "--barlw"|"-barlw") bar_line_width="$2";shift;;
 	    "--viewer"|"-viewer") eps_viewer="$2";shift;;
 	    "--data"|"-data") data_file="$2";shift;;
 	    "--gp"|"-gp") gpfname="$2";shift;;
 	    "--eps"|"-eps") epsfile="$2";shift;;
+	    "--noappend"|"-noappend") no_append="YES";;
 	    "--") break;
 	esac
 	shift
     done
     # Check if plot type is not set. If so default to bargraph
-    if [ "${plot_type}XX" == "XX" ];then
+    if [ "${plot_type}" == "" ];then
 	plot_type="bargraph"
     fi
 
@@ -2000,26 +1951,14 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:,gp:,eps:"
 	data_file="/tmp/moufoplot.data"
     fi
 
+    parse_vals
 
-    # Custom Labels (TAGS)
-    set_ifs ","
-    local xi=0
-    for x in ${x_tags}; do
-	xtags_array[${xi}]="${x}"
-	xi=$((xi+1))
-    done
-    local yi=0
-    for y in ${y_tags}; do
-	ytags_array[${yi}]="${y}"
-	yi=$((yi + 1))
-    done
-    local zi=0
-    for z in ${z_tags}; do
-	ztags_array[${zi}]="${z}"
-	zi=$((zi + 1))
-    done
-    reset_ifs
+    parse_tags
 
+    parse_xrotate		# After parse_tags, parse_vals
+
+    parse_percent 		# Must run before parse_legend
+    parse_yformat		# After parse_percent
 
     # Parse Legend parameters
     parse_legend
@@ -2049,12 +1988,14 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:,gp:,eps:"
     parse_yavg
     if [ $? -ne 0 ]; then exit 1; fi
 
-    do_percent
-
     parse_yrange
     if [ $? -ne 0 ]; then exit 1; fi    
 
     parse_offsets
+
+    if [ "${y_tics}" == "" ]&&[ "${y_range}" == "" ];then
+	y_tics=5
+    fi
 
     echo "+--------------------------------+"
     echo "|         MoufoPlot              |"
@@ -2066,15 +2007,16 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:,gp:,eps:"
     echo "| y: ${y_vals}"
     echo "| z: ${z_vals}"
     echo "| filter: ${others}"
-    echo "| Title: ${main_title}"
-    echo "| x label: ${x_title}"
-    echo "| x label offset: ${x_label_offset}"
-    echo "| y label: ${y_title}"
-    echo "| y label offset: ${y_label_offset}"
+    echo "| title: ${title}"
+    echo "| xlabel: ${x_title}"
+    echo "| xlabel offset: ${x_label_offset}"
+    echo "| ylabel: ${y_title}"
+    echo "| ylabel offset: ${y_label_offset}"
+    echo "| zlabel: ${z_label}"
     echo "| xtags: ${x_tags}"
     echo "| ytags: ${y_tags}"
     echo "| ztags: ${z_tags}"
-    echo "| ztagsoff: ${z_tags_offset}"
+    echo "| ztagsoffset: ${z_tags_offset}"
     echo "| x norm filters: ${x_norm}"
     echo "| y norm filters: ${y_norm}"
     echo "| y norm values: ${y_normv}"
@@ -2132,9 +2074,6 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:,gp:,eps:"
     if [ "${gpfname}" == "" ];then
 	gpfname="moufoplot.gp"
     fi
-    if [ "${epsfile}" == "" ];then
-	epsfile="${argfname}.eps"
-    fi
 
     if [ "${bar_line_width}" == "" ];then
 	bar_line_width=1
@@ -2144,15 +2083,16 @@ percent,barw:,barlw:,viewer:,xlabeloffset:,ylabeloffset:,ztagsoffset:,gp:,eps:"
     echo "| yavg: ${y_avg}"
     echo "| percent: ${percent}"
     echo "| bar width: ${bar_width}"
+    echo "| line width: ${line_width}"
     echo "| bar line width: ${bar_line_width}"
     echo "| .data file: ${data_file}"
     echo "| .gp   file: ${gpfname}"
     echo "| .eps  file: ${epsfile}"
+    echo "| Dont append data to eps: ${no_append}"
     echo "| viewer: ${eps_viewer}"
     echo "+-------------------------------+"
 
 }
-
 
 usage()
 {
@@ -2169,16 +2109,17 @@ usage()
     echo "   --filter,-f \"<filter vals>\": The filtering identifiers."
     echo "   --title, -t \"<title>\"      : (Opt) Graph title."
     echo "   --xlabel \"<x label>\"       : (Opt) Label of the X axis."
-    echo "   --xlabeloff <x label offset> : (Opt) Set the offset of xlabel."
+    echo "   --xlabeloffset <xlabel offset>: (Opt) Set the offset of xlabel."
     echo "   --ylabel \"<y label>\"       : (Opt) Label of the Y axis."
-    echo "   --ylabeloff <y label offset> : (Opt) Set the offset of ylabel."
+    echo "   --ylabeloffset <ylabel offset>: (Opt) Set the offset of ylabel."
+    echo "   --zlabel \"<z label>\"       : (Opt) Label of the Z axis."
     echo "   --data \"<file path>\"       : (Opt) .data data file."
     echo "   --gp \"<file path>\"         : (Opt) .gp gnuplot file."
     echo "   --eps \"<file path>\"        : (Opt) .eps postscript file."
     echo "   --xtags \"<tags>\"           : (Opt) Tags for the X axis."
     echo "   --ytags \"<tags>\"           : (Opt) Tags for the Y axis."
     echo "   --ztags \"<tags>\"           : (Opt) Tags for the Z axis."
-    echo "   --ztagsoff <z tags offset>   : (Opt) Set the offset of z tags."
+    echo "   --ztagsoffset <ztags offset> : (Opt) Set the offset of z tags."
     echo "   --xnorm \"<x norm filters>\" : (Opt) Normalization filter X."
     echo "   --ynorm \"<y norm filters>\" : (Opt) Normalization filter Y."
     echo "   --ynormv \"<y norm values>\" : (Opt) Normalization values Y."
@@ -2201,13 +2142,43 @@ usage()
     echo "   --ignore,-i                  : (Opt) Ignore Filter ERROR."
     echo "   --percent                    : (Opt) Change Y axis to show % vals."
     echo "   --viewer <eps viewer>        : (Opt) Prefer to use EPS VIEWER."
-    echo "   --barw <bar width>           : (Opt) Set the bar width size."
+    echo "   --barw <bar width>           : (Opt) Set the bar width."
+    echo "   --linew <line width>         : (Opt) Set the line width."
     echo "   --barlw <bar line width>     : (Opt) Set the bar line width."
-
-
+    echo "   --noappend                   : (Opt) Dont append moufoplot data to eps."
     echo "   --help                       : Print this help screen."
     exit 1
 }
+
+# Append 1) The moufplot command
+#        2) The .gp file contents
+#        3) The data points
+# to the eps file as comments
+append_data_to_eps()
+{
+    if [ "${no_append}" == "YES" ]; then
+	return
+    fi
+    echo "Appending moufoplot command to ${epsfile}..."
+    echo "%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
+    echo "%% moufoplot command:" >> ${epsfile}
+    echo "%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
+    echo $@ | sed 's/^/%% /' >> ${epsfile}
+
+    echo "Appending numerical data (${data_file}) to ${epsfile}..."
+    echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
+    echo "%% moufoplot data: ${data_file}" >> ${epsfile}
+    echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
+    cat ${data_file} | sed 's/^/%% /' >> ${epsfile}
+
+    echo "Appending .gp file (${gpfname}) to ${epsfile}..."
+    echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
+    echo "%% moufoplot .gp: ${gpfname}" >> ${epsfile}
+    echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
+    cat ${gpfname} | sed 's/^/%% /' >> ${epsfile}
+}
+
+
 
 findviewer()
 {
@@ -2240,21 +2211,25 @@ moufoplot()
     if [ $? -ne 0 ]; then exit 1; fi
 
     sanity_checks
+    set_defaults
     if [ $? -ne 0 ]; then exit 1; fi
 
     if [ "${plot_type}" == "heatmap" ];then
-	create_heatmap_data_file "${data_file}" "${others}"
-	gp_heatmap_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
+	create_data_file_hmap "${others}"
+	gp_hmap_options 
     elif [ "${plot_type}" == "bargraph" ];then
-	create_data_file "${data_file}" "${others}"
+	create_data_file "" "${others}"
 	gp_bar_options
     elif [ "${plot_type}" == "linegraph" ];then
-	create_data_file "${data_file}" "${others}"
-	gp_line_options "${data_file}" "${x_vals}" "${y_vals}" "${main_title}" "${x_title}" "${y_title}"
+	create_data_file "" "${others}"
+	gp_line_options
     elif [ "${plot_type}" == "stacked" ];then
-	create_data_file "${data_file}" "${others}"
+	create_data_file "rowstacked" "${others}" 
 	gp_bar_options "rowstacked"
     fi
+
+    # Append Data to EPS file
+    append_data_to_eps "$@"
 
     # View EPS file
     findviewer
@@ -2262,6 +2237,7 @@ moufoplot()
     if [ "${viewer}" != "" ];then
 	echo "View ${epsfile} using ${viewer}"
 	local viewcmd="${viewer} ${epsfile}"
+	echo ${viewcmd}
 	eval ${viewcmd}
     fi
 }
