@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Moufoplot 
+# MoufoPlot 
 # Copyright (C) 2012 Vasileios Porpodas <v DOT porpodas AT ed.ac.uk>
 #
 # MoufoPlot is free software; you can redistribute it and/or modify it under
@@ -14,7 +14,7 @@
 # for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with GCC; see the file COPYING3.  If not see
+# along with MoufoPlot; see the file COPYING3.  If not see
 # <http://www.gnu.org/licenses/>.
 
 
@@ -164,7 +164,7 @@ get_match ()
 	    return
 	else
 	    echo -e "\nERROR: Filter: ${matches} matches ${count_files} files in ${DIR} !!!"
-    	    echo -e "FILES: $filename"
+    	    echo -e "FILES:\n$filename"
     	    exit 1
 	fi
     fi
