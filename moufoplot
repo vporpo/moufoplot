@@ -1857,7 +1857,9 @@ parse_tags()
 parse_vals()
 {
     # Reverse x, y
-    if [ "${plot_type}" == "bargraph" ] || [ "${plot_type}" == "stacked" ];then
+    if [ "${plot_type}" == "bargraph" ] \
+	|| [ "${plot_type}" == "stacked" ] \
+	|| [ "${plot_type}" == "linegraph" ];then
 	local x_vals_sv=${x_vals}
 	x_vals=${y_vals}
 	y_vals=${x_vals_sv}

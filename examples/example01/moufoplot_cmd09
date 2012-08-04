@@ -1,0 +1,2 @@
+#!/bin/bash
+../../moufoplot -d data/ --hmap -x size4k,size8k,size16k -y assoc2,assoc4 -f cycles --legend box --title "Performance results" --xlabel "Cache size" --ylabel "Cache associativity"

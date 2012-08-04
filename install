@@ -1,0 +1,2 @@
+#!/bin/sh
+sudo cp moufoplot /usr/local/bin/
