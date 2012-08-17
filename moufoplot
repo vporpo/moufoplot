@@ -318,7 +318,7 @@ gp_size()
 
 gp_terminal()
 {
-    echo "set term postscript eps enhanced color" > ${gpfname} 
+    echo "set term ${gp_terminal_cmd}" > ${gpfname} 
 }
 
 gp_output()
@@ -1338,6 +1338,17 @@ sanity_checks()
 	    exit 1
 	fi
     fi
+    if [ "${out_format}" != "" ];then
+	case "${out_format}" in
+	    "eps") gp_terminal_cmd="postscript eps enhanced color";suffix="eps";;
+	    "png") gp_terminal_cmd="png interlace truecolor enhanced large ";suffix="png";;
+	    "jpeg") gp_terminal_cmd="jpeg interlace truecolor enhanced large";suffix="jpeg";;
+	    *) echo "ERROR: --outformat: ${out_format}"; exit 1
+	esac
+    else
+	gp_terminal_cmd="postscript eps enhanced color"
+	suffix="eps"
+    fi
 }
 
 set_defaults()
@@ -1349,7 +1360,7 @@ set_defaults()
     fi
 
     if [ "${epsfile}" == "" ];then
-	epsfile="moufoplot.eps"
+	epsfile="moufoplot.${suffix}"
     fi
 
     # noappend
@@ -1880,7 +1891,7 @@ parse_arguments()
 title:,xlabel:,ylabel:,data:,xtags:,ytags:,ztags:,xnorm:,ynorm:,ynormv:,xrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,barw:,linew:,barlw:,viewer:,xlabeloffset:,\
-ylabeloffset:,ztagsoffset:,gp:,eps:,zlabel:,noappend"
+ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
     # getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -1938,8 +1949,9 @@ ylabeloffset:,ztagsoffset:,gp:,eps:,zlabel:,noappend"
 	    "--viewer"|"-viewer") eps_viewer="$2";shift;;
 	    "--data"|"-data") data_file="$2";shift;;
 	    "--gp"|"-gp") gpfname="$2";shift;;
-	    "--eps"|"-eps") epsfile="$2";shift;;
+	    "--out"|"-out") epsfile="$2";shift;;
 	    "--noappend"|"-noappend") no_append="YES";;
+	    "--outformat"|"-outformat") out_format="$2";shift;;
 	    "--") break;
 	esac
 	shift
@@ -2089,9 +2101,10 @@ ylabeloffset:,ztagsoffset:,gp:,eps:,zlabel:,noappend"
     echo "| bar line width: ${bar_line_width}"
     echo "| .data file: ${data_file}"
     echo "| .gp   file: ${gpfname}"
-    echo "| .eps  file: ${epsfile}"
+    echo "| output file: ${epsfile}"
     echo "| Dont append data to eps: ${no_append}"
     echo "| viewer: ${eps_viewer}"
+    echo "| outformat: ${out_format}"
     echo "+-------------------------------+"
 
 }
@@ -2117,7 +2130,7 @@ usage()
     echo "   --zlabel \"<z label>\"       : (Opt) Label of the Z axis."
     echo "   --data \"<file path>\"       : (Opt) .data data file."
     echo "   --gp \"<file path>\"         : (Opt) .gp gnuplot file."
-    echo "   --eps \"<file path>\"        : (Opt) .eps postscript file."
+    echo "   --out \"<file path>\"        : (Opt) Output postscript file."
     echo "   --xtags \"<tags>\"           : (Opt) Tags for the X axis."
     echo "   --ytags \"<tags>\"           : (Opt) Tags for the Y axis."
     echo "   --ztags \"<tags>\"           : (Opt) Tags for the Z axis."
@@ -2143,11 +2156,12 @@ usage()
     echo "   --yavg <array of Y>          : (Opt) Avg over selected Y."
     echo "   --ignore,-i                  : (Opt) Ignore Filter ERROR."
     echo "   --percent                    : (Opt) Change Y axis to show % vals."
-    echo "   --viewer <eps viewer>        : (Opt) Prefer to use EPS VIEWER."
+    echo "   --viewer <file viewer>       : (Opt) Prefer to use VIEWER."
     echo "   --barw <bar width>           : (Opt) Set the bar width."
     echo "   --linew <line width>         : (Opt) Set the line width."
     echo "   --barlw <bar line width>     : (Opt) Set the bar line width."
     echo "   --noappend                   : (Opt) Dont append moufoplot data to eps."
+    echo "   --outformat <eps|png|jpeg>   : (Opt) Select output file format."
     echo "   --help                       : Print this help screen."
     exit 1
 }
@@ -2184,14 +2198,20 @@ append_data_to_eps()
 
 findviewer()
 {
-    local pdfviewers="evince,okular,kpdf,gv,inkscape,gimp"
+    local viewers
+    case "${suffix}" in
+	"eps") viewers="evince,okular,kpdf,gv,inkscape,gimp";;
+	"jpeg") viewers="gpicview,firefox,google-chrome,gimp";;
+	"png") viewers="gpicview,firefox,google-chrome,gimp";;
+	*) echo "ERROR in findviewer(). suffix:'${suffix}' unrecognized."; exit 1;;
+    esac
     if [ "${eps_viewer}" != "" ];then
-	pdfviewers="${eps_viewer},${pdfviewers}"
+	viewers="${eps_viewer},${viewers}"
     fi
     local viewer
     RETVAL=""
     set_ifs ","
-    for viewer in ${pdfviewers}; do
+    for viewer in ${viewers}; do
 	which ${viewer} 2> /dev/null 1> /dev/null
 	if [ $? -eq 0 ];then
 	    RETVAL=${viewer}
@@ -2199,7 +2219,7 @@ findviewer()
 	    return
 	fi
     done
-    echo "WARNING: No EPS viewer found in (${pdfviewers}) to display ${epsfile}."
+    echo "WARNING: No EPS viewer found in (${viewers}) to display ${epsfile}."
     echo "Try using: --viewer " 
     reset_ifs
 }
