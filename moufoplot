@@ -1244,9 +1244,11 @@ sanity_checks()
 	    local min=0
 	    local max=0
 	    local xv
+	    set_ifs ", "
 	    for xv in ${x_vals};do
 		max=$((${max} + 1))
 	    done
+	    reset_ifs
 
 	    if [ ${x} -lt ${min} ]||[ ${x} -gt ${max} ];then
 		echo "ERROR: in xavg: ${x_avg}. Must be: ${min} < ${x} < ${max}."
@@ -1272,13 +1274,15 @@ sanity_checks()
 	    local min=0
 	    local max=0
 	    local yv
+	    set_ifs ", "
 	    for yv in ${y_vals};do
-		max=$((${max} + 1))
+	    	max=$((${max} + 1))
 	    done
+	    reset_ifs
 
 	    if [ ${y} -lt ${min} ]||[ ${y} -gt ${max} ];then
-		echo "ERROR: in yavg: ${y_avg}. Must be: ${min} < ${y} < ${max}."
-		exit 1
+	    	echo "ERROR: in yavg: ${y_avg}. Must be: ${min} < ${y} < ${max}."
+	    	exit 1
 	    fi
 	    i=$((${i} + 1))
 	done
@@ -2152,8 +2156,8 @@ usage()
     echo "   --xmask <bitmap>             : (Opt) Disable X bars with 0."
     echo "   --ymask <bitmap>             : (Opt) Disable Y bars with 0."
     echo "   --zmask <bitmap>             : (Opt) Disable Z bars with 0."
-    echo "   --xavg <array of X>          : (Opt) Avg over selected X."
-    echo "   --yavg <array of Y>          : (Opt) Avg over selected Y."
+    echo "   --xavg <0,1,2,3,...>         : (Opt) Avg over selected X."
+    echo "   --yavg <0,1,2,3,...>         : (Opt) Avg over selected Y."
     echo "   --ignore,-i                  : (Opt) Ignore Filter ERROR."
     echo "   --percent                    : (Opt) Change Y axis to show % vals."
     echo "   --viewer <file viewer>       : (Opt) Prefer to use VIEWER."
