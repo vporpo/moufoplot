@@ -407,8 +407,8 @@ gp_bar_options()
     gp_xtics_rotate
     gp_set_grid
     gp_xy_format
-    gp_key
     gp_fonts
+    gp_key
     gp_title
     gp_ytics
     gp_yrange 
@@ -466,10 +466,11 @@ gp_bar_options()
 	    if [ "${ztags_array[${zi}]}" != "" ];then
 		local ztag=${ztags_array[${zi}]}
 		ztag=`echo ${ztag}|sed 's/ /_/g'` # Remove spaces
-	    else
-		local ztag=${z}
-		ztag=`echo ${ztag}|sed 's/ /_/g'` # Remove spaces
-	    fi
+	    fi 
+	    # else
+	    # 	local ztag=${z}
+	    # 	ztag=`echo ${ztag}|sed 's/ /_/g'` # Remove spaces
+	    # fi
 
 	    plot_cmd="${plot_cmd} newhistogram \"${ztag}\", "
 	    for x in ${x_vals}; do
@@ -507,8 +508,8 @@ gp_line_options()
     gp_xtics_rotate
     gp_set_grid
     gp_xy_format
-    gp_key
     gp_fonts
+    gp_key
     gp_title
     gp_ytics
     gp_yrange
@@ -735,7 +736,7 @@ create_data_file()
     	y_array="${y_array},avg"
 	y_vals=${y_array}
 	local yi=0
-	while [ ${yi} -lt ${max_y} ];do
+	while [ ${yi} -lt ${max_x} ];do
 	    ysum[${yi}]="0"
 	    yi=$((${yi} + 1))
 	done
@@ -924,7 +925,7 @@ create_data_file_hmap()
     	y_array="${y_array},avg"
 	y_vals=${y_array}
 	local yi=0
-	while [ ${yi} -lt ${max_y} ];do
+	while [ ${yi} -lt ${max_x} ];do
 	    sumy[${yi}]="0"
 	    yi=$((${yi} + 1))
 	done
@@ -1716,11 +1717,12 @@ parse_colors()
 	color_array[5]="#00BB00" # light green
 	color_array[6]="#AA0000" # red
 	color_array[7]="#6699ff" # light blue
-	color_array[8]="#ffcc00" # light orange
-	color_array[9]="#990099" # purple
-	color_array[10]="#999900"
-	color_array[11]="#dddddd"
+	color_array[10]="#006f00" # dark orange
+	color_array[8]="#887700" # light orange
 	color_array[12]="#555555"
+	color_array[9]="#c900c9" # light purple
+	color_array[11]="#dddddd"
+
 	color_array[13]="#00ff00"
 	color_array[14]="#00ffff"
 	color_array[15]="#ff0000"
@@ -1852,16 +1854,19 @@ parse_tags()
     # Custom Labels (TAGS)
     set_ifs ","
     local xi=0
+    local x
     for x in ${x_tags}; do
 	xtags_array[${xi}]="${x}"
 	xi=$((xi+1))
     done
     local yi=0
+    local y
     for y in ${y_tags}; do
 	ytags_array[${yi}]="${y}"
 	yi=$((yi + 1))
     done
     local zi=0
+    local z
     for z in ${z_tags}; do
 	ztags_array[${zi}]="${z}"
 	zi=$((zi + 1))
