@@ -1964,6 +1964,9 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
 	    "--") break;
 	esac
 	shift
+	if [ "${1}" != "--" ];then
+	    arguments_saved="${arguments_saved} ${1} \"${2}\""
+	fi
     done
     # Check if plot type is not set. If so default to bargraph
     if [ "${plot_type}" == "" ];then
@@ -2188,7 +2191,8 @@ append_data_to_eps()
     echo "%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
     echo "%% moufoplot command:" >> ${epsfile}
     echo "%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
-    echo $@ | sed 's/^/%% /' >> ${epsfile}
+    # echo $@ | sed 's/^/%% /' >> ${epsfile}
+    echo "moufoplot ${arguments_saved}" | sed 's/^/%% /' >> ${epsfile}
 
     echo "Appending numerical data (${data_file}) to ${epsfile}..."
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
