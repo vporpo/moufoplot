@@ -2170,6 +2170,7 @@ usage()
     echo "   --yavg <0,1,2,3,...>         : (Opt) Avg over selected Y."
     echo "   --ignore,-i                  : (Opt) Ignore Filter ERROR."
     echo "   --percent                    : (Opt) Change Y axis to show % vals."
+    echo "   --noviewer                   : (Opt) Disable launching the VIEWER."
     echo "   --viewer <file viewer>       : (Opt) Prefer to use VIEWER."
     echo "   --barw <bar width>           : (Opt) Set the bar width."
     echo "   --linew <line width>         : (Opt) Set the line width."
