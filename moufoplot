@@ -1899,7 +1899,7 @@ parse_arguments()
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
 title:,xlabel:,ylabel:,data:,xtags:,ytags:,ztags:,xnorm:,ynorm:,ynormv:,xrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
-zmask:,xavg:,yavg:,percent,barw:,linew:,barlw:,viewer:,xlabeloffset:,\
+zmask:,xavg:,yavg:,percent,barw:,linew:,barlw:,noviewer,viewer:,xlabeloffset:,\
 ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
@@ -1955,6 +1955,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
 	    "--barw"|"-barw") bar_width="$2";shift;;
 	    "--linew"|"-linew") line_width="$2";shift;;
 	    "--barlw"|"-barlw") bar_line_width="$2";shift;;
+	    "--noviewer"|"-noviewer") no_viewer="YES";;
 	    "--viewer"|"-viewer") eps_viewer="$2";shift;;
 	    "--data"|"-data") data_file="$2";shift;;
 	    "--gp"|"-gp") gpfname="$2";shift;;
@@ -2115,6 +2116,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
     echo "| .gp   file: ${gpfname}"
     echo "| output file: ${epsfile}"
     echo "| Dont append data to eps: ${no_append}"
+    echo "| noviewer: ${no_viewer}"
     echo "| viewer: ${eps_viewer}"
     echo "| outformat: ${out_format}"
     echo "+-------------------------------+"
@@ -2269,7 +2271,7 @@ moufoplot()
     # View EPS file
     findviewer
     local viewer=${RETVAL}
-    if [ "${viewer}" != "" ];then
+    if [ "${viewer}" != "" ]&&[ "${no_viewer}" != "YES" ];then
 	echo "View ${epsfile} using ${viewer}"
 	local viewcmd="${viewer} ${epsfile}"
 	echo ${viewcmd}
