@@ -1912,6 +1912,9 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
     fi
     eval set -- "$args"
     while true; do
+
+	local saved_1=${1}
+	local saved_2=${2}
 	case "$1" in
 	    "--dir"|"-dir"|"-d") DIR="$2";shift;;
 	    "--xvals"|"-xvals"|"-x") x_vals="$2";shift;;
@@ -1964,10 +1967,17 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
 	    "--outformat"|"-outformat") out_format="$2";shift;;
 	    "--") break;
 	esac
-	shift
-	if [ "${1}" != "--" ];then
-	    arguments_saved="${arguments_saved} ${1} \"${2}\""
+
+	# If shifted then $1 == saved_2
+	if [ "${1}" == "${saved_2}" ]&&[ "${1}" != "${saved_1}" ];then
+	    # The argument requires 2 parts, save them both
+	    arguments_saved="${arguments_saved} ${saved_1} \"${saved_2}\""
+	else
+	    # The argument only has 1 part
+	    arguments_saved="${arguments_saved} ${saved_1}"
 	fi
+
+	shift
     done
     # Check if plot type is not set. If so default to bargraph
     if [ "${plot_type}" == "" ];then
