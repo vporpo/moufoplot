@@ -148,7 +148,7 @@ get_match ()
 
     set_ifs ", "
     for match in $matches; do
-	grep_cmd="${grep_cmd}|egrep \"_${match}_|^${match}_|_${match}\\$\""
+	grep_cmd="${grep_cmd}|egrep \"_${match}_|^${match}_|_${match}\\$|^${match}\\$\""
     done
     reset_ifs
 
@@ -495,9 +495,13 @@ gp_bar_options()
 	done
     fi
     reset_ifs
-    echo "${plot_cmd%?}" >> ${gpfname}
-    gnuplot ${gpfname}
 
+    if [ "${plot_cmd}" == "plot " ];then
+	echo "SANITY ERROR: plot_cmd is incorrect"
+	exit 1
+    fi
+
+    echo "${plot_cmd%?}" >> ${gpfname}
 }
 
 gp_line_options()
@@ -537,7 +541,6 @@ gp_line_options()
     done
     reset_ifs
     echo "${plot_cmd%?}" >> ${gpfname}
-    gnuplot ${gpfname}
 }
 
 gp_hmap_options()
@@ -572,8 +575,6 @@ gp_hmap_options()
     local plot_cmd="plot "
     plot_cmd="${plot_cmd} \"${data_file}\" matrix with image"
     echo "${plot_cmd}" >> ${gpfname}
-
-    gnuplot ${gpfname}
 }
 
 create_tics()
@@ -606,7 +607,11 @@ create_tics()
 	RETVAL="${xtics_cmd%?})"
     elif [ "${xORy}" == "y" ];then
 	local y
-	local ytics_cmd="set ytics ("
+	if [ "${y_vals}" != "" ];then
+	    local ytics_cmd="set ytics ("
+	else
+	    local ytics_cmd=""
+	fi
 	local yi=0
 	local skipped=0
 	for y in ${y_vals}; do
@@ -624,8 +629,9 @@ create_tics()
 	    fi
 	    ytics_cmd="${ytics_cmd}\"${tag}\" $((${yi} - ${skipped})),"
 	    yi=$((${yi} + 1))
+	    ytics_cmd="${ytics_cmd%?})"
 	done
-	RETVAL="${ytics_cmd%?})"
+	RETVAL=${ytics_cmd}
      fi
     reset_ifs 
 }
@@ -723,7 +729,7 @@ create_data_file()
     for x in ${x_array}; do
 	max_x=$((${max_x} + 1))
     done
-    local max_y=0
+    local max_y=1
     for y in ${y_array}; do
 	max_y=$((${max_y} + 1))
     done
@@ -770,6 +776,11 @@ create_data_file()
 	z_array="NO-ZAXIS"
 	local no_z=1
     fi
+    if [ "${y_array}" == "" ];then
+	y_array="NO-YAXIS"
+	local no_y=1
+    fi
+
 
     local zi=0
     for z in ${z_array};do
@@ -781,6 +792,10 @@ create_data_file()
 	local yi=0    
 	local normalize_value=1.0
 	for y in ${y_array}; do
+	    if [ "${no_y}" == "1" ];then
+		y=""
+	    fi
+
 	    if [ "${ytags_array[${yi}]}" != "" ];then
 		local ytag=${ytags_array[${yi}]}
 		ytag=`echo ${ytag}|sed 's/ /_/g'` # Remove spaces
@@ -788,6 +803,9 @@ create_data_file()
 		local ytag=${y}
 		ytag=`echo ${ytag}|sed 's/ /_/g'` # Remove spaces
 	    fi
+	    if [ "${ytag}" == "" ];then
+		local ytag="no-ytag"
+	    fi 
 
             # Normalization on the Y axis
 	    if [ "${y_norm_array[${yi}]}" != "" ];then
@@ -802,6 +820,7 @@ create_data_file()
 	    local sum_x_all=0
 	    local sumx="0"
 	    local xi=0
+
 	    for x in ${x_array}; do
 		if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ];then # x/y avg
 		    local opts="${x} ${y} ${z} ${filter}"
@@ -877,7 +896,6 @@ create_data_file()
     printf " Done.\n"
     # Dump data
     echo -e $data |tee ${data_file}
-    
 }
 
 
@@ -912,7 +930,7 @@ create_data_file_hmap()
     for x in ${x_array}; do
 	max_x=$((${max_x} + 1))
     done
-    local max_y=0
+    local max_y=1
     for y in ${y_array}; do
 	max_y=$((${max_y} + 1))
     done
@@ -931,16 +949,21 @@ create_data_file_hmap()
 	done
     fi
 
-
-
     local data=""
+
+    if [ "${y_array}" == "" ];then
+	y_array="NO-Y"
+	local no_y=1
+    fi
 
     local yi=0
     for y in ${y_array}; do
+	if [ "${no_y}" == "1" ];then
+	    y=""
+	fi
 	local sumx="0"
 	local xi=0
 	for x in ${x_array}; do
-
 	    if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ];then # x/y avg
 		local opts="${x} ${y} ${filter}"
 		get_match "$DIR" "$opts"
@@ -1880,9 +1903,11 @@ parse_vals()
     if [ "${plot_type}" == "bargraph" ] \
 	|| [ "${plot_type}" == "stacked" ] \
 	|| [ "${plot_type}" == "linegraph" ];then
-	local x_vals_sv=${x_vals}
-	x_vals=${y_vals}
-	y_vals=${x_vals_sv}
+	if [ "${y_vals}" != "" ];then
+	    local x_vals_sv=${x_vals}
+	    x_vals=${y_vals}
+	    y_vals=${x_vals_sv}
+	fi
     fi
 }
 
@@ -2276,6 +2301,13 @@ moufoplot()
 	gp_bar_options "rowstacked"
     fi
 
+    local gnuplot_cmd="gnuplot ${gpfname}"
+    eval ${gnuplot_cmd}
+    if [ $? -ne 0 ];then
+	echo "ERROR: in ${gnuplot_cmd}"
+	exit 1
+    fi
+
     # Append Data to EPS file
     append_data_to_eps "$@"
 
@@ -2284,7 +2316,7 @@ moufoplot()
     local viewer=${RETVAL}
     if [ "${viewer}" != "" ]&&[ "${no_viewer}" != "YES" ];then
 	echo "View ${epsfile} using ${viewer}"
-	local viewcmd="${viewer} ${epsfile}"
+	local viewcmd="${viewer} ${epsfile} &"
 	echo ${viewcmd}
 	eval ${viewcmd}
     fi
