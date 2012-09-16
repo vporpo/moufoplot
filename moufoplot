@@ -446,7 +446,7 @@ gp_bar_options()
     local z
 
     if [ "${z_vals}" == "" ];then
-	for x in ${x_vals}; do
+	while [ ${xi} -lt ${max_x} ]; do
 	# skip masked
 	    if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
 		xi=$((${xi} + 1))
@@ -460,7 +460,8 @@ gp_bar_options()
 	done
     else
 	local zi=0
-	for z in ${z_vals}; do
+	# for z in ${z_vals}; do
+	while [ ${zi} -lt ${max_z} ];do
 	    local cmn=2
 
 	    if [ "${ztags_array[${zi}]}" != "" ];then
@@ -473,7 +474,9 @@ gp_bar_options()
 	    # fi
 
 	    plot_cmd="${plot_cmd} newhistogram \"${ztag}\", "
-	    for x in ${x_vals}; do
+	    # for x in ${x_vals}; do
+	    local xi=0
+	    while [ ${xi} -lt ${max_x} ]; do
 		# skip masked
 		if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
 		    xi=$((${xi} + 1))
@@ -527,7 +530,8 @@ gp_line_options()
     local cmn=2
     local xi=0
     set_ifs "${IFS_CHAR}"
-    for x in ${x_vals}; do
+    # for x in ${x_vals}; do
+    while [ ${xi} -lt ${max_x} ]; do
 	# skip masked
 	if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
 	    xi=$((${xi} + 1))
@@ -588,7 +592,8 @@ create_tics()
 	local xtics_cmd="set xtics ("
 	local skipped=0
 	local xi=0
-	for x in ${x_vals}; do
+	# for x in ${x_vals}; do
+	while [ ${xi} -lt ${max_x} ]; do
 	    # skip X masked data
 	    if [ "${x_mask}" != "" ]&&[ "${x_mask_array[${xi}]}" == "0" ];then
 		xi=$((${xi} + 1))
@@ -611,10 +616,13 @@ create_tics()
 	    local ytics_cmd="set ytics ("
 	else
 	    local ytics_cmd=""
+	    RETVAL=""
+	    return
 	fi
 	local yi=0
 	local skipped=0
-	for y in ${y_vals}; do
+	# for y in ${y_vals}; do
+	while [ ${yi} -lt ${max_y} ]; do
             # skip Y masked data
 	    if [ "${y_mask}" != "" ]&&[ "${y_mask_array[${yi}]}" == "0" ];then
 		yi=$((${yi} + 1))
@@ -629,8 +637,8 @@ create_tics()
 	    fi
 	    ytics_cmd="${ytics_cmd}\"${tag}\" $((${yi} - ${skipped})),"
 	    yi=$((${yi} + 1))
-	    ytics_cmd="${ytics_cmd%?})"
 	done
+	ytics_cmd="${ytics_cmd%?})"
 	RETVAL=${ytics_cmd}
      fi
     reset_ifs 
@@ -712,9 +720,6 @@ create_data_file()
     local rowstacked=${1}
     local filter=${2}
 
-    local x_array=${x_vals}
-    local y_array=${y_vals}
-    local z_array=${z_vals}
     local x
     local y
     local z
@@ -723,35 +728,7 @@ create_data_file()
     printf "Creating data file ${data_file} ..."
     set_ifs "${IFS_CHAR}" # Let ',' be the separator character
 
-
-    # avg
-    local max_x=0
-    for x in ${x_array}; do
-	max_x=$((${max_x} + 1))
-    done
-    local max_y=1
-    for y in ${y_array}; do
-	max_y=$((${max_y} + 1))
-    done
-    if [ "${x_avg}" != "" ];then
-	x_array="${x_array},avg"
-	x_vals=${x_array}
-    fi
-    local ysum
-    if [ "${y_avg}" != "" ];then
-    	y_array="${y_array},avg"
-	y_vals=${y_array}
-	local yi=0
-	while [ ${yi} -lt ${max_x} ];do
-	    ysum[${yi}]="0"
-	    yi=$((${yi} + 1))
-	done
-    fi
-
-
-
     local data="NULL"
-
     
     local xi=0
     for x in ${x_array}; do
@@ -772,14 +749,6 @@ create_data_file()
     done
     data="${data}\n"
 
-    if [ "${z_array}" == "" ];then
-	z_array="NO-ZAXIS"
-	local no_z=1
-    fi
-    if [ "${y_array}" == "" ];then
-	y_array="NO-YAXIS"
-	local no_y=1
-    fi
 
 
     local zi=0
@@ -796,16 +765,7 @@ create_data_file()
 		y=""
 	    fi
 
-	    if [ "${ytags_array[${yi}]}" != "" ];then
-		local ytag=${ytags_array[${yi}]}
-		ytag=`echo ${ytag}|sed 's/ /_/g'` # Remove spaces
-	    else
-		local ytag=${y}
-		ytag=`echo ${ytag}|sed 's/ /_/g'` # Remove spaces
-	    fi
-	    if [ "${ytag}" == "" ];then
-		local ytag="no-ytag"
-	    fi 
+	    get_ytag ${yi} 	# sets ytag
 
             # Normalization on the Y axis
 	    if [ "${y_norm_array[${yi}]}" != "" ];then
@@ -822,7 +782,11 @@ create_data_file()
 	    local xi=0
 
 	    for x in ${x_array}; do
-		if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ];then # x/y avg
+		if [ "${no_x}" == "1" ];then
+		    x=""
+		fi
+
+		if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
 		    local opts="${x} ${y} ${z} ${filter}"
 		    get_match "${DIR}" "$opts"
 		    local file=${RETVAL}
@@ -915,8 +879,6 @@ in_array()
 create_data_file_hmap()
 {
     local filter=$1
-    local x_array=${x_vals}
-    local y_array=${y_vals}
     local data_file=${data_file}
 
     local x
@@ -925,46 +887,21 @@ create_data_file_hmap()
 
     set_ifs "${IFS_CHAR}" # Let ',' be the separator character
 
-    # avg
-    local max_x=0
-    for x in ${x_array}; do
-	max_x=$((${max_x} + 1))
-    done
-    local max_y=1
-    for y in ${y_array}; do
-	max_y=$((${max_y} + 1))
-    done
-    if [ "${x_avg}" != "" ];then
-	x_array="${x_array},avg"
-	x_vals=${x_array}
-    fi
-    local sumy
-    if [ "${y_avg}" != "" ];then
-    	y_array="${y_array},avg"
-	y_vals=${y_array}
-	local yi=0
-	while [ ${yi} -lt ${max_x} ];do
-	    sumy[${yi}]="0"
-	    yi=$((${yi} + 1))
-	done
-    fi
-
     local data=""
 
-    if [ "${y_array}" == "" ];then
-	y_array="NO-Y"
-	local no_y=1
-    fi
-
-    local yi=0
+    local xi=0, yi=0, zi=0
     for y in ${y_array}; do
 	if [ "${no_y}" == "1" ];then
 	    y=""
 	fi
 	local sumx="0"
 	local xi=0
+
 	for x in ${x_array}; do
-	    if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ];then # x/y avg
+	    if [ "${no_x}" == "1" ];then
+		x=""
+	    fi
+	    if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
 		local opts="${x} ${y} ${filter}"
 		get_match "$DIR" "$opts"
 		local file=${RETVAL}
@@ -1897,18 +1834,88 @@ parse_tags()
     reset_ifs
 }
 
+get_ytag()
+{
+    local yi=$1
+    if [ "${ytags_array[${yi}]}" != "" ];then
+	ytag=${ytags_array[${yi}]}
+	ytag=`echo ${ytag}|sed 's/ /_/g'` # Remove spaces
+    else
+	ytag=${y}
+	ytag=`echo ${ytag}|sed 's/ /_/g'` # Remove spaces
+    fi
+    if [ "${ytag}" == "" ];then
+	ytag="no-ytag"
+    fi 
+}
+
+
 parse_vals()
 {
     # Reverse x, y
-    if [ "${plot_type}" == "bargraph" ] \
-	|| [ "${plot_type}" == "stacked" ] \
-	|| [ "${plot_type}" == "linegraph" ];then
-	if [ "${y_vals}" != "" ];then
-	    local x_vals_sv=${x_vals}
-	    x_vals=${y_vals}
-	    y_vals=${x_vals_sv}
-	fi
+    # if [ "${plot_type}" == "bargraph" ] \
+    # 	|| [ "${plot_type}" == "stacked" ] \
+    # 	|| [ "${plot_type}" == "linegraph" ];then
+    # 	if [ "${y_vals}" != "" ];then
+	    # local x_vals_sv=${x_vals}
+	    # x_vals=${y_vals}
+	    # y_vals=${x_vals_sv}
+    # 	fi
+    # fi
+    
+
+    x_array=${x_vals}
+    y_array=${y_vals}
+    z_array=${z_vals}
+
+    if [ "${z_array}" == "" ];then
+	z_array="NO-ZAXIS"
+	no_z=1
     fi
+    if [ "${y_array}" == "" ];then
+	y_array="NO-YAXIS"
+	no_y=1
+    fi
+    if [ "${x_array}" == "" ];then
+	x_array="NO-XAXIS"
+	no_x=1
+    fi
+
+    # avg
+    set_ifs ", "
+    max_x=0
+    for x in ${x_array}; do
+	max_x=$((${max_x} + 1))
+    done
+    max_y=0
+    for y in ${y_array}; do
+	max_y=$((${max_y} + 1))
+    done
+    max_z=0
+    for z in ${z_array}; do
+	max_z=$((${max_z} + 1))
+    done
+    reset_ifs
+
+
+    if [ "${x_avg}" != "" ];then
+	x_array="${x_array},avg"
+	x_vals=${x_array}
+    fi
+
+    if [ "${y_avg}" != "" ];then
+    	y_array="${y_array},avg"
+	y_vals=${y_array}
+	local yi=0
+	while [ ${yi} -lt ${max_x} ];do
+	    ysum[${yi}]="0"
+	    yi=$((${yi} + 1))
+	done
+    fi
+
+
+
+
 }
 
 parse_arguments()
