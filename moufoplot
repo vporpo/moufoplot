@@ -534,7 +534,8 @@ gp_bar_options()
 	    fi
 
 	    local color=${color_array[$cmn]}
-	    plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}:xtic(1) with histograms title columnheader(${cmn}) lt 1 lw ${bar_line_width} lc rgb \"${color}\","
+
+	    plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}:xtic(1) with histograms title columnheader(${cmn}) lt ${line_type_array[${xi}]} lw ${line_width} lc rgb \"${color}\","
 	    cmn=$((cmn+1))
 	    xi=$((${xi} + 1))
 	done
@@ -569,7 +570,7 @@ gp_bar_options()
 		else
 		    local title_stuff="notitle"
 		fi
-		plot_cmd="${plot_cmd} \"${data_file}\" index ${zi} using ${cmn}:xtic(1) with histograms ${title_stuff} lt 1 lw ${bar_line_width} lc rgb \"${color}\","
+		plot_cmd="${plot_cmd} \"${data_file}\" index ${zi} using ${cmn}:xtic(1) with histograms ${title_stuff} lt 1 lw ${line_width} lc rgb \"${color}\","
 
 		cmn=$((cmn+1))
 		xi=$((${xi} + 1))
@@ -620,18 +621,7 @@ gp_line_options()
 
 	local color=${color_array[$cmn]}
 
-	if [ "${point_type}" != "" ];then
-	    local pnt_type="pt ${point_type_array[${xi}]}"
-	else
-	    local pnt_type=""
-	fi
-	if [ "${line_type}" != "" ];then
-	    local ln_type="lt ${line_type_array[${xi}]}"
-	else
-	    local ln_type=""
-	fi
-
-	plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}:xtic(1) with linespoints title columnheader(${cmn}) lw ${line_width} ps ${point_size} ${pnt_type} ${ln_type} lc rgb \"${color}\","
+	plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}:xtic(1) with linespoints title columnheader(${cmn}) lw ${line_width} ps ${point_size} pt ${point_type_array[${xi}]} lt ${line_type_array[${xi}]} lc rgb \"${color}\","
 	cmn=$((cmn+1))
 	xi=$((${xi} + 1))
     done
@@ -1856,6 +1846,13 @@ parse_pnttype()
 	    i=$(($i + 1))
 	done
 	reset_ifs
+    else
+	# Set default value
+	local i=0;
+	while [ ${i} -lt ${max_x} ]; do
+	    point_type_array[${i}]=${i}
+	    i=$((i + 1))
+	done
     fi
 }
 
@@ -1877,6 +1874,13 @@ parse_linetype()
 	    i=$(($i + 1))
 	done
 	reset_ifs
+    else
+	# Set default value
+	local i=0;
+	while [ ${i} -lt ${max_x} ]; do
+	    line_type_array[${i}]=1
+	    i=$((i + 1))
+	done
     fi
 }
 
@@ -2057,7 +2061,7 @@ parse_arguments()
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
 title:,xlabel:,ylabel:,data:,xtags:,ytags:,ztags:,xnorm:,ynorm:,ynormv:,xrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
-zmask:,xavg:,yavg:,percent,barw:,linew:,linetype:,pntsize:,pnttype:,barlw:,noviewer,viewer:,xlabeloffset:,\
+zmask:,xavg:,yavg:,percent,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,viewer:,xlabeloffset:,\
 ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,version"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
@@ -2118,7 +2122,6 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,version"
 	    "--linetype"|"-linetype") line_type="$2";shift;;
 	    "--pntsize"|"-pntsize") point_size="$2";shift;;
 	    "--pnttype"|"-pnttype") point_type="$2";shift;;
-	    "--barlw"|"-barlw") bar_line_width="$2";shift;;
 	    "--noviewer"|"-noviewer") no_viewer="YES";;
 	    "--viewer"|"-viewer") eps_viewer="$2";shift;;
 	    "--data"|"-data") data_file="$2";shift;;
@@ -2287,10 +2290,6 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,version"
 	gpfname="moufoplot.gp"
     fi
 
-    if [ "${bar_line_width}" == "" ];then
-	bar_line_width=1
-    fi
-
     echo "| xavg: ${x_avg}"
     echo "| yavg: ${y_avg}"
     echo "| percent: ${percent}"
@@ -2371,7 +2370,6 @@ usage()
     echo "   --linetype <3,6,1,...>       : (Opt) Set the line type."
     echo "   --pntsize <point size>       : (Opt) Set the line point size."
     echo "   --pnttype <3,6,1,...>        : (Opt) Set the line point types."
-    echo "   --barlw <bar line width>     : (Opt) Set the bar line width."
     echo "   --noappend                   : (Opt) Dont append moufoplot data to eps."
     echo "   --outformat <eps|png|jpeg>   : (Opt) Select output file format."
     echo "   --version (or -v)            : Print version and exit."
