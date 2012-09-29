@@ -17,7 +17,7 @@
 # along with MoufoPlot; see the file COPYING3.  If not see
 # <http://www.gnu.org/licenses/>.
 
-
+moufoplot_version="0.01"
 
 # Input: FILE
 # Output: A string with all the parts separated by space
@@ -619,7 +619,7 @@ gp_line_options()
 	fi
 
 	local color=${color_array[$cmn]}
-	plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}:xtic(1) with linespoints title columnheader(${cmn}) lw ${line_width} lc rgb \"${color}\","
+	plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}:xtic(1) with linespoints title columnheader(${cmn}) lw ${line_width} ps ${point_size} lc rgb \"${color}\","
 	cmn=$((cmn+1))
 	xi=$((${xi} + 1))
     done
@@ -1353,6 +1353,18 @@ sanity_checks()
 	line_width=3  		# Default line width
     fi
 
+    # point size
+    if [ "${point_size}" != "" ];then
+	is_number ${point_size}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: point size: ${point_size} must be a number!"
+	    exit 1
+	fi
+    else
+	point_size=`echo "1 + ${line_width}/8" |bc -l` # Default point size
+    fi
+
 
     # offsets
     if [ "${x_label_offset}" != "" ];then
@@ -1383,7 +1395,7 @@ sanity_checks()
 	no_append="YES"
 	case "${out_format}" in
 	    "eps") gp_terminal_cmd="postscript eps enhanced color";suffix="eps";no_append="NO";;
-	    "png") gp_terminal_cmd="png interlace truecolor enhanced large ";suffix="png";;
+	    "png") gp_terminal_cmd="png interlace truecolor enhanced crop";suffix="png";;
 	    "jpeg") gp_terminal_cmd="jpeg interlace truecolor enhanced large";suffix="jpeg";;
 	    *) echo "ERROR: --outformat: ${out_format}"; exit 1
 	esac
@@ -1889,13 +1901,15 @@ parse_tags()
     local xi=0
     local x
     for x in ${x_tags}; do
-	xtags_array[${xi}]="${x}"
+	local x_nospaces=`echo ${x}|sed 's/ /-/g'` # Remove spaces
+	xtags_array[${xi}]="${x_nospaces}"
 	xi=$((xi+1))
     done
     local yi=0
     local y
     for y in ${y_tags}; do
-	ytags_array[${yi}]="${y}"
+	local y_nospaces=`echo ${y}|sed 's/ /-/g'` # Remove spaces
+	ytags_array[${yi}]="${y_nospaces}"
 	yi=$((yi + 1))
     done
     local zi=0
@@ -1911,11 +1925,11 @@ get_ytag()
 {
     local yi=$1
     if [ "${ytags_array[${yi}]}" != "" ];then
-	ytag=${ytags_array[${yi}]}
-	ytag=`echo ${ytag}|sed 's/ /_/g'` # Remove spaces
+    	ytag=${ytags_array[${yi}]}
+    	# ytag=`echo ${ytag}|sed 's/ /-/g'` # Remove spaces
     else
-	ytag=${y}
-	ytag=`echo ${ytag}|sed 's/ /_/g'` # Remove spaces
+    	ytag=${y}
+    	# ytag=`echo ${ytag}|sed 's/ /-/g'` # Remove spaces
     fi
     if [ "${ytag}" == "" ];then
 	ytag="no-ytag"
@@ -1989,19 +2003,12 @@ parse_vals()
 
 parse_arguments()
 {
-    # DIR
-    if [ "${DIR}" == "" ];then
-	DIR="${PWD}"
-	echo "WARNING: No --dir given, assuming \"${DIR}\" "
-    fi
-
-
-    local short_args="hd:x:y:z:f:t:c:i"
+    local short_args="hd:x:y:z:f:t:c:iv"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
 title:,xlabel:,ylabel:,data:,xtags:,ytags:,ztags:,xnorm:,ynorm:,ynormv:,xrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
-zmask:,xavg:,yavg:,percent,barw:,linew:,barlw:,noviewer,viewer:,xlabeloffset:,\
-ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
+zmask:,xavg:,yavg:,percent,barw:,linew:,pntsize:,barlw:,noviewer,viewer:,xlabeloffset:,\
+ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,version"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
     # getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -2058,6 +2065,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
 	    "--percent"|"-percent") percent="YES";;
 	    "--barw"|"-barw") bar_width="$2";shift;;
 	    "--linew"|"-linew") line_width="$2";shift;;
+	    "--pntsize"|"-pntsize") point_size="$2";shift;;
 	    "--barlw"|"-barlw") bar_line_width="$2";shift;;
 	    "--noviewer"|"-noviewer") no_viewer="YES";;
 	    "--viewer"|"-viewer") eps_viewer="$2";shift;;
@@ -2066,6 +2074,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
 	    "--out"|"-out") epsfile="$2";shift;;
 	    "--noappend"|"-noappend") no_append="YES";;
 	    "--outformat"|"-outformat") out_format="$2";shift;;
+	    "--version"|"-version"|"-v") version; exit 0;;
 	    "--") break;
 	esac
 
@@ -2080,6 +2089,13 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
 
 	shift
     done
+
+    # DIR
+    if [ "${DIR}" == "" ];then
+	DIR="${PWD}"
+	echo "WARNING: No --dir given, assuming \"${DIR}\" "
+    fi
+
     # Check if plot type is not set. If so default to bargraph
     if [ "${plot_type}" == "" ];then
 	plot_type="bargraph"
@@ -2222,6 +2238,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
     echo "| percent: ${percent}"
     echo "| bar width: ${bar_width}"
     echo "| line width: ${line_width}"
+    echo "| point size: ${point_size}"
     echo "| bar line width: ${bar_line_width}"
     echo "| .data file: ${data_file}"
     echo "| .gp   file: ${gpfname}"
@@ -2234,9 +2251,15 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
 
 }
 
+version()
+{
+    # local script_name=${0##*/}
+    echo "MoufoPlot ${moufoplot_version}"
+}
+
 usage()
 {
-    script_name=${0##*/}
+    version
     echo "Usage: ${script_name} <OPTIONS>"
     echo "   --bar                        : (DEF) Generate histograms."
     echo "   --stack                      : Generate stacked histograms."
@@ -2272,7 +2295,7 @@ usage()
     echo "   --yformat \"format\"         : (Opt) Format of the y tags."
     echo "   --ytics NUM                  : (Opt) Number of tics on Y."
     echo "   --yrange MIN,MAX,STEP        : (Opt) Range of Y tics."
-    echo "   --colors,-c #color1,#color2..: (Opt) User defined colors."
+    echo "   --colors,-c \"#color1,#color2...\": (Opt) User defined colors."
     echo "   --gap <number>               : (Opt) The gap between clusters."
     echo "   --xmask <bitmap>             : (Opt) Disable X bars with 0."
     echo "   --ymask <bitmap>             : (Opt) Disable Y bars with 0."
@@ -2285,9 +2308,11 @@ usage()
     echo "   --viewer <file viewer>       : (Opt) Prefer to use VIEWER."
     echo "   --barw <bar width>           : (Opt) Set the bar width."
     echo "   --linew <line width>         : (Opt) Set the line width."
+    echo "   --pntsize <point size>       : (Opt) Set the line point size."
     echo "   --barlw <bar line width>     : (Opt) Set the bar line width."
     echo "   --noappend                   : (Opt) Dont append moufoplot data to eps."
     echo "   --outformat <eps|png|jpeg>   : (Opt) Select output file format."
+    echo "   --version (or -v)            : Print version and exit."
     echo "   --help                       : Print this help screen."
     exit 1
 }
