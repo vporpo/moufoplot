@@ -133,10 +133,10 @@ gen_names()
 }
 
 # Input: DIR MATCHES
-# Output: An array of all the files in DIR that match the MATCHES
+# Output: The number that matches
 # Example: get_match i2 jpeg d1 opt2
-#          Returns jpeg_opt2_i2_d1
-get_match ()
+#          Returns the number contained in jpeg_opt2_i2_d1
+get_match_dir ()
 {
     local DIR=$1
     local matches=$2
@@ -159,20 +159,76 @@ get_match ()
     local count_files=`echo $filename|wc -w`
     if [ ${count_files} -ne 1 ]&&[ "${exit_on_multiple_matches}" == "" ]; then
 	if [ "${ignore_filter}" == "YES" ]&&[ ${count_files} -eq 0 ];then
-	    echo -e "\nWARNING: Filter: ${matches} matches ${count_files} files in ${DIR} !!!"
+	    echo -e "\nWARNING: Filter -f: ${matches} matches ${count_files} files in ${DIR} !!!"
 	    RETVAL=""
 	    return
 	else
 	    echo -e "\nERROR: Filter: ${matches} matches ${count_files} files in ${DIR} !!!"
-    	    echo -e "FILES:\n$filename"
+    	    echo -e "The following files all match the filter:\n$filename"
+	    echo -e "Please add more constraints into the filter ${matches}."
     	    exit 1
 	fi
     fi
     # echo $filename
     out="${filename} ${out}"
     RETVAL=${out}
+    get_file_value "${DIR}/${RETVAL}"
 }
 
+
+get_match_file ()
+{
+    local DIR=$1
+    local matches=$2
+    local exit_on_multiple_matches=$3
+    local grep_cmd=""
+    local out=""
+
+    # echo "Matching... ${matches}"
+
+    set_ifs ", "
+    for match in $matches; do
+	grep_cmd="${grep_cmd}|egrep \"_${match}_|^${match}_|_${match}:|^${match}:\""  #1st change \\$->:
+    done
+    reset_ifs
+
+    grep_cmd="cat ${DIR}${grep_cmd}"  #2nd change "cat"
+    # echo "GREP_CMD: $grep_cmd"
+
+    local filename=`eval ${grep_cmd}`
+    # echo "filename: ${filename}"
+    local count_files=`echo $filename|wc -l`  #3rd change
+    if [ ${count_files} -ne 1 ]&&[ "${exit_on_multiple_matches}" == "" ]; then
+	if [ "${ignore_filter}" == "YES" ]&&[ ${count_files} -eq 0 ];then
+	    echo -e "\nWARNING: Filter -f: ${matches} matches ${count_files} lines in ${DIR} !!!" #4th change files->lines
+	    RETVAL=""
+	    return
+	else
+	    echo -e "\nERROR: Filter: ${matches} matches ${count_files} lines in ${DIR} !!!" #5th change files->lines
+    	    echo -e "The following lines all match the filter:\n$filename"
+	    echo -e "Please add more more constraints to the filter ${matches}."
+    	    exit 1
+	fi
+    fi
+    # echo $filename
+    # out="${filename} ${out}"
+    local number=`echo ${filename} | egrep -o ":.+" | sed 's/://'`
+    # echo "NUMBER:${number}"
+    fix_exponential ${number}
+}
+
+# Switch between DIR/FILE mode
+get_match ()
+{
+   if [ -d "${DIR}" ];then
+       get_match_dir $@
+   elif [ -f "${DIR}" ];then
+       get_match_file $@
+   else
+       printf "ERROR: ${DIR} not a file or directory.\n"
+       exit 1
+   fi
+}
 
 # Input: X_ARRAY MAX
 # Output: An array of the part numbers that are not part of the X Axis.
@@ -193,6 +249,32 @@ get_not_x()
     echo ${not_x_values}
 }
 
+
+# Change input number from exponential notation to regular
+fix_exponential()
+{
+    local data=$1
+    is_number "${data}"
+    local isnum=${RETVAL}
+    if [ "${isnum}" == "no" ];then
+	is_exponential_notation "${data}"
+	local isexp=${RETVAL}
+	if [ "${isexp}" == "no" ];then
+	    exit 1
+	else
+	    # number is in exponential notation. we have to convert it to float
+	    local first=`echo ${data} | egrep -o "[0-9]+(\.[0-9]+|)" | head -n 1`
+	    local last=`echo ${data} | egrep -o "([Ee]\+[0-9]+|)" |egrep -o "[0-9]+"`
+	    # echo "data: ${data}, first: ${first}, last: ${last}"
+	    local float_val=`echo "${first} * 10 ^ ${last}" |bc -l`
+	    data=${float_val}
+	fi
+    fi
+    # echo ${data}
+    RETVAL=${data}
+}
+
+
 # Input: FILE
 # Output: The number contained in FILE
 # Example: get_file_value jpeg_opt1_i2_d1
@@ -212,25 +294,13 @@ get_file_value()
 	    exit 1
 	fi
     fi
-    is_number "${data}"
-    local isnum=${RETVAL}
-    if [ "${isnum}" == "no" ];then
-	is_exponential_notation "${data}"
-	local isexp=${RETVAL}
-	if [ "${isexp}" == "no" ];then
-	    echo "ERROR: file: ${file}: ${data} is not a number OR an exponential."
-	    exit 1
-	else
-	    # number is in exponential notation. we have to convert it to float
-	    local first=`echo ${data} | egrep -o "[0-9]+(\.[0-9]+|)" | head -n 1`
-	    local last=`echo ${data} | egrep -o "([Ee]\+[0-9]+|)" |egrep -o "[0-9]+"`
-	    # echo "data: ${data}, first: ${first}, last: ${last}"
-	    local float_val=`echo "${first} * 10 ^ ${last}" |bc -l`
-	    data=${float_val}
-	fi
+    
+    fix_exponential "${data}"
+    if [ $? -ne 0 ];then
+	echo "ERROR: file: ${file}: ${data} is not a number OR an exponential."
+	exit 1
     fi
-    # echo ${data}
-    RETVAL=${data}
+    RETVAL=${RETVAL}
 }
 
 # Input: DATA_FILE_ARRAY OUT_DIR
@@ -260,8 +330,8 @@ normalize()
 
 is_exponential_notation()
 {
-    value=${1}
-    grepped_val=`echo ${1} | egrep -o "[0-9]+(\.[0-9]+|)([Ee]\+[0-9]+|)" | head -n 1`
+    local value=${1}
+    local grepped_val=`echo ${1} | egrep -o "[0-9]+(\.[0-9]+|)([Ee]\+[0-9]+|)" | head -n 1`
     if [ "${value}" == "${grepped_val}" ]; then
 	RETVAL="yes"
     else
@@ -269,11 +339,21 @@ is_exponential_notation()
     fi
 }
 
+get_number()
+{
+    local value=${1}
+    local grepped_val=`echo ${1} | egrep -o "(-|)([[:digit:]]+\.*[[:digit:]]*)" | head -n 1`
+    RETVAL=${grepped_val}
+}
+
+
 is_number()
 {
-    value=${1}
-    grepped_val=`echo ${1} | egrep -o "(-|)([[:digit:]]+\.*[[:digit:]]*)" | head -n 1`
-    if [ "${value}" == "${grepped_val}" ]; then
+    local value=${1}
+    get_number ${value}
+    local number=${RETVAL}
+    # grepped_val=`echo ${1} | egrep -o "(-|)([[:digit:]]+\.*[[:digit:]]*)" | head -n 1`
+    if [ "${value}" == "${number}" ]; then
 	RETVAL="yes"
     else
 	RETVAL="no"
@@ -283,8 +363,8 @@ is_number()
 
 is_integer()
 {
-    value=${1}
-    grepped_val=`echo ${1} | egrep -o "(-|)([[:digit:]])+"`
+    local value=${1}
+    local grepped_val=`echo ${1} | egrep -o "(-|)([[:digit:]])+"`
     if [ "${value}" == "${grepped_val}" ]; then
 	RETVAL="yes"
     else
@@ -751,6 +831,7 @@ create_data_file()
 
 
 
+
     local zi=0
     for z in ${z_array};do
 	if [ "${no_z}" == "1" ];then
@@ -789,13 +870,10 @@ create_data_file()
 		if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
 		    local opts="${x} ${y} ${z} ${filter}"
 		    get_match "${DIR}" "$opts"
-		    local file=${RETVAL}
+		    file_val=${RETVAL}
 		    if [ "${ignore_filter}" == "YES" ]&&[ "${RETVAL}" == "" ];then
-			RETVAL=0
-		    else
-			get_file_value "${DIR}/${file}"
+			local file_val=0
 		    fi
-		    local file_val=${RETVAL}
 
 	            # Normalization on the X axis
 		    if [ "${x_norm_array[${xi}]}" != "" ];then
@@ -904,8 +982,6 @@ create_data_file_hmap()
 	    if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
 		local opts="${x} ${y} ${filter}"
 		get_match "$DIR" "$opts"
-		local file=${RETVAL}
-		get_file_value "${DIR}/${file}"
 		local file_val=${RETVAL}
 		if [ "${percent}" != "" ];then
 		    file_val=`echo "${file_val} * 100" |bc -l`
@@ -960,8 +1036,8 @@ check_if_arguments_exist()
 	for val2 in ${vals2}; do
 	    for val3 in ${vals3}; do
 		get_match "${DIR}" "${val1} ${val2} ${val3}" "NO"
-		# local matches=${RETVAL}
-		if [ $? -ne 0 ]; then
+		local match=${RETVAL}
+		if [ "${match}" == "" ]; then
 		    echo "ERROR: Filters: ${val1} ${val2} ${val3} are too restrictive! Can't find match in ${DIR}."
 		    exit 1
 		fi
@@ -994,8 +1070,8 @@ less_than()
 
 sanity_checks()
 {
-    if [ ! -d "${DIR}" ]; then
-	echo "ERROR: Directory \"${dir}\" does not exist ! (wrong --dir ???)"
+    if [ ! -d "${DIR}" ]&&[ ! -f "${DIR}" ]; then
+	echo "ERROR: File/Directory \"${dir}\" does not exist ! (wrong --dir ???)"
 	exit 1
     fi
 
@@ -1366,8 +1442,6 @@ get_normalize_values()
     local xn
     for xn in ${x_norm};do
 	get_match "${DIR}" "${xn} ${others}"
-	local file=${RETVAL}
-	get_file_value "${DIR}/${file}"
 	local xnorm_val=${RETVAL}
 	x_norm_array[${ni}]=${xnorm_val}
 	ni=$((ni + 1))
@@ -1390,8 +1464,6 @@ get_normalize_values()
     local yn
     for yn in ${y_norm};do
 	get_match "${DIR}" "${yn} ${others}"
-	local file=${RETVAL}
-	get_file_value "${DIR}/${file}"
 	local ynorm_val=${RETVAL}
 	y_norm_array[${ni}]=${ynorm_val}
 	ni=$((ni + 1))
@@ -1913,10 +1985,6 @@ parse_vals()
 	    yi=$((${yi} + 1))
 	done
     fi
-
-
-
-
 }
 
 parse_arguments()
@@ -2072,7 +2140,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:"
     echo "+--------------------------------+"
     echo "| COMMAND LINE OPTIONS:"
     echo "| Type: ${plot_type}"
-    echo "| DIR:${DIR}"
+    echo "| DIR/FILE: ${DIR}"
     echo "| x: ${x_vals}"
     echo "| y: ${y_vals}"
     echo "| z: ${z_vals}"
@@ -2174,7 +2242,7 @@ usage()
     echo "   --stack                      : Generate stacked histograms."
     echo "   --line                       : Generate line-graphs."
     echo "   --hmap                       : Generate heat-map graphs."
-    echo "   --dir,-d \"<DIR>\"           : The result files Directory."
+    echo "   --dir,-d \"<DIR/FILE>\"      : File or Directory of input data."
     echo "   --xvals,-x \"<x values>\"    : The identifiers of the X values."
     echo "   --yvals,-y \"<y values>\"    : The identifiers of the Y values."
     echo "   --zvals,-z \"<z values>\"    : The identifiers of the Z values."
