@@ -382,7 +382,7 @@ gp_yrange()
 
 gp_fonts()
 {
-    local font_type="Times"
+    # local font_type="Times"  # Does not work with png,jpeg
     local title_font_size="18"
     local legend_font_size="14"
     local legend_font_spacing="0.9"
@@ -1304,8 +1304,9 @@ sanity_checks()
 	fi
     fi
     if [ "${out_format}" != "" ];then
+	no_append="YES"
 	case "${out_format}" in
-	    "eps") gp_terminal_cmd="postscript eps enhanced color";suffix="eps";;
+	    "eps") gp_terminal_cmd="postscript eps enhanced color";suffix="eps";no_append="NO";;
 	    "png") gp_terminal_cmd="png interlace truecolor enhanced large ";suffix="png";;
 	    "jpeg") gp_terminal_cmd="jpeg interlace truecolor enhanced large";suffix="jpeg";;
 	    *) echo "ERROR: --outformat: ${out_format}"; exit 1
@@ -1672,7 +1673,7 @@ parse_colors()
 	color_array[0]="#000000" #(black)
 	color_array[1]="#000000" #(black)
 	color_array[2]="#202000" # black
-	color_array[3]="#ffdd00" # light yellow
+	color_array[3]="#ccaa00" # light yellow
 	color_array[4]="#0000AA" # dark blue
 	color_array[5]="#00BB00" # light green
 	color_array[6]="#AA0000" # red
@@ -2323,7 +2324,7 @@ moufoplot()
     local viewer=${RETVAL}
     if [ "${viewer}" != "" ]&&[ "${no_viewer}" != "YES" ];then
 	echo "View ${epsfile} using ${viewer}"
-	local viewcmd="${viewer} ${epsfile} &"
+	local viewcmd="${viewer} ${epsfile} "
 	echo ${viewcmd}
 	eval ${viewcmd}
     fi
