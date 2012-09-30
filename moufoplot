@@ -218,15 +218,28 @@ get_match_file ()
 }
 
 # Switch between DIR/FILE mode
-get_match ()
+get_match()
 {
+    local dir=${1}
+    local opts=${2}
+    local ignore_filter=${3}
+
    if [ -d "${DIR}" ];then
-       get_match_dir $@
+       get_match_dir "${dir}" "${opts}"
    elif [ -f "${DIR}" ];then
-       get_match_file $@
+       get_match_file "${dir}" "${opts}"
    else
        printf "ERROR: ${DIR} not a file or directory.\n"
        exit 1
+   fi
+
+   if [ "${RETVAL}" == "" ];then
+       if [ "${ignore_filter}" == "YES" ];then
+	   RETVAL=0
+       else
+	   printf "\nERROR: Can't find value that matches: ${opts} in ${dir}\n"
+	   exit 1
+       fi
    fi
 }
 
@@ -440,7 +453,11 @@ gp_ytics()
 	    y_range_step=${y_range_step/.*}
 	fi
     fi
-    echo "set ytics ${y_range_step}" >> ${gpfname}
+    if [ "${y_tics}" == "0" ];then
+	echo "unset ytics" >> ${gpfname}
+    else
+	echo "set ytics ${y_range_step}" >> ${gpfname}
+    fi
 }
 
 gp_yrange()
@@ -545,14 +562,11 @@ gp_bar_options()
 	while [ ${zi} -lt ${max_z} ];do
 	    local cmn=2
 
-	    if [ "${ztags_array[${zi}]}" != "" ];then
+	    if [ "${noz_tags}" == "YES" ];then
+		local ztag=""
+	    else
 		local ztag=${ztags_array[${zi}]}
-		ztag=`echo ${ztag}|sed 's/ /_/g'` # Remove spaces
-	    fi 
-	    # else
-	    # 	local ztag=${z}
-	    # 	ztag=`echo ${ztag}|sed 's/ /_/g'` # Remove spaces
-	    # fi
+	    fi
 
 	    plot_cmd="${plot_cmd} newhistogram \"${ztag}\", "
 	    # for x in ${x_vals}; do
@@ -642,7 +656,8 @@ gp_hmap_options()
     echo "set palette rgbformula 7,7,7" >> ${gpfname}
     echo "set palette rgbformula 30,31,32" >> ${gpfname}
     echo "set cblabel \"${z_label}\""  >> ${gpfname}
-    echo "unset cbtics" >> ${gpfname} # This removes tics from heat bar
+    # echo "unset cbtics" >> ${gpfname} # This removes tics from heat bar
+    echo "set cbtics" >> ${gpfname} 
     echo "unset key" >> ${gpfname} # Otherwise the filename is displayed
 
     gp_title
@@ -683,10 +698,10 @@ create_tics()
 		continue
 	    fi
 
-	    if [ "${x_tags}" != "" ]; then
-		local tag="${xtags_array[${xi}]}"
+	    if [ "${nox_tags}" == "YES" ]; then
+		local tag="\"\""
 	    else
-		local tag=${x}
+		local tag="${xtags_array[${xi}]}"
 	    fi
 	    xtics_cmd="${xtics_cmd}\"${tag}\" $((${xi}-${skipped})),"
 	    xi=$((${xi} + 1))
@@ -712,10 +727,10 @@ create_tics()
 		continue
 	    fi
 
-	    if [ "${ytags_array[${yi}]}" != "" ]; then
-		local tag="${ytags_array[${yi}]}"
+	    if [ "${noy_tags}" == "YES" ]; then
+		local tag=""
 	    else
-		local tag=${y}
+		local tag="${ytags_array[${yi}]}"
 	    fi
 	    ytics_cmd="${ytics_cmd}\"${tag}\" $((${yi} - ${skipped})),"
 	    yi=$((${yi} + 1))
@@ -814,10 +829,10 @@ create_data_file()
     
     local xi=0
     for x in ${x_array}; do
-	if [ "${x_tags}" != "" ];then
-	    local xtag=${xtags_array[${xi}]}
+	if [ "${nox_tags}" == "YES" ];then
+	    local xtag="\"\""
 	else
-	    local xtag=${x}
+	    local xtag=${xtags_array[${xi}]}
 	fi
 
         # skip masked data
@@ -848,8 +863,15 @@ create_data_file()
 		y=""
 	    fi
 
-	    get_ytag ${yi} 	# sets ytag
-
+	    if [ "${noy_tags}" == "YES" ];then
+		ytag="\"\""
+	    else
+		ytag=${ytags_array[${yi}]}
+		if [ "${ytag}" == "" ];then
+		    ytag="\"\""
+		fi
+	    fi
+	    
             # Normalization on the Y axis
 	    if [ "${y_norm_array[${yi}]}" != "" ];then
 		normalize_value=`echo ${y_norm_array[${yi}]}*1.0|bc -l`
@@ -871,11 +893,8 @@ create_data_file()
 
 		if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
 		    local opts="${x} ${y} ${z} ${filter}"
-		    get_match "${DIR}" "$opts"
+		    get_match "${DIR}" "$opts" "${ignore_filter}"
 		    file_val=${RETVAL}
-		    if [ "${ignore_filter}" == "YES" ]&&[ "${RETVAL}" == "" ];then
-			local file_val=0
-		    fi
 
 	            # Normalization on the X axis
 		    if [ "${x_norm_array[${xi}]}" != "" ];then
@@ -1153,12 +1172,12 @@ sanity_checks()
 	is_integer ${y_tics}
 	local is=${RETVAL}
 	if [ "${is}" != "yes" ]; then
-	    echo "ERROR: Y tics: ${y_tics} must be a positive integer."
+	    echo "ERROR: Y tics: ${y_tics} must be an integer >= 0."
 	    exit 1
 	fi
-	if [ ${y_tics} -le 0 ];then
-	    echo "ERROR: Y tics: ${y_tics} must be a positive integer."
-	    exti 1
+	if [ ${y_tics} -lt 0 ];then
+	    echo "ERROR: Y tics: ${y_tics} must be an integer >= 0."
+	    exit 1
 	fi
     fi
 
@@ -1954,42 +1973,40 @@ parse_tags()
     set_ifs ","
     local xi=0
     local x
+    if [ "${x_tags}" == "" ]; then
+	x_tags=${x_vals}
+    fi
     for x in ${x_tags}; do
 	local x_nospaces=`echo ${x}|sed 's/ /-/g'` # Remove spaces
 	xtags_array[${xi}]="${x_nospaces}"
 	xi=$((xi+1))
     done
+
+
     local yi=0
     local y
+    if [ "${y_tags}" == "" ]; then
+	y_tags=${y_vals}
+    fi
     for y in ${y_tags}; do
 	local y_nospaces=`echo ${y}|sed 's/ /-/g'` # Remove spaces
 	ytags_array[${yi}]="${y_nospaces}"
 	yi=$((yi + 1))
     done
+
+
     local zi=0
     local z
+    if [ "${z_tags}" == "" ]; then
+	z_tags=${z_vals}
+    fi
     for z in ${z_tags}; do
+	local z_nospaces=`echo ${z}|sed 's/ /-/g'` # Remove spaces
 	ztags_array[${zi}]="${z}"
 	zi=$((zi + 1))
     done
     reset_ifs
 }
-
-get_ytag()
-{
-    local yi=$1
-    if [ "${ytags_array[${yi}]}" != "" ];then
-    	ytag=${ytags_array[${yi}]}
-    	# ytag=`echo ${ytag}|sed 's/ /-/g'` # Remove spaces
-    else
-    	ytag=${y}
-    	# ytag=`echo ${ytag}|sed 's/ /-/g'` # Remove spaces
-    fi
-    if [ "${ytag}" == "" ];then
-	ytag="no-ytag"
-    fi 
-}
-
 
 parse_vals()
 {
@@ -2059,7 +2076,7 @@ parse_arguments()
 {
     local short_args="hd:x:y:z:f:t:c:iv"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
-title:,xlabel:,ylabel:,data:,xtags:,ytags:,ztags:,xnorm:,ynorm:,ynormv:,xrotate:,\
+title:,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,xnorm:,ynorm:,ynormv:,xrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,viewer:,xlabeloffset:,\
 ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,version"
@@ -2085,8 +2102,11 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,version"
 	    "--filter"|"-filter"|"-f") others="$2";shift;;
 	    "--title"|"-title"|"-t") title="$2";shift;;
 	    "--xtags"|"-xtags") x_tags="$2";shift;;
+	    "--noxtags"|"-noxtags") nox_tags="YES";;
 	    "--ytags"|"-ytags") y_tags="$2";shift;;
+	    "--noytags"|"-noytags") noy_tags="YES";;
 	    "--ztags"|"-ztags") z_tags="$2";shift;;
+	    "--noztags"|"-noztags") noz_tags="YES";;
 	    "--xlabel"|"-xlabel") x_title="$2";shift;;
 	    "--xlabeloffset"|"-xlabeloffset") x_label_offset="$2";shift;;
 	    "--ylabel"|"-ylabel") y_title="$2";shift;;
@@ -2229,8 +2249,11 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,version"
     echo "| ylabel offset: ${y_label_offset}"
     echo "| zlabel: ${z_label}"
     echo "| xtags: ${x_tags}"
+    echo "| noxtags: ${nox_tags}"
     echo "| ytags: ${y_tags}"
+    echo "| noytags: ${noy_tags}"
     echo "| ztags: ${z_tags}"
+    echo "| noztags: ${noz_tags}"
     echo "| ztagsoffset: ${z_tags_offset}"
     echo "| x norm filters: ${x_norm}"
     echo "| y norm filters: ${y_norm}"
@@ -2339,8 +2362,11 @@ usage()
     echo "   --gp \"<file path>\"         : (Opt) .gp gnuplot file."
     echo "   --out \"<file path>\"        : (Opt) Output postscript file."
     echo "   --xtags \"<tags>\"           : (Opt) Tags for the X axis."
+    echo "   --noxtags                    : (Opt) Disable X axis tags."
     echo "   --ytags \"<tags>\"           : (Opt) Tags for the Y axis."
+    echo "   --noytags                    : (Opt) Disable Y axis tags."
     echo "   --ztags \"<tags>\"           : (Opt) Tags for the Z axis."
+    echo "   --noztags                    : (Opt) Disable Z axis tags."
     echo "   --ztagsoffset <ztags offset> : (Opt) Set the offset of z tags."
     echo "   --xnorm \"<x norm filters>\" : (Opt) Normalization filter X."
     echo "   --ynorm \"<y norm filters>\" : (Opt) Normalization filter Y."
