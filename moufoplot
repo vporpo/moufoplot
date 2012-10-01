@@ -1434,7 +1434,7 @@ set_defaults()
     fi
 
     if [ "${epsfile}" == "" ];then
-	epsfile="moufoplot.${suffix}"
+	epsfile="_moufoplot.${suffix}"
     fi
 
     # noappend
@@ -2310,7 +2310,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,version"
 
 
     if [ "${gpfname}" == "" ];then
-	gpfname="moufoplot.gp"
+	gpfname="/tmp/moufoplot.gp"
     fi
 
     echo "| xavg: ${x_avg}"
