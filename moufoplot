@@ -829,7 +829,7 @@ create_data_file()
     
     local xi=0
     for x in ${x_array}; do
-	if [ "${nox_tags}" == "YES" ];then
+	if [ "${nox_tags}" == "YES" ]||[ "${no_x}" == "1" ];then
 	    local xtag="\"\""
 	else
 	    local xtag=${xtags_array[${xi}]}
