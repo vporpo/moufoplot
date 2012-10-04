@@ -20,13 +20,23 @@
 moufoplot_version="0.01"
 
 
+
+# Printing Functions:
+# 1. Print regular message. This gets turned off in silent mode.
 print_msg()
 {
     if [ ! "${silent}" == "YES" ];then
 	printf "${1}"
     fi
 }
-
+# 2. Printe Error message.
+print_err()
+{
+    # if [ ! "${silent}" == "YES" ];then
+    printf "${1}"
+    # fi
+}
+# 3. Print the contents of a file. This gets turned off in silent mode.
 print_file()
 {
     if [ ! "${silent}" == "YES" ];then
@@ -185,7 +195,7 @@ get_all()
     elif [ -f ${DIR} ];then
 	get_all_file ${DIR}
     else
-	printf "ERROR: ${DIR} not a file or directory.\n"
+	print_err "ERROR: ${DIR} not a file or directory.\n"
 	exit 1
    fi
 }
@@ -288,7 +298,7 @@ get_match()
    elif [ -f "${DIR}" ];then
        get_match_file "${dir}" "${opts}"
    else
-       printf "ERROR: ${DIR} not a file or directory.\n"
+       print_err "ERROR: ${DIR} not a file or directory.\n"
        exit 1
    fi
 
@@ -296,7 +306,7 @@ get_match()
        if [ "${ignore_filter}" == "YES" ];then
 	   RETVAL=0
        else
-	   printf "\nERROR: Can't find value that matches: ${opts} in ${dir}\n"
+	   print_err "\nERROR: Can't find value that matches: ${opts} in ${dir}\n"
 	   exit 1
        fi
    fi
@@ -811,10 +821,10 @@ debug_stack()
 {
     local i=0
     while [ ${i} -lt ${IFS_CNT} ]; do
-	printf "|%s" "${IFS_STACK[${i}]}"
+	print_err "|%s" "${IFS_STACK[${i}]}"
 	i=$((${i} + 1))
     done
-    printf "|\n"
+    print_err "|\n"
 }
 # set IFS to the given value and save the previous one
 set_ifs()
@@ -2270,7 +2280,8 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version"
     # DIR
     if [ "${DIR}" == "" ];then
 	DIR="${PWD}"
-	echo "WARNING: No --dir given, assuming \"${DIR}\" "
+	print_err "ERROR: No data selected! Please specify with -d / --dir.\n"
+	exit 1
     fi
 
     # Check if plot type is not set. If so default to bargraph
