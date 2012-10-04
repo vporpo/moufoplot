@@ -19,6 +19,23 @@
 
 moufoplot_version="0.01"
 
+
+print_msg()
+{
+    if [ ! "${silent}" == "YES" ];then
+	printf "${1}"
+    fi
+}
+
+print_file()
+{
+    if [ ! "${silent}" == "YES" ];then
+	cat "${1}"
+    fi
+}
+
+
+
 # Input: FILE
 # Output: A string with all the parts separated by space
 # Example: get_all_parts_of_file jpeg_otp1_i1_d2
@@ -864,7 +881,7 @@ create_data_file()
     local z
     local fig_options=`get_all_parts_of_file "${fig_file}"`
 
-    printf "Creating data file ${data_file} ..."
+    print_msg "Creating data file ${data_file} ...\n"
     set_ifs "${IFS_CHAR}" # Let ',' be the separator character
 
     local data="NULL"
@@ -998,9 +1015,10 @@ create_data_file()
 	zi=$((${zi} + 1 ))
     done
     reset_ifs
-    printf " Done.\n"
+    print_msg " Done.\n"
     # Dump data
-    echo -e $data |tee ${data_file}
+    echo -e ${data} > ${data_file}
+    print_file "${data_file}"
 }
 
 
@@ -1511,7 +1529,7 @@ get_normalize_values()
 
     # Normalize
     set_ifs ","
-    printf "Getting X normalization values from filters... "
+    print_msg "Getting X normalization values from filters... \n"
     local ni=0
     local xn
     for xn in ${x_norm};do
@@ -1530,10 +1548,11 @@ get_normalize_values()
 	xi=$((xi + 1))
     done
     
-    printf "Done!\n"
-    echo "X norm values: ${x_norm_array[@]}"
+    print_msg "Done!\n"
+    print_msg "X norm values: ${x_norm_array[@]}"
+    print_msg "\n"
 
-    printf "Getting Y normalization values from filters... "
+    print_msg "Getting Y normalization values from filters... \n"
     local ni=0
     local yn
     for yn in ${y_norm};do
@@ -1551,8 +1570,9 @@ get_normalize_values()
 	fi
 	yi=$((yi + 1))
     done
-    printf "Done!\n"
-    echo "Y norm values: ${y_norm_array[@]}"
+    print_msg "Done!\n"
+    print_msg "Y norm values: ${y_norm_array[@]}"
+    print_msg "\n"
     reset_ifs
 }
 
@@ -1731,7 +1751,7 @@ parse_legend()
 
 
     fi
-    echo "Legend: ${key_command}"
+    print_msg "Legend: ${key_command}\n"
 }
 
 
@@ -2160,7 +2180,7 @@ parse_arguments()
 title:,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,xnorm:,ynorm:,ynormv:,xrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,viewer:,xlabeloffset:,\
-ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,version"
+ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version"
     local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
     local args_array=($args)
     # getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -2230,6 +2250,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,version"
 	    "--out"|"-out") epsfile="$2";shift;;
 	    "--noappend"|"-noappend") no_append="YES";;
 	    "--outformat"|"-outformat") out_format="$2";shift;;
+	    "--silent"|"-silent") silent="YES";;
 	    "--version"|"-version"|"-v") version; exit 0;;
 	    "--") break;
 	esac
@@ -2313,104 +2334,105 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,version"
 	y_tics=5
     fi
 
-    echo "+--------------------------------+"
-    echo "|         MoufoPlot              |"
-    echo "+--------------------------------+"
-    echo "| COMMAND LINE OPTIONS:"
-    echo "| Type: ${plot_type}"
-    echo "| DIR/FILE: ${DIR}"
-    echo "| x: ${x_vals}"
-    echo "| y: ${y_vals}"
-    echo "| z: ${z_vals}"
-    echo "| filter: ${others}"
-    echo "| title: ${title}"
-    echo "| xlabel: ${x_title}"
-    echo "| xlabel offset: ${x_label_offset}"
-    echo "| ylabel: ${y_title}"
-    echo "| ylabel offset: ${y_label_offset}"
-    echo "| zlabel: ${z_label}"
-    echo "| xtags: ${x_tags}"
-    echo "| noxtags: ${nox_tags}"
-    echo "| ytags: ${y_tags}"
-    echo "| noytags: ${noy_tags}"
-    echo "| ztags: ${z_tags}"
-    echo "| noztags: ${noz_tags}"
-    echo "| ztagsoffset: ${z_tags_offset}"
-    echo "| x norm filters: ${x_norm}"
-    echo "| y norm filters: ${y_norm}"
-    echo "| y norm values: ${y_normv}"
-    echo "| x tags rotate: ${x_tics_rotate}"
-    echo "| Legend: ${legend_params}"
-    echo "| Size: ${size_param}"
-    echo "| Xformat: ${x_format}"
-    echo "| Yformat: ${y_format}"
-    echo "| Ytics: ${y_tics}"
-    echo "| Yrange: ${y_range}"
-    echo "| Colors: ${user_colors}"
-    echo "| Ignore Filter ERROR: ${ignore_filter}"
-    echo "| Cluster GAP: ${cluster_gap}"
+    print_msg "+--------------------------------+\n"
+    print_msg "|         MoufoPlot              |\n"
+    print_msg "+--------------------------------+\n"
+    print_msg "| COMMAND LINE OPTIONS:\n"
+    print_msg "| Type: ${plot_type}\n"
+    print_msg "| DIR/FILE: ${DIR}\n"
+    print_msg "| x: ${x_vals}\n"
+    print_msg "| y: ${y_vals}\n"
+    print_msg "| z: ${z_vals}\n"
+    print_msg "| filter: ${others}\n"
+    print_msg "| title: ${title}\n"
+    print_msg "| xlabel: ${x_title}\n"
+    print_msg "| xlabel offset: ${x_label_offset}\n"
+    print_msg "| ylabel: ${y_title}\n"
+    print_msg "| ylabel offset: ${y_label_offset}\n"
+    print_msg "| zlabel: ${z_label}\n"
+    print_msg "| xtags: ${x_tags}\n"
+    print_msg "| noxtags: ${nox_tags}\n"
+    print_msg "| ytags: ${y_tags}\n"
+    print_msg "| noytags: ${noy_tags}\n"
+    print_msg "| ztags: ${z_tags}\n"
+    print_msg "| noztags: ${noz_tags}\n"
+    print_msg "| ztagsoffset: ${z_tags_offset}\n"
+    print_msg "| x norm filters: ${x_norm}\n"
+    print_msg "| y norm filters: ${y_norm}\n"
+    print_msg "| y norm values: ${y_normv}\n"
+    print_msg "| x tags rotate: ${x_tics_rotate}\n"
+    print_msg "| Legend: ${legend_params}\n"
+    print_msg "| Size: ${size_param}\n"
+    print_msg "| Xformat: ${x_format}\n"
+    print_msg "| Yformat: ${y_format}\n"
+    print_msg "| Ytics: ${y_tics}\n"
+    print_msg "| Yrange: ${y_range}\n"
+    print_msg "| Colors: ${user_colors}\n"
+    print_msg "| Ignore Filter ERROR: ${ignore_filter}\n"
+    print_msg "| Cluster GAP: ${cluster_gap}\n"
 
     local xmk
     local xmi=0
-    printf "|        "
+    print_msg "|        "
     for xmk in ${x_mask};do
-	printf "%1d " ${xmi}
+	print_msg "%1d " ${xmi}
 	xmi=$((${xmi}+1))
 	if [ ${xmi} -eq 10 ];then
 	    xmi=0
 	fi
     done
-    printf "\n"
-    echo "| xmask: ${x_mask}"
+    print_msg "\n"
+    print_msg "| xmask: ${x_mask}\n"
 
     local ymk
     local ymi=0
-    printf "|        "
+    print_msg "|        "
     for ymk in ${y_mask};do
-	printf "%1d " ${ymi}
+	print_msg "%1d " ${ymi}
 	ymi=$((${ymi}+1))
 	if [ ${ymi} -eq 10 ];then
 	    ymi=0
 	fi
     done
-    printf "\n"
-    echo "| ymask: ${y_mask}"
+    print_msg "\n"
+    print_msg "| ymask: ${y_mask}\n"
 
     local zmk
     local zmi=0
-    printf "|        "
+    print_msg "|        "
     for zmk in ${z_mask};do
-	printf "%1d " ${zmi}
+	print_msg "%1d " ${zmi}
 	zmi=$((${zmi}+1))
 	if [ ${zmi} -eq 10 ];then
 	    zmi=0
 	fi
     done
-    printf "\n"
-    echo "| zmask: ${z_mask}"
+    print_msg "\n"
+    print_msg "| zmask: ${z_mask}\n"
 
 
     if [ "${gpfname}" == "" ];then
 	gpfname="/tmp/moufoplot.gp"
     fi
 
-    echo "| xavg: ${x_avg}"
-    echo "| yavg: ${y_avg}"
-    echo "| percent: ${percent}"
-    echo "| bar width: ${bar_width}"
-    echo "| line width: ${line_width}"
-    echo "| line type: ${line_type}"
-    echo "| point size: ${point_size}"
-    echo "| point type: ${point_type}"
-    echo "| bar line width: ${bar_line_width}"
-    echo "| .data file: ${data_file}"
-    echo "| .gp   file: ${gpfname}"
-    echo "| output file: ${epsfile}"
-    echo "| Dont append data to eps: ${no_append}"
-    echo "| noviewer: ${no_viewer}"
-    echo "| viewer: ${eps_viewer}"
-    echo "| outformat: ${out_format}"
-    echo "+-------------------------------+"
+    print_msg "| xavg: ${x_avg}\n"
+    print_msg "| yavg: ${y_avg}\n"
+    print_msg "| percent: ${percent}\n"
+    print_msg "| bar width: ${bar_width}\n"
+    print_msg "| line width: ${line_width}\n"
+    print_msg "| line type: ${line_type}\n"
+    print_msg "| point size: ${point_size}\n"
+    print_msg "| point type: ${point_type}\n"
+    print_msg "| bar line width: ${bar_line_width}\n"
+    print_msg "| .data file: ${data_file}\n"
+    print_msg "| .gp   file: ${gpfname}\n"
+    print_msg "| output file: ${epsfile}\n"
+    print_msg "| Dont append data to eps: ${no_append}\n"
+    print_msg "| noviewer: ${no_viewer}\n"
+    print_msg "| viewer: ${eps_viewer}\n"
+    print_msg "| outformat: ${out_format}\n"
+    print_msg "| silent: ${silent}\n"
+    print_msg "+-------------------------------+\n"
 
 }
 
@@ -2423,64 +2445,65 @@ version()
 usage()
 {
     version
-    echo "Usage: ${script_name} <OPTIONS>"
-    echo "   --bar                        : (DEF) Generate histograms."
-    echo "   --stack                      : Generate stacked histograms."
-    echo "   --line                       : Generate line-graphs."
-    echo "   --hmap                       : Generate heat-map graphs."
-    echo "   --dir,-d \"<DIR/FILE>\"      : File or Directory of input data."
-    echo "   --xvals,-x \"<x values>\"    : The identifiers of the X values."
-    echo "   --yvals,-y \"<y values>\"    : The identifiers of the Y values."
-    echo "   --zvals,-z \"<z values>\"    : The identifiers of the Z values."
-    echo "   --filter,-f \"<filter vals>\": The filtering identifiers."
-    echo "   --title, -t \"<title>\"      : (Opt) Graph title."
-    echo "   --xlabel \"<x label>\"       : (Opt) Label of the X axis."
-    echo "   --xlabeloffset <xlabel offset>: (Opt) Set the offset of xlabel."
-    echo "   --ylabel \"<y label>\"       : (Opt) Label of the Y axis."
-    echo "   --ylabeloffset <ylabel offset>: (Opt) Set the offset of ylabel."
-    echo "   --zlabel \"<z label>\"       : (Opt) Label of the Z axis."
-    echo "   --data \"<file path>\"       : (Opt) .data data file."
-    echo "   --gp \"<file path>\"         : (Opt) .gp gnuplot file."
-    echo "   --out \"<file path>\"        : (Opt) Output postscript file."
-    echo "   --xtags \"<tags>\"           : (Opt) Tags for the X axis."
-    echo "   --noxtags                    : (Opt) Disable X axis tags."
-    echo "   --ytags \"<tags>\"           : (Opt) Tags for the Y axis."
-    echo "   --noytags                    : (Opt) Disable Y axis tags."
-    echo "   --ztags \"<tags>\"           : (Opt) Tags for the Z axis."
-    echo "   --noztags                    : (Opt) Disable Z axis tags."
-    echo "   --ztagsoffset <ztags offset> : (Opt) Set the offset of z tags."
-    echo "   --xnorm \"<x norm filters>\" : (Opt) Normalization filter X."
-    echo "   --ynorm \"<y norm filters>\" : (Opt) Normalization filter Y."
-    echo "   --ynormv \"<y norm values>\" : (Opt) Normalization values Y."
-    echo "   --xrotate \"<angle>\"        : (Opt) Rotate angle for X tags."
-    echo "   --legend \"<parameters>\"    : (Opt) Control legend attrib."
-    echo "         Params: on/off, in/out, top/bottom/center, right/left,"
-    echo "                 horizontal/vertical, ljust,rjust, small, box, atMxN"
-    echo "   --size NUMxNUM               : (Opt) Dimensions of the graph."
-    echo "   --xformat \"format\"         : (Opt) Format of the x tags."
-    echo "   --yformat \"format\"         : (Opt) Format of the y tags."
-    echo "   --ytics NUM                  : (Opt) Number of tics on Y."
-    echo "   --yrange MIN,MAX,STEP        : (Opt) Range of Y tics."
-    echo "   --colors,-c \"#color1,#color2...\": (Opt) User defined colors."
-    echo "   --gap <number>               : (Opt) The gap between clusters."
-    echo "   --xmask <bitmap>             : (Opt) Disable X bars with 0."
-    echo "   --ymask <bitmap>             : (Opt) Disable Y bars with 0."
-    echo "   --zmask <bitmap>             : (Opt) Disable Z bars with 0."
-    echo "   --xavg <0,1,2,3,...>         : (Opt) Avg over selected X."
-    echo "   --yavg <0,1,2,3,...>         : (Opt) Avg over selected Y."
-    echo "   --ignore,-i                  : (Opt) Ignore Filter ERROR."
-    echo "   --percent                    : (Opt) Change Y axis to show % vals."
-    echo "   --noviewer                   : (Opt) Disable launching the VIEWER."
-    echo "   --viewer <file viewer>       : (Opt) Prefer to use VIEWER."
-    echo "   --barw <bar width>           : (Opt) Set the bar width."
-    echo "   --linew <line width>         : (Opt) Set the line width."
-    echo "   --linetype <3,6,1,...>       : (Opt) Set the line type."
-    echo "   --pntsize <point size>       : (Opt) Set the line point size."
-    echo "   --pnttype <3,6,1,...>        : (Opt) Set the line point types."
-    echo "   --noappend                   : (Opt) Dont append moufoplot data to eps."
-    echo "   --outformat <eps|png|jpeg>   : (Opt) Select output file format."
-    echo "   --version (or -v)            : Print version and exit."
-    echo "   --help                       : Print this help screen."
+    print_msg "Usage: ${script_name} <OPTIONS>\n"
+    print_msg "   --bar                        : (DEF) Generate histograms.\n"
+    print_msg "   --stack                      : Generate stacked histograms.\n"
+    print_msg "   --line                       : Generate line-graphs.\n"
+    print_msg "   --hmap                       : Generate heat-map graphs.\n"
+    print_msg "   --dir,-d \"<DIR/FILE>\"      : File or Directory of input data.\n"
+    print_msg "   --xvals,-x \"<x values>\"    : The identifiers of the X values.\n"
+    print_msg "   --yvals,-y \"<y values>\"    : The identifiers of the Y values.\n"
+    print_msg "   --zvals,-z \"<z values>\"    : The identifiers of the Z values.\n"
+    print_msg "   --filter,-f \"<filter vals>\": The filtering identifiers.\n"
+    print_msg "   --title, -t \"<title>\"      : (Opt) Graph title.\n"
+    print_msg "   --xlabel \"<x label>\"       : (Opt) Label of the X axis.\n"
+    print_msg "   --xlabeloffset <xlabel offset>: (Opt) Set the offset of xlabel.\n"
+    print_msg "   --ylabel \"<y label>\"       : (Opt) Label of the Y axis.\n"
+    print_msg "   --ylabeloffset <ylabel offset>: (Opt) Set the offset of ylabel.\n"
+    print_msg "   --zlabel \"<z label>\"       : (Opt) Label of the Z axis.\n"
+    print_msg "   --data \"<file path>\"       : (Opt) .data data file.\n"
+    print_msg "   --gp \"<file path>\"         : (Opt) .gp gnuplot file.\n"
+    print_msg "   --out \"<file path>\"        : (Opt) Output postscript file.\n"
+    print_msg "   --xtags \"<tags>\"           : (Opt) Tags for the X axis.\n"
+    print_msg "   --noxtags                    : (Opt) Disable X axis tags.\n"
+    print_msg "   --ytags \"<tags>\"           : (Opt) Tags for the Y axis.\n"
+    print_msg "   --noytags                    : (Opt) Disable Y axis tags.\n"
+    print_msg "   --ztags \"<tags>\"           : (Opt) Tags for the Z axis.\n"
+    print_msg "   --noztags                    : (Opt) Disable Z axis tags.\n"
+    print_msg "   --ztagsoffset <ztags offset> : (Opt) Set the offset of z tags.\n"
+    print_msg "   --xnorm \"<x norm filters>\" : (Opt) Normalization filter X.\n"
+    print_msg "   --ynorm \"<y norm filters>\" : (Opt) Normalization filter Y.\n"
+    print_msg "   --ynormv \"<y norm values>\" : (Opt) Normalization values Y.\n"
+    print_msg "   --xrotate \"<angle>\"        : (Opt) Rotate angle for X tags.\n"
+    print_msg "   --legend \"<parameters>\"    : (Opt) Control legend attrib.\n"
+    print_msg "         Params: on/off, in/out, top/bottom/center, right/left,\n"
+    print_msg "                 horizontal/vertical, ljust,rjust, small, box, atMxN\n"
+    print_msg "   --size NUMxNUM               : (Opt) Dimensions of the graph.\n"
+    print_msg "   --xformat \"format\"         : (Opt) Format of the x tags.\n"
+    print_msg "   --yformat \"format\"         : (Opt) Format of the y tags.\n"
+    print_msg "   --ytics NUM                  : (Opt) Number of tics on Y.\n"
+    print_msg "   --yrange MIN,MAX,STEP        : (Opt) Range of Y tics.\n"
+    print_msg "   --colors,-c \"#color1,#color2...\": (Opt) User defined colors.\n"
+    print_msg "   --gap <number>               : (Opt) The gap between clusters.\n"
+    print_msg "   --xmask <bitmap>             : (Opt) Disable X bars with 0.\n"
+    print_msg "   --ymask <bitmap>             : (Opt) Disable Y bars with 0.\n"
+    print_msg "   --zmask <bitmap>             : (Opt) Disable Z bars with 0.\n"
+    print_msg "   --xavg <0,1,2,3,...>         : (Opt) Avg over selected X.\n"
+    print_msg "   --yavg <0,1,2,3,...>         : (Opt) Avg over selected Y.\n"
+    print_msg "   --ignore,-i                  : (Opt) Ignore Filter ERROR.\n"
+    print_msg "   --percent                    : (Opt) Change Y axis to show % vals.\n"
+    print_msg "   --noviewer                   : (Opt) Disable launching the VIEWER.\n"
+    print_msg "   --viewer <file viewer>       : (Opt) Prefer to use VIEWER.\n"
+    print_msg "   --barw <bar width>           : (Opt) Set the bar width.\n"
+    print_msg "   --linew <line width>         : (Opt) Set the line width.\n"
+    print_msg "   --linetype <3,6,1,...>       : (Opt) Set the line type.\n"
+    print_msg "   --pntsize <point size>       : (Opt) Set the line point size.\n"
+    print_msg "   --pnttype <3,6,1,...>        : (Opt) Set the line point types.\n"
+    print_msg "   --noappend                   : (Opt) Dont append moufoplot data to eps.\n"
+    print_msg "   --outformat <eps|png|jpeg>   : (Opt) Select output file format.\n"
+    print_msg "   --silent                     : (Opt) Silent output on screen.\n"
+    print_msg "   --version (or -v)            : Print version and exit.\n"
+    print_msg "   --help                       : Print this help screen.\n"
     exit 1
 }
 
@@ -2493,20 +2516,20 @@ append_data_to_eps()
     if [ "${no_append}" == "YES" ]; then
 	return
     fi
-    echo "Appending moufoplot command to ${epsfile}..."
+    print_msg "Appending moufoplot command to ${epsfile}...\n"
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
     echo "%% `version` , `gnuplot --version`" >> ${epsfile}
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
     # echo $@ | sed 's/^/%% /' >> ${epsfile}
     echo "moufoplot ${arguments_saved}" | sed 's/^/%% /' >> ${epsfile}
 
-    echo "Appending numerical data (${data_file}) to ${epsfile}..."
+    print_msg "Appending numerical data (${data_file}) to ${epsfile}...\n"
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
     echo "%% moufoplot data: ${data_file}" >> ${epsfile}
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
     cat ${data_file} | sed 's/^/%% /' >> ${epsfile}
 
-    echo "Appending .gp file (${gpfname}) to ${epsfile}..."
+    print_msg "Appending .gp file (${gpfname}) to ${epsfile}...\n"
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
     echo "%% moufoplot .gp: ${gpfname}" >> ${epsfile}
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
@@ -2538,8 +2561,8 @@ findviewer()
 	    return
 	fi
     done
-    echo "WARNING: No EPS viewer found in (${viewers}) to display ${epsfile}."
-    echo "Try using: --viewer " 
+    print_msg "WARNING: No EPS viewer found in (${viewers}) to display ${epsfile}.\n"
+    print_msg "Try using: --viewer \n" 
     reset_ifs
 }
 
@@ -2583,9 +2606,9 @@ moufoplot()
     findviewer
     local viewer=${RETVAL}
     if [ "${viewer}" != "" ]&&[ "${no_viewer}" != "YES" ];then
-	echo "View ${epsfile} using ${viewer}"
+	print_msg "View ${epsfile} using ${viewer}\n"
 	local viewcmd="${viewer} ${epsfile} "
-	echo ${viewcmd}
+	print_msg "${viewcmd}\n"
 	eval ${viewcmd}
     fi
 }
