@@ -2577,9 +2577,18 @@ findviewer()
     reset_ifs
 }
 
+check_if_gnuplot_exists()
+{
+    gnuplot --help > /dev/null
+    if [ $? -ne 0 ];then
+	echo "ERROR: can't run gnuplot. Please install gnuplot"
+	exit 1
+    fi
+}
 
 moufoplot()
 {
+    check_if_gnuplot_exists
     IFS_CNT=0
     IFS_CHAR=','
     parse_arguments "$@"
