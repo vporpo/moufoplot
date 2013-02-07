@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0 EPSF-2.0
 %%Title: img//example19line.eps
 %%Creator: gnuplot 4.4 patchlevel 0
-%%CreationDate: Sun Sep 30 04:26:55 2012
+%%CreationDate: Thu Feb  7 12:17:43 2013
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 230 176
 %%EndComments
@@ -50,7 +50,7 @@ SDict begin [
   /Author (cowbob)
 %  /Producer (gnuplot)
 %  /Keywords ()
-  /CreationDate (Sun Sep 30 04:26:55 2012)
+  /CreationDate (Thu Feb  7 12:17:43 2013)
   /DOCINFO pdfmark
 end
 } ifelse
@@ -647,27 +647,16 @@ LTb
 1.000 UP
 1.000 UL
 LTb
-1.000 UL
-LTb
-2570 2037 N
-0 252 V
-735 0 V
-0 -252 V
--735 0 V
-Z stroke
-2570 2289 M
-735 0 V
 % Begin plot #1
 1.375 UP
-stroke
 3.000 UL
 LT0
-0.13 0.13 0.00 C LCb setrgbcolor
+1.00 0.00 0.00 C LCb setrgbcolor
 2738 2226 M
 [ [(Helvetica) 140.0 0.0 true true 0 (i1)]
 ] -46.7 MRshow
 LT0
-0.13 0.13 0.00 C 2822 2226 M
+1.00 0.00 0.00 C 2822 2226 M
 399 0 V
 630 1353 M
 1380 119 V
@@ -681,12 +670,12 @@ LT0
 1.375 UP
 3.000 UL
 LT0
-0.80 0.67 0.00 C LCb setrgbcolor
+0.00 1.00 0.00 C LCb setrgbcolor
 2738 2100 M
 [ [(Helvetica) 140.0 0.0 true true 0 (i2)]
 ] -46.7 MRshow
 LT0
-0.80 0.67 0.00 C 2822 2100 M
+0.00 1.00 0.00 C 2822 2100 M
 399 0 V
 630 1830 M
 1380 24 V
@@ -714,9 +703,9 @@ showpage
 %%Trailer
 %%DocumentFonts: Helvetica
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MoufoPlot 0.01 , gnuplot 4.4 patchlevel 0
+%% MoufoPlot 0.02 , gnuplot 4.4 patchlevel 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --legend "box" --line --out "img//example19line.eps" --noviewer
+%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --colors "#ff0000,#00ff00" --line --out "img//example19line.eps" --noviewer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% moufoplot data: /tmp/moufoplot.data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -729,7 +718,7 @@ showpage
 %% 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot .gp: moufoplot.gp
+%% moufoplot .gp: /tmp/moufoplot.gp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set term postscript eps enhanced color
 %% set output "img//example19line.eps"
@@ -742,9 +731,9 @@ showpage
 %% set title font ",18" 
 %% set ylabel font ",16" 
 %% set xlabel font ",16" 
-%% set key inside top box
+%% set key inside top
 %% set ytics .38200000000000000000
 %% set yrange[0:2.67400000000000000000]
 %% set xrange[0:]
 %% set xlabel " " offset 0,-0.8
-%% plot  "/tmp/moufoplot.data" using 2:xtic(1) with linespoints title columnheader(2) lw 3 ps 1.37500000000000000000 pt 0 lt 1 lc rgb "#202000", "/tmp/moufoplot.data" using 3:xtic(1) with linespoints title columnheader(3) lw 3 ps 1.37500000000000000000 pt 1 lt 1 lc rgb "#ccaa00"
+%% plot  "/tmp/moufoplot.data" using 2:xtic(1) with linespoints title columnheader(2) lw 3 ps 1.37500000000000000000 pt 0 lt 1 lc rgb "#ff0000", "/tmp/moufoplot.data" using 3:xtic(1) with linespoints title columnheader(3) lw 3 ps 1.37500000000000000000 pt 1 lt 1 lc rgb "#00ff00"

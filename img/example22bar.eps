@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0 EPSF-2.0
 %%Title: img//example22bar.eps
 %%Creator: gnuplot 4.4 patchlevel 0
-%%CreationDate: Sun Sep 30 04:27:04 2012
+%%CreationDate: Thu Feb  7 12:17:50 2013
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 230 176
 %%EndComments
@@ -50,7 +50,7 @@ SDict begin [
   /Author (cowbob)
 %  /Producer (gnuplot)
 %  /Keywords ()
-  /CreationDate (Sun Sep 30 04:27:04 2012)
+  /CreationDate (Thu Feb  7 12:17:50 2013)
   /DOCINFO pdfmark
 end
 } ifelse
@@ -499,7 +499,7 @@ LTb
 -63 0 V
 stroke
 546 984 M
-[ [(Helvetica) 160.0 0.0 true true 0 (0.20)]
+[ [(Helvetica) 160.0 0.0 true true 0 (0.38)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -515,7 +515,7 @@ LTb
 -63 0 V
 stroke
 546 1212 M
-[ [(Helvetica) 160.0 0.0 true true 0 (0.40)]
+[ [(Helvetica) 160.0 0.0 true true 0 (0.76)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -531,7 +531,7 @@ LTb
 -63 0 V
 stroke
 546 1440 M
-[ [(Helvetica) 160.0 0.0 true true 0 (0.60)]
+[ [(Helvetica) 160.0 0.0 true true 0 (1.15)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -547,7 +547,7 @@ LTb
 -63 0 V
 stroke
 546 1668 M
-[ [(Helvetica) 160.0 0.0 true true 0 (0.80)]
+[ [(Helvetica) 160.0 0.0 true true 0 (1.53)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -563,7 +563,7 @@ LTb
 -63 0 V
 stroke
 546 1896 M
-[ [(Helvetica) 160.0 0.0 true true 0 (1.00)]
+[ [(Helvetica) 160.0 0.0 true true 0 (1.91)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -581,7 +581,7 @@ LTb
 -63 0 V
 stroke
 546 2124 M
-[ [(Helvetica) 160.0 0.0 true true 0 (1.20)]
+[ [(Helvetica) 160.0 0.0 true true 0 (2.29)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -597,7 +597,7 @@ LTb
 -63 0 V
 stroke
 546 2352 M
-[ [(Helvetica) 160.0 0.0 true true 0 (1.40)]
+[ [(Helvetica) 160.0 0.0 true true 0 (2.67)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -647,7 +647,18 @@ LTb
 1.000 UP
 1.000 UL
 LTb
+1.000 UL
+LTb
+2570 2037 N
+0 252 V
+735 0 V
+0 -252 V
+-735 0 V
+Z stroke
+2570 2289 M
+735 0 V
 % Begin plot #1
+stroke
 3.000 UL
 LT0
 0.13 0.13 0.00 C LCb setrgbcolor
@@ -755,22 +766,22 @@ showpage
 %%Trailer
 %%DocumentFonts: Helvetica
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MoufoPlot 0.01 , gnuplot 4.4 patchlevel 0
+%% MoufoPlot 0.02 , gnuplot 4.4 patchlevel 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --ynorm "i2 opt3" --bar --out "img//example22bar.eps" --noviewer
+%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --legend "box" --bar --out "img//example22bar.eps" --noviewer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% moufoplot data: /tmp/moufoplot.data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% NULL i1 i2
 %% # 
-%% opt1 .52356020942408376963 .94240837696335078534
-%% opt2 .62827225130890052356 .96335078534031413612
-%% opt3 .68062827225130890052 1.00000000000000000000
+%% opt1 1.00000000000000000000 1.80000000000000000000
+%% opt2 1.20000000000000000000 1.84000000000000000000
+%% opt3 1.30000000000000000000 1.91000000000000000000
 %% 
 %% 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot .gp: moufoplot.gp
+%% moufoplot .gp: /tmp/moufoplot.gp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set term postscript eps enhanced color
 %% set output "img//example22bar.eps"
@@ -783,9 +794,9 @@ showpage
 %% set title font ",18" 
 %% set ylabel font ",16" 
 %% set xlabel font ",16" 
-%% set key inside top
-%% set ytics .20000000000000000000
-%% set yrange[0:1.40000000000000000000]
+%% set key inside top box
+%% set ytics .38200000000000000000
+%% set yrange[0:2.67400000000000000000]
 %% set style data histograms
 %% set style histogram cluster gap 1 title offset 0,0.40000000000000000000
 %% set style fill solid 1.0 border lt "black"

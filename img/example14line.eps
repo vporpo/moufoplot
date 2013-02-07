@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0 EPSF-2.0
 %%Title: img//example14line.eps
 %%Creator: gnuplot 4.4 patchlevel 0
-%%CreationDate: Sun Sep 30 04:26:38 2012
+%%CreationDate: Thu Feb  7 12:17:26 2013
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 230 176
 %%EndComments
@@ -50,7 +50,7 @@ SDict begin [
   /Author (cowbob)
 %  /Producer (gnuplot)
 %  /Keywords ()
-  /CreationDate (Sun Sep 30 04:26:38 2012)
+  /CreationDate (Thu Feb  7 12:17:26 2013)
   /DOCINFO pdfmark
 end
 } ifelse
@@ -648,8 +648,8 @@ LTb
 1.000 UL
 LTb
 % Begin plot #1
-1.375 UP
-3.000 UL
+2.250 UP
+10.000 UL
 LT0
 0.13 0.13 0.00 C LCb setrgbcolor
 2738 2226 M
@@ -661,14 +661,14 @@ LT0
 630 1353 M
 1380 119 V
 1379 60 V
-630 1353 Crs
-2010 1472 Crs
-3389 1532 Crs
-3021 2226 Crs
+630 1353 Pnt
+2010 1472 Pnt
+3389 1532 Pnt
+3021 2226 Pnt
 % End plot #1
 % Begin plot #2
-1.375 UP
-3.000 UL
+2.250 UP
+10.000 UL
 LT0
 0.80 0.67 0.00 C LCb setrgbcolor
 2738 2100 M
@@ -680,10 +680,10 @@ LT0
 630 1830 M
 1380 24 V
 1379 42 V
-630 1830 Crs
-2010 1854 Crs
-3389 1896 Crs
-3021 2100 Crs
+630 1830 Pls
+2010 1854 Pls
+3389 1896 Pls
+3021 2100 Pls
 % End plot #2
 1.000 UL
 LTb
@@ -703,9 +703,9 @@ showpage
 %%Trailer
 %%DocumentFonts: Helvetica
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MoufoPlot 0.01 , gnuplot 4.4 patchlevel 0
+%% MoufoPlot 0.02 , gnuplot 4.4 patchlevel 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --pnttype "2,2" --line --out "img//example14line.eps" --noviewer
+%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --linew "10" --line --out "img//example14line.eps" --noviewer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% moufoplot data: /tmp/moufoplot.data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -718,7 +718,7 @@ showpage
 %% 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot .gp: moufoplot.gp
+%% moufoplot .gp: /tmp/moufoplot.gp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set term postscript eps enhanced color
 %% set output "img//example14line.eps"
@@ -736,4 +736,4 @@ showpage
 %% set yrange[0:2.67400000000000000000]
 %% set xrange[0:]
 %% set xlabel " " offset 0,-0.8
-%% plot  "/tmp/moufoplot.data" using 2:xtic(1) with linespoints title columnheader(2) lw 3 ps 1.37500000000000000000 pt 2 lt 1 lc rgb "#202000", "/tmp/moufoplot.data" using 3:xtic(1) with linespoints title columnheader(3) lw 3 ps 1.37500000000000000000 pt 2 lt 1 lc rgb "#ccaa00"
+%% plot  "/tmp/moufoplot.data" using 2:xtic(1) with linespoints title columnheader(2) lw 10 ps 2.25000000000000000000 pt 0 lt 1 lc rgb "#202000", "/tmp/moufoplot.data" using 3:xtic(1) with linespoints title columnheader(3) lw 10 ps 2.25000000000000000000 pt 1 lt 1 lc rgb "#ccaa00"

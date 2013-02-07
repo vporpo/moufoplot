@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0 EPSF-2.0
 %%Title: img//example1hmap.eps
 %%Creator: gnuplot 4.4 patchlevel 0
-%%CreationDate: Sun Sep 30 04:25:57 2012
+%%CreationDate: Thu Feb  7 12:16:44 2013
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 230 176
 %%EndComments
@@ -50,7 +50,7 @@ SDict begin [
   /Author (cowbob)
 %  /Producer (gnuplot)
 %  /Keywords ()
-  /CreationDate (Sun Sep 30 04:25:57 2012)
+  /CreationDate (Thu Feb  7 12:16:44 2013)
   /DOCINFO pdfmark
 end
 } ifelse
@@ -569,6 +569,45 @@ LTb
 714 560 M
 0 63 V
 stroke
+714 420 M
+[ [(Helvetica) 160.0 0.0 true true 0 (a)]
+] -53.3 MCshow
+1.000 UL
+LTb
+1252 560 M
+0 63 V
+stroke
+1252 420 M
+[ [(Helvetica) 160.0 0.0 true true 0 (b)]
+] -53.3 MCshow
+1.000 UL
+LTb
+1790 560 M
+0 63 V
+stroke
+1790 420 M
+[ [(Helvetica) 160.0 0.0 true true 0 (c)]
+] -53.3 MCshow
+1.000 UL
+LTb
+2327 560 M
+0 63 V
+stroke
+2327 420 M
+[ [(Helvetica) 160.0 0.0 true true 0 (d)]
+] -53.3 MCshow
+1.000 UL
+LTb
+2865 560 M
+0 63 V
+stroke
+2865 420 M
+[ [(Helvetica) 160.0 0.0 true true 0 (e)]
+] -53.3 MCshow
+1.000 UL
+LTb
+1.000 UL
+LTb
 714 2352 N
 714 560 L
 2151 0 V
@@ -741,16 +780,16 @@ showpage
 %%Trailer
 %%DocumentFonts: Helvetica
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MoufoPlot 0.01 , gnuplot 4.4 patchlevel 0
+%% MoufoPlot 0.02 , gnuplot 4.4 patchlevel 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot  -d "input0.dat" -x "a,b,c,d,e" --noxtags --hmap --out "img//example1hmap.eps" --noviewer
+%% moufoplot  -d "input0.dat" -x "@" --hmap --out "img//example1hmap.eps" --noviewer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% moufoplot data: /tmp/moufoplot.data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% 1.50 2.50 3 2 1.10 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot .gp: moufoplot.gp
+%% moufoplot .gp: /tmp/moufoplot.gp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set term postscript eps enhanced color
 %% set output "img//example1hmap.eps"
@@ -768,6 +807,6 @@ showpage
 %% set cbtics
 %% unset key
 %% set xlabel " " offset 0,-0.8
-%% set xtics ("""" 0,"""" 1,"""" 2,"""" 3,"""" 4)
+%% set xtics ("a" 0,"b" 1,"c" 2,"d" 3,"e" 4)
 %% 
 %% plot  "/tmp/moufoplot.data" matrix with image

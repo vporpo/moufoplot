@@ -1,257 +1,279 @@
 
 <html><title>MoufoPlot Examples</title>
+<head>
+<style type="text/css">
+.description
+{
+   background-color: #6699CC;
+   height: 15%;
+   color: #333333;
+   font-family: Times New Roman;
+   font-size: 14px;
+   padding: 1px;
+}
+.row
+{
+   width: 1300px;
+   height: 300px;
+}
+.example
+{
+  width:  250px;
+  height: 100%;
+  float: left; 
+  margin: 2px;
+}
+.graph
+{
+   height: 60%;
+}
+.code
+{
+   # background-color: #DFDFDF;
+   background-color: #000000;
+   # color: #333333;
+   color: #CFCFCF;
+   font-family: "Courier";
+   font-size: 11px;
+   padding: 1px;
+   height: 25%;
+}
+.descr-datafile
+{
+   background-color: #dd2222;
+   color: #333333;ewline
+   font-family: "Times New Roman";
+   font-size: 12px;
+   padding: 1px;
+   height: 7%;
+}
+.datafile
+{
+   background-color: #DFDFDF;
+   color: #333333;
+   font-family: "Courier";
+   font-size: 9px;
+   padding: 1px;
+   height: 93%;
+}
+.newline
+{
+   clear: both;
+   height: 5px;
+   # background-color: red;
+}
+</style>
+</head>
+
 <body>
-<h2>MoufoPlot 0.01 Examples (gnuplot 4.4 patchlevel 0)</h2>
-<a href="https://github.com/vporpo/moufoplot">Download MoufoPlot</a><br/>
-INDEX<hr/>
-<a href=#example0>0. Very Basic example</a><br/>
-<a href=#example1>1. Disable tags</a><br/>
-<a href=#example2>2. Selecting data. Show only data that are: A,B,D,E and STABLE and TEST1</a><br/>
-<a href=#example3>3. Disable vertical tics</a><br/>
-<a href=#example4>4. Basic example i1 and i2 on X, opt1, opt2, opt3 on Y</a><br/>
-<a href=#example5>5. Reverse of the previous </a><br/>
-<a href=#example6>6. Rotate the tags of the horizontal axis</a><br/>
-<a href=#example7>7. Title of graph</a><br/>
-<a href=#example8>8. Axis Labels</a><br/>
-<a href=#example9>9. Change X and Y Tags</a><br/>
-<a href=#example10>10. Set Vertical Axis ticks (0 to 2 with step of 0.5)</a><br/>
-<a href=#example11>11. Thicker lines (line width)</a><br/>
-<a href=#example12>12. Bigger line points (point size)</a><br/>
-<a href=#example13>13. Set line types</a><br/>
-<a href=#example14>14. Set point types</a><br/>
-<a href=#example15>15. Bar thickness (bar width)</a><br/>
-<a href=#example16>16. Set colors manually (HEX)</a><br/>
-<a href=#example17>17. Change dimensions (width X height)</a><br/>
-<a href=#example18>18. Turn OFF the legend</a><br/>
-<a href=#example19>19. Box around the legend</a><br/>
-<a href=#example20>20. Manually place legend at (1,2.5)</a><br/>
-<a href=#example21>21. Place legend outside the graph</a><br/>
-<a href=#example22>22. Normalize to i2 and opt3</a><br/>
-<a href=#example23>23. Normalize to i2 and opt3 + PERCENT</a><br/>
-<a href=#example24>24. Calculate the average over (all) -y 0,1,2</a><br/>
-<a href=#example25>25. Calculate the average over (only) -y 0,1</a><br/>
-<a href=#example26>26. Calculate the average over (all) -x 0,1</a><br/>
-<a href=#example27>27. Hide (mask) output -y opt1</a><br/>
-<a href=#example28>28. Hide (mask) output -x i1</a><br/>
-<a href=#example29>29. Clustered Graph</a><br/>
-<a href=#example30>30. Clustered Graph With Title and Labels</a><br/>
-<a href=#example31>31. Stacked graph</a><br/>
+<h2>MoufoPlot 0.02 Examples (gnuplot 4.4 patchlevel 0)</h2>
+<a href="https://github.com/vporpo/moufoplot/archive/master.zip">Download MoufoPlot</a><br/>
+<a href="https://github.com/vporpo/moufoplot">MoufoPlot github page</a><br/>
+<h3>INDEX</h3><hr/>
+<a href=#example0>0. Very Basic example X</a><br/>
+<a href=#example1>1. Draw all X</a><br/>
+<a href=#example2>2. Very Basic example Y</a><br/>
+<a href=#example3>3. Draw all Y</a><br/>
+<a href=#example4>4. Selecting data. Show only A,B,D,E and STABLE and TEST1</a><br/>
+<a href=#example5>5. Disable tags</a><br/>
+<a href=#example6>6. Disable vertical tics</a><br/>
+<a href=#example7>7. Basic example i1 and i2 on X, opt1, opt2, opt3 on Y</a><br/>
+<a href=#example8>8. Reverse of the previous </a><br/>
+<a href=#example9>9. Rotate the tags of the horizontal axis</a><br/>
+<a href=#example10>10. Title of graph</a><br/>
+<a href=#example11>11. Axis Labels</a><br/>
+<a href=#example12>12. Change X and Y Tags</a><br/>
+<a href=#example13>13. Set Vertical Axis ticks (0 to 2 with step of 0.5)</a><br/>
+<a href=#example14>14. Thicker lines (line width)</a><br/>
+<a href=#example15>15. Bigger line points (point size)</a><br/>
+<a href=#example16>16. Set line types</a><br/>
+<a href=#example17>17. Set point types</a><br/>
+<a href=#example18>18. Bar thickness (bar width)</a><br/>
+<a href=#example19>19. Set colors manually (HEX)</a><br/>
+<a href=#example20>20. Change dimensions (width X height)</a><br/>
+<a href=#example21>21. Turn OFF the legend</a><br/>
+<a href=#example22>22. Box around the legend</a><br/>
+<a href=#example23>23. Manually place legend at (1,2.5)</a><br/>
+<a href=#example24>24. Place legend outside the graph</a><br/>
+<a href=#example25>25. Normalize to i2 and opt3</a><br/>
+<a href=#example26>26. Normalize to i2 and opt3 + PERCENT</a><br/>
+<a href=#example27>27. Calculate the average over (all) -y 0,1,2</a><br/>
+<a href=#example28>28. Calculate the average over (only) -y 0,1</a><br/>
+<a href=#example29>29. Calculate the average over (all) -x 0,1</a><br/>
+<a href=#example30>30. Hide (mask) output -y opt1</a><br/>
+<a href=#example31>31. Hide (mask) output -x i1</a><br/>
+<a href=#example32>32. Clustered Graph</a><br/>
+<a href=#example33>33. Clustered Graph With Title and Labels</a><br/>
+
 <hr/>
-<table border=0>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=row>
+<div class=example>
 <a name="example0"></a>
-<font color=#333333>0. Very Basic example (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example0bar.eps"><img src="img//example0bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input0.dat -x a,b,c,d,e --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>0. Very Basic example X (Bar graph)</div>
+<div class=graph><a href="img//example0bar.eps"><img src="img//example0bar.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x a,b,c,d --bar</div>
+</div>
+<div class=example>
 <a name="example0"></a>
-<font color=#333333>0. Very Basic example (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example0stack.eps"><img src="img//example0stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input0.dat -x a,b,c,d,e --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>0. Very Basic example X (Stacked Bar graph)</div>
+<div class=graph><a href="img//example0stack.eps"><img src="img//example0stack.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x a,b,c,d --stack</div>
+</div>
+<div class=example>
 <a name="example0"></a>
-<font color=#333333>0. Very Basic example (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example0line.eps"><img src="img//example0line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input0.dat -x a,b,c,d,e --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>0. Very Basic example X (Line graph)</div>
+<div class=graph><a href="img//example0line.eps"><img src="img//example0line.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x a,b,c,d --line</div>
+</div>
+<div class=example>
 <a name="example0"></a>
-<font color=#333333>0. Very Basic example (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example0hmap.eps"><img src="img//example0hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input0.dat -x a,b,c,d,e --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input0.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-a:1.50
+<div class=description>0. Very Basic example X (Heat map)</div>
+<div class=graph><a href="img//example0hmap.eps"><img src="img//example0hmap.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x a,b,c,d --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input0.dat</div>
+<div class=datafile><pre>a:1.50
 b:2.50
 c:3
 d:2
-e:1.10
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+e:1.10</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example1"></a>
-<font color=#333333>1. Disable tags (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example1bar.eps"><img src="img//example1bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input0.dat -x a,b,c,d,e --noxtags --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>1. Draw all X (Bar graph)</div>
+<div class=graph><a href="img//example1bar.eps"><img src="img//example1bar.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x @ --bar</div>
+</div>
+<div class=example>
 <a name="example1"></a>
-<font color=#333333>1. Disable tags (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example1stack.eps"><img src="img//example1stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input0.dat -x a,b,c,d,e --noxtags --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>1. Draw all X (Stacked Bar graph)</div>
+<div class=graph><a href="img//example1stack.eps"><img src="img//example1stack.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x @ --stack</div>
+</div>
+<div class=example>
 <a name="example1"></a>
-<font color=#333333>1. Disable tags (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example1line.eps"><img src="img//example1line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input0.dat -x a,b,c,d,e --noxtags --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>1. Draw all X (Line graph)</div>
+<div class=graph><a href="img//example1line.eps"><img src="img//example1line.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x @ --line</div>
+</div>
+<div class=example>
 <a name="example1"></a>
-<font color=#333333>1. Disable tags (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example1hmap.eps"><img src="img//example1hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input0.dat -x a,b,c,d,e --noxtags --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input0.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-a:1.50
+<div class=description>1. Draw all X (Heat map)</div>
+<div class=graph><a href="img//example1hmap.eps"><img src="img//example1hmap.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x @ --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input0.dat</div>
+<div class=datafile><pre>a:1.50
 b:2.50
 c:3
 d:2
-e:1.10
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+e:1.10</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example2"></a>
-<font color=#333333>2. Selecting data. Show only data that are: A,B,D,E and STABLE and TEST1 (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example2bar.eps"><img src="img//example2bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input3.dat -x a,b,d,e -f test1,stable --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>2. Very Basic example Y (Bar graph)</div>
+<div class=graph><a href="img//example2bar.eps"><img src="img//example2bar.png"></a></div>
+<div class=code>moufoplot -d input0.dat -y a,b,c,d --bar</div>
+</div>
+<div class=example>
 <a name="example2"></a>
-<font color=#333333>2. Selecting data. Show only data that are: A,B,D,E and STABLE and TEST1 (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example2stack.eps"><img src="img//example2stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input3.dat -x a,b,d,e -f test1,stable --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>2. Very Basic example Y (Stacked Bar graph)</div>
+<div class=graph><a href="img//example2stack.eps"><img src="img//example2stack.png"></a></div>
+<div class=code>moufoplot -d input0.dat -y a,b,c,d --stack</div>
+</div>
+<div class=example>
 <a name="example2"></a>
-<font color=#333333>2. Selecting data. Show only data that are: A,B,D,E and STABLE and TEST1 (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example2line.eps"><img src="img//example2line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input3.dat -x a,b,d,e -f test1,stable --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>2. Very Basic example Y (Line graph)</div>
+<div class=graph><a href="img//example2line.eps"><img src="img//example2line.png"></a></div>
+<div class=code>moufoplot -d input0.dat -y a,b,c,d --line</div>
+</div>
+<div class=example>
 <a name="example2"></a>
-<font color=#333333>2. Selecting data. Show only data that are: A,B,D,E and STABLE and TEST1 (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example2hmap.eps"><img src="img//example2hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input3.dat -x a,b,d,e -f test1,stable --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input3.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-a_test1_stable:1.50
+<div class=description>2. Very Basic example Y (Heat map)</div>
+<div class=graph><a href="img//example2hmap.eps"><img src="img//example2hmap.png"></a></div>
+<div class=code>moufoplot -d input0.dat -y a,b,c,d --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input0.dat</div>
+<div class=datafile><pre>a:1.50
+b:2.50
+c:3
+d:2
+e:1.10</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
+<a name="example3"></a>
+<div class=description>3. Draw all Y (Bar graph)</div>
+<div class=graph><a href="img//example3bar.eps"><img src="img//example3bar.png"></a></div>
+<div class=code>moufoplot -d input0.dat -y @ --bar</div>
+</div>
+<div class=example>
+<a name="example3"></a>
+<div class=description>3. Draw all Y (Stacked Bar graph)</div>
+<div class=graph><a href="img//example3stack.eps"><img src="img//example3stack.png"></a></div>
+<div class=code>moufoplot -d input0.dat -y @ --stack</div>
+</div>
+<div class=example>
+<a name="example3"></a>
+<div class=description>3. Draw all Y (Line graph)</div>
+<div class=graph><a href="img//example3line.eps"><img src="img//example3line.png"></a></div>
+<div class=code>moufoplot -d input0.dat -y @ --line</div>
+</div>
+<div class=example>
+<a name="example3"></a>
+<div class=description>3. Draw all Y (Heat map)</div>
+<div class=graph><a href="img//example3hmap.eps"><img src="img//example3hmap.png"></a></div>
+<div class=code>moufoplot -d input0.dat -y @ --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input0.dat</div>
+<div class=datafile><pre>a:1.50
+b:2.50
+c:3
+d:2
+e:1.10</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
+<a name="example4"></a>
+<div class=description>4. Selecting data. Show only A,B,D,E and STABLE and TEST1 (Bar graph)</div>
+<div class=graph><a href="img//example4bar.eps"><img src="img//example4bar.png"></a></div>
+<div class=code>moufoplot -d input3.dat -x a,b,d,e -f test1,stable --bar</div>
+</div>
+<div class=example>
+<a name="example4"></a>
+<div class=description>4. Selecting data. Show only A,B,D,E and STABLE and TEST1 (Stacked Bar graph)</div>
+<div class=graph><a href="img//example4stack.eps"><img src="img//example4stack.png"></a></div>
+<div class=code>moufoplot -d input3.dat -x a,b,d,e -f test1,stable --stack</div>
+</div>
+<div class=example>
+<a name="example4"></a>
+<div class=description>4. Selecting data. Show only A,B,D,E and STABLE and TEST1 (Line graph)</div>
+<div class=graph><a href="img//example4line.eps"><img src="img//example4line.png"></a></div>
+<div class=code>moufoplot -d input3.dat -x a,b,d,e -f test1,stable --line</div>
+</div>
+<div class=example>
+<a name="example4"></a>
+<div class=description>4. Selecting data. Show only A,B,D,E and STABLE and TEST1 (Heat map)</div>
+<div class=graph><a href="img//example4hmap.eps"><img src="img//example4hmap.png"></a></div>
+<div class=code>moufoplot -d input3.dat -x a,b,d,e -f test1,stable --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input3.dat</div>
+<div class=datafile><pre>a_test1_stable:1.50
 b_test1_stable:2.50
 c_test1_stable:3
 d_test1_stable:2
@@ -270,2026 +292,1008 @@ a_test2_unstable:0.90
 b_test2_unstable:1.10
 c_test2_unstable:2.20
 d_test2_unstable:1.30
-e_test2_unstable:0.80
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example3"></a>
-<font color=#333333>3. Disable vertical tics (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example3bar.eps"><img src="img//example3bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input0.dat -x a,b,c,d,e --ytics=0 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example3"></a>
-<font color=#333333>3. Disable vertical tics (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example3stack.eps"><img src="img//example3stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input0.dat -x a,b,c,d,e --ytics=0 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example3"></a>
-<font color=#333333>3. Disable vertical tics (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example3line.eps"><img src="img//example3line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input0.dat -x a,b,c,d,e --ytics=0 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example3"></a>
-<font color=#333333>3. Disable vertical tics (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example3hmap.eps"><img src="img//example3hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input0.dat -x a,b,c,d,e --ytics=0 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input0.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-a:1.50
+e_test2_unstable:0.80</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
+<a name="example5"></a>
+<div class=description>5. Disable tags (Bar graph)</div>
+<div class=graph><a href="img//example5bar.eps"><img src="img//example5bar.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x a,b,c,d,e --noxtags --bar</div>
+</div>
+<div class=example>
+<a name="example5"></a>
+<div class=description>5. Disable tags (Stacked Bar graph)</div>
+<div class=graph><a href="img//example5stack.eps"><img src="img//example5stack.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x a,b,c,d,e --noxtags --stack</div>
+</div>
+<div class=example>
+<a name="example5"></a>
+<div class=description>5. Disable tags (Line graph)</div>
+<div class=graph><a href="img//example5line.eps"><img src="img//example5line.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x a,b,c,d,e --noxtags --line</div>
+</div>
+<div class=example>
+<a name="example5"></a>
+<div class=description>5. Disable tags (Heat map)</div>
+<div class=graph><a href="img//example5hmap.eps"><img src="img//example5hmap.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x a,b,c,d,e --noxtags --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input0.dat</div>
+<div class=datafile><pre>a:1.50
 b:2.50
 c:3
 d:2
-e:1.10
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example4"></a>
-<font color=#333333>4. Basic example i1 and i2 on X, opt1, opt2, opt3 on Y (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example4bar.eps"><img src="img//example4bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example4"></a>
-<font color=#333333>4. Basic example i1 and i2 on X, opt1, opt2, opt3 on Y (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example4stack.eps"><img src="img//example4stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example4"></a>
-<font color=#333333>4. Basic example i1 and i2 on X, opt1, opt2, opt3 on Y (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example4line.eps"><img src="img//example4line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example4"></a>
-<font color=#333333>4. Basic example i1 and i2 on X, opt1, opt2, opt3 on Y (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example4hmap.eps"><img src="img//example4hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
-perf_i1_opt2:1.2
-perf_i1_opt3:1.3
-perf_i2_opt1:1.8
-perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example5"></a>
-<font color=#333333>5. Reverse of the previous  (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example5bar.eps"><img src="img//example5bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x opt1,opt2,opt3 -y i1,i2 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example5"></a>
-<font color=#333333>5. Reverse of the previous  (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example5stack.eps"><img src="img//example5stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x opt1,opt2,opt3 -y i1,i2 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example5"></a>
-<font color=#333333>5. Reverse of the previous  (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example5line.eps"><img src="img//example5line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x opt1,opt2,opt3 -y i1,i2 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example5"></a>
-<font color=#333333>5. Reverse of the previous  (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example5hmap.eps"><img src="img//example5hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x opt1,opt2,opt3 -y i1,i2 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
-perf_i1_opt2:1.2
-perf_i1_opt3:1.3
-perf_i2_opt1:1.8
-perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+e:1.10</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example6"></a>
-<font color=#333333>6. Rotate the tags of the horizontal axis (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example6bar.eps"><img src="img//example6bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xrotate=-45 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>6. Disable vertical tics (Bar graph)</div>
+<div class=graph><a href="img//example6bar.eps"><img src="img//example6bar.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x a,b,c,d,e --ytics=0 --bar</div>
+</div>
+<div class=example>
 <a name="example6"></a>
-<font color=#333333>6. Rotate the tags of the horizontal axis (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example6stack.eps"><img src="img//example6stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xrotate=-45 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>6. Disable vertical tics (Stacked Bar graph)</div>
+<div class=graph><a href="img//example6stack.eps"><img src="img//example6stack.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x a,b,c,d,e --ytics=0 --stack</div>
+</div>
+<div class=example>
 <a name="example6"></a>
-<font color=#333333>6. Rotate the tags of the horizontal axis (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example6line.eps"><img src="img//example6line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xrotate=-45 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>6. Disable vertical tics (Line graph)</div>
+<div class=graph><a href="img//example6line.eps"><img src="img//example6line.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x a,b,c,d,e --ytics=0 --line</div>
+</div>
+<div class=example>
 <a name="example6"></a>
-<font color=#333333>6. Rotate the tags of the horizontal axis (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example6hmap.eps"><img src="img//example6hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xrotate=-45 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
-perf_i1_opt2:1.2
-perf_i1_opt3:1.3
-perf_i2_opt1:1.8
-perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>6. Disable vertical tics (Heat map)</div>
+<div class=graph><a href="img//example6hmap.eps"><img src="img//example6hmap.png"></a></div>
+<div class=code>moufoplot -d input0.dat -x a,b,c,d,e --ytics=0 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input0.dat</div>
+<div class=datafile><pre>a:1.50
+b:2.50
+c:3
+d:2
+e:1.10</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example7"></a>
-<font color=#333333>7. Title of graph (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example7bar.eps"><img src="img//example7bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>7. Basic example i1 and i2 on X, opt1, opt2, opt3 on Y (Bar graph)</div>
+<div class=graph><a href="img//example7bar.eps"><img src="img//example7bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --bar</div>
+</div>
+<div class=example>
 <a name="example7"></a>
-<font color=#333333>7. Title of graph (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example7stack.eps"><img src="img//example7stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>7. Basic example i1 and i2 on X, opt1, opt2, opt3 on Y (Stacked Bar graph)</div>
+<div class=graph><a href="img//example7stack.eps"><img src="img//example7stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --stack</div>
+</div>
+<div class=example>
 <a name="example7"></a>
-<font color=#333333>7. Title of graph (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example7line.eps"><img src="img//example7line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>7. Basic example i1 and i2 on X, opt1, opt2, opt3 on Y (Line graph)</div>
+<div class=graph><a href="img//example7line.eps"><img src="img//example7line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --line</div>
+</div>
+<div class=example>
 <a name="example7"></a>
-<font color=#333333>7. Title of graph (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example7hmap.eps"><img src="img//example7hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>7. Basic example i1 and i2 on X, opt1, opt2, opt3 on Y (Heat map)</div>
+<div class=graph><a href="img//example7hmap.eps"><img src="img//example7hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example8"></a>
-<font color=#333333>8. Axis Labels (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example8bar.eps"><img src="img//example8bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xlabel "Horizontal Label" --ylabel "Vertical Label" --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>8. Reverse of the previous  (Bar graph)</div>
+<div class=graph><a href="img//example8bar.eps"><img src="img//example8bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x opt1,opt2,opt3 -y i1,i2 --bar</div>
+</div>
+<div class=example>
 <a name="example8"></a>
-<font color=#333333>8. Axis Labels (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example8stack.eps"><img src="img//example8stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xlabel "Horizontal Label" --ylabel "Vertical Label" --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>8. Reverse of the previous  (Stacked Bar graph)</div>
+<div class=graph><a href="img//example8stack.eps"><img src="img//example8stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x opt1,opt2,opt3 -y i1,i2 --stack</div>
+</div>
+<div class=example>
 <a name="example8"></a>
-<font color=#333333>8. Axis Labels (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example8line.eps"><img src="img//example8line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xlabel "Horizontal Label" --ylabel "Vertical Label" --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>8. Reverse of the previous  (Line graph)</div>
+<div class=graph><a href="img//example8line.eps"><img src="img//example8line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x opt1,opt2,opt3 -y i1,i2 --line</div>
+</div>
+<div class=example>
 <a name="example8"></a>
-<font color=#333333>8. Axis Labels (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example8hmap.eps"><img src="img//example8hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xlabel "Horizontal Label" --ylabel "Vertical Label" --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>8. Reverse of the previous  (Heat map)</div>
+<div class=graph><a href="img//example8hmap.eps"><img src="img//example8hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x opt1,opt2,opt3 -y i1,i2 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example9"></a>
-<font color=#333333>9. Change X and Y Tags (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example9bar.eps"><img src="img//example9bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --xlabel "Horizontal Label" --ylabel "Vertical Label" --xtag "Tag of i1","Tag of i2" --ytag "Optim.1","Optim.2","Optim.3"  --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>9. Rotate the tags of the horizontal axis (Bar graph)</div>
+<div class=graph><a href="img//example9bar.eps"><img src="img//example9bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xrotate=-45 --bar</div>
+</div>
+<div class=example>
 <a name="example9"></a>
-<font color=#333333>9. Change X and Y Tags (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example9stack.eps"><img src="img//example9stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --xlabel "Horizontal Label" --ylabel "Vertical Label" --xtag "Tag of i1","Tag of i2" --ytag "Optim.1","Optim.2","Optim.3"  --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>9. Rotate the tags of the horizontal axis (Stacked Bar graph)</div>
+<div class=graph><a href="img//example9stack.eps"><img src="img//example9stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xrotate=-45 --stack</div>
+</div>
+<div class=example>
 <a name="example9"></a>
-<font color=#333333>9. Change X and Y Tags (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example9line.eps"><img src="img//example9line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --xlabel "Horizontal Label" --ylabel "Vertical Label" --xtag "Tag of i1","Tag of i2" --ytag "Optim.1","Optim.2","Optim.3"  --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>9. Rotate the tags of the horizontal axis (Line graph)</div>
+<div class=graph><a href="img//example9line.eps"><img src="img//example9line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xrotate=-45 --line</div>
+</div>
+<div class=example>
 <a name="example9"></a>
-<font color=#333333>9. Change X and Y Tags (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example9hmap.eps"><img src="img//example9hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --xlabel "Horizontal Label" --ylabel "Vertical Label" --xtag "Tag of i1","Tag of i2" --ytag "Optim.1","Optim.2","Optim.3"  --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>9. Rotate the tags of the horizontal axis (Heat map)</div>
+<div class=graph><a href="img//example9hmap.eps"><img src="img//example9hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xrotate=-45 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example10"></a>
-<font color=#333333>10. Set Vertical Axis ticks (0 to 2 with step of 0.5) (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example10bar.eps"><img src="img//example10bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yrange 0,2,0.5 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>10. Title of graph (Bar graph)</div>
+<div class=graph><a href="img//example10bar.eps"><img src="img//example10bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --bar</div>
+</div>
+<div class=example>
 <a name="example10"></a>
-<font color=#333333>10. Set Vertical Axis ticks (0 to 2 with step of 0.5) (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example10stack.eps"><img src="img//example10stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yrange 0,2,0.5 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>10. Title of graph (Stacked Bar graph)</div>
+<div class=graph><a href="img//example10stack.eps"><img src="img//example10stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --stack</div>
+</div>
+<div class=example>
 <a name="example10"></a>
-<font color=#333333>10. Set Vertical Axis ticks (0 to 2 with step of 0.5) (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example10line.eps"><img src="img//example10line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yrange 0,2,0.5 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>10. Title of graph (Line graph)</div>
+<div class=graph><a href="img//example10line.eps"><img src="img//example10line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --line</div>
+</div>
+<div class=example>
 <a name="example10"></a>
-<font color=#333333>10. Set Vertical Axis ticks (0 to 2 with step of 0.5) (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example10hmap.eps"><img src="img//example10hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yrange 0,2,0.5 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>10. Title of graph (Heat map)</div>
+<div class=graph><a href="img//example10hmap.eps"><img src="img//example10hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example11"></a>
-<font color=#333333>11. Thicker lines (line width) (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example11bar.eps"><img src="img//example11bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linew 10 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>11. Axis Labels (Bar graph)</div>
+<div class=graph><a href="img//example11bar.eps"><img src="img//example11bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xlabel "Horizontal Label" --ylabel "Vertical Label" --bar</div>
+</div>
+<div class=example>
 <a name="example11"></a>
-<font color=#333333>11. Thicker lines (line width) (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example11stack.eps"><img src="img//example11stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linew 10 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>11. Axis Labels (Stacked Bar graph)</div>
+<div class=graph><a href="img//example11stack.eps"><img src="img//example11stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xlabel "Horizontal Label" --ylabel "Vertical Label" --stack</div>
+</div>
+<div class=example>
 <a name="example11"></a>
-<font color=#333333>11. Thicker lines (line width) (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example11line.eps"><img src="img//example11line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linew 10 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>11. Axis Labels (Line graph)</div>
+<div class=graph><a href="img//example11line.eps"><img src="img//example11line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xlabel "Horizontal Label" --ylabel "Vertical Label" --line</div>
+</div>
+<div class=example>
 <a name="example11"></a>
-<font color=#333333>11. Thicker lines (line width) (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example11hmap.eps"><img src="img//example11hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linew 10 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>11. Axis Labels (Heat map)</div>
+<div class=graph><a href="img//example11hmap.eps"><img src="img//example11hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xlabel "Horizontal Label" --ylabel "Vertical Label" --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example12"></a>
-<font color=#333333>12. Bigger line points (point size) (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example12bar.eps"><img src="img//example12bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pntsize 3 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>12. Change X and Y Tags (Bar graph)</div>
+<div class=graph><a href="img//example12bar.eps"><img src="img//example12bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --xlabel "Horizontal Label" --ylabel "Vertical Label" --xtag "Tag of i1","Tag of i2" --ytag "Optim.1","Optim.2","Optim.3"  --bar</div>
+</div>
+<div class=example>
 <a name="example12"></a>
-<font color=#333333>12. Bigger line points (point size) (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example12stack.eps"><img src="img//example12stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pntsize 3 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>12. Change X and Y Tags (Stacked Bar graph)</div>
+<div class=graph><a href="img//example12stack.eps"><img src="img//example12stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --xlabel "Horizontal Label" --ylabel "Vertical Label" --xtag "Tag of i1","Tag of i2" --ytag "Optim.1","Optim.2","Optim.3"  --stack</div>
+</div>
+<div class=example>
 <a name="example12"></a>
-<font color=#333333>12. Bigger line points (point size) (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example12line.eps"><img src="img//example12line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pntsize 3 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>12. Change X and Y Tags (Line graph)</div>
+<div class=graph><a href="img//example12line.eps"><img src="img//example12line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --xlabel "Horizontal Label" --ylabel "Vertical Label" --xtag "Tag of i1","Tag of i2" --ytag "Optim.1","Optim.2","Optim.3"  --line</div>
+</div>
+<div class=example>
 <a name="example12"></a>
-<font color=#333333>12. Bigger line points (point size) (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example12hmap.eps"><img src="img//example12hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pntsize 3 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>12. Change X and Y Tags (Heat map)</div>
+<div class=graph><a href="img//example12hmap.eps"><img src="img//example12hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --title "This is the title" --xlabel "Horizontal Label" --ylabel "Vertical Label" --xtag "Tag of i1","Tag of i2" --ytag "Optim.1","Optim.2","Optim.3"  --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example13"></a>
-<font color=#333333>13. Set line types (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example13bar.eps"><img src="img//example13bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linetype 3,3 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>13. Set Vertical Axis ticks (0 to 2 with step of 0.5) (Bar graph)</div>
+<div class=graph><a href="img//example13bar.eps"><img src="img//example13bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yrange 0,2,0.5 --bar</div>
+</div>
+<div class=example>
 <a name="example13"></a>
-<font color=#333333>13. Set line types (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example13stack.eps"><img src="img//example13stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linetype 3,3 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>13. Set Vertical Axis ticks (0 to 2 with step of 0.5) (Stacked Bar graph)</div>
+<div class=graph><a href="img//example13stack.eps"><img src="img//example13stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yrange 0,2,0.5 --stack</div>
+</div>
+<div class=example>
 <a name="example13"></a>
-<font color=#333333>13. Set line types (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example13line.eps"><img src="img//example13line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linetype 3,3 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>13. Set Vertical Axis ticks (0 to 2 with step of 0.5) (Line graph)</div>
+<div class=graph><a href="img//example13line.eps"><img src="img//example13line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yrange 0,2,0.5 --line</div>
+</div>
+<div class=example>
 <a name="example13"></a>
-<font color=#333333>13. Set line types (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example13hmap.eps"><img src="img//example13hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linetype 3,3 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>13. Set Vertical Axis ticks (0 to 2 with step of 0.5) (Heat map)</div>
+<div class=graph><a href="img//example13hmap.eps"><img src="img//example13hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yrange 0,2,0.5 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example14"></a>
-<font color=#333333>14. Set point types (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example14bar.eps"><img src="img//example14bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pnttype 2,2 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>14. Thicker lines (line width) (Bar graph)</div>
+<div class=graph><a href="img//example14bar.eps"><img src="img//example14bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linew 10 --bar</div>
+</div>
+<div class=example>
 <a name="example14"></a>
-<font color=#333333>14. Set point types (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example14stack.eps"><img src="img//example14stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pnttype 2,2 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>14. Thicker lines (line width) (Stacked Bar graph)</div>
+<div class=graph><a href="img//example14stack.eps"><img src="img//example14stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linew 10 --stack</div>
+</div>
+<div class=example>
 <a name="example14"></a>
-<font color=#333333>14. Set point types (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example14line.eps"><img src="img//example14line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pnttype 2,2 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>14. Thicker lines (line width) (Line graph)</div>
+<div class=graph><a href="img//example14line.eps"><img src="img//example14line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linew 10 --line</div>
+</div>
+<div class=example>
 <a name="example14"></a>
-<font color=#333333>14. Set point types (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example14hmap.eps"><img src="img//example14hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pnttype 2,2 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>14. Thicker lines (line width) (Heat map)</div>
+<div class=graph><a href="img//example14hmap.eps"><img src="img//example14hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linew 10 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example15"></a>
-<font color=#333333>15. Bar thickness (bar width) (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example15bar.eps"><img src="img//example15bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --barw 0.5 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>15. Bigger line points (point size) (Bar graph)</div>
+<div class=graph><a href="img//example15bar.eps"><img src="img//example15bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pntsize 3 --bar</div>
+</div>
+<div class=example>
 <a name="example15"></a>
-<font color=#333333>15. Bar thickness (bar width) (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example15stack.eps"><img src="img//example15stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --barw 0.5 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>15. Bigger line points (point size) (Stacked Bar graph)</div>
+<div class=graph><a href="img//example15stack.eps"><img src="img//example15stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pntsize 3 --stack</div>
+</div>
+<div class=example>
 <a name="example15"></a>
-<font color=#333333>15. Bar thickness (bar width) (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example15line.eps"><img src="img//example15line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --barw 0.5 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>15. Bigger line points (point size) (Line graph)</div>
+<div class=graph><a href="img//example15line.eps"><img src="img//example15line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pntsize 3 --line</div>
+</div>
+<div class=example>
 <a name="example15"></a>
-<font color=#333333>15. Bar thickness (bar width) (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example15hmap.eps"><img src="img//example15hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --barw 0.5 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>15. Bigger line points (point size) (Heat map)</div>
+<div class=graph><a href="img//example15hmap.eps"><img src="img//example15hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pntsize 3 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example16"></a>
-<font color=#333333>16. Set colors manually (HEX) (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example16bar.eps"><img src="img//example16bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --colors "#ff0000,#00ff00" --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>16. Set line types (Bar graph)</div>
+<div class=graph><a href="img//example16bar.eps"><img src="img//example16bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linetype 3,3 --bar</div>
+</div>
+<div class=example>
 <a name="example16"></a>
-<font color=#333333>16. Set colors manually (HEX) (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example16stack.eps"><img src="img//example16stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --colors "#ff0000,#00ff00" --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>16. Set line types (Stacked Bar graph)</div>
+<div class=graph><a href="img//example16stack.eps"><img src="img//example16stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linetype 3,3 --stack</div>
+</div>
+<div class=example>
 <a name="example16"></a>
-<font color=#333333>16. Set colors manually (HEX) (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example16line.eps"><img src="img//example16line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --colors "#ff0000,#00ff00" --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>16. Set line types (Line graph)</div>
+<div class=graph><a href="img//example16line.eps"><img src="img//example16line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linetype 3,3 --line</div>
+</div>
+<div class=example>
 <a name="example16"></a>
-<font color=#333333>16. Set colors manually (HEX) (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example16hmap.eps"><img src="img//example16hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --colors "#ff0000,#00ff00" --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>16. Set line types (Heat map)</div>
+<div class=graph><a href="img//example16hmap.eps"><img src="img//example16hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --linetype 3,3 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example17"></a>
-<font color=#333333>17. Change dimensions (width X height) (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example17bar.eps"><img src="img//example17bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --size 0.4x0.5 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>17. Set point types (Bar graph)</div>
+<div class=graph><a href="img//example17bar.eps"><img src="img//example17bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pnttype 2,2 --bar</div>
+</div>
+<div class=example>
 <a name="example17"></a>
-<font color=#333333>17. Change dimensions (width X height) (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example17stack.eps"><img src="img//example17stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --size 0.4x0.5 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>17. Set point types (Stacked Bar graph)</div>
+<div class=graph><a href="img//example17stack.eps"><img src="img//example17stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pnttype 2,2 --stack</div>
+</div>
+<div class=example>
 <a name="example17"></a>
-<font color=#333333>17. Change dimensions (width X height) (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example17line.eps"><img src="img//example17line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --size 0.4x0.5 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>17. Set point types (Line graph)</div>
+<div class=graph><a href="img//example17line.eps"><img src="img//example17line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pnttype 2,2 --line</div>
+</div>
+<div class=example>
 <a name="example17"></a>
-<font color=#333333>17. Change dimensions (width X height) (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example17hmap.eps"><img src="img//example17hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --size 0.4x0.5 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>17. Set point types (Heat map)</div>
+<div class=graph><a href="img//example17hmap.eps"><img src="img//example17hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --pnttype 2,2 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example18"></a>
-<font color=#333333>18. Turn OFF the legend (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example18bar.eps"><img src="img//example18bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend off --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>18. Bar thickness (bar width) (Bar graph)</div>
+<div class=graph><a href="img//example18bar.eps"><img src="img//example18bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --barw 0.5 --bar</div>
+</div>
+<div class=example>
 <a name="example18"></a>
-<font color=#333333>18. Turn OFF the legend (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example18stack.eps"><img src="img//example18stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend off --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>18. Bar thickness (bar width) (Stacked Bar graph)</div>
+<div class=graph><a href="img//example18stack.eps"><img src="img//example18stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --barw 0.5 --stack</div>
+</div>
+<div class=example>
 <a name="example18"></a>
-<font color=#333333>18. Turn OFF the legend (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example18line.eps"><img src="img//example18line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend off --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>18. Bar thickness (bar width) (Line graph)</div>
+<div class=graph><a href="img//example18line.eps"><img src="img//example18line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --barw 0.5 --line</div>
+</div>
+<div class=example>
 <a name="example18"></a>
-<font color=#333333>18. Turn OFF the legend (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example18hmap.eps"><img src="img//example18hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend off --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>18. Bar thickness (bar width) (Heat map)</div>
+<div class=graph><a href="img//example18hmap.eps"><img src="img//example18hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --barw 0.5 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example19"></a>
-<font color=#333333>19. Box around the legend (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example19bar.eps"><img src="img//example19bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>19. Set colors manually (HEX) (Bar graph)</div>
+<div class=graph><a href="img//example19bar.eps"><img src="img//example19bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --colors "#ff0000,#00ff00" --bar</div>
+</div>
+<div class=example>
 <a name="example19"></a>
-<font color=#333333>19. Box around the legend (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example19stack.eps"><img src="img//example19stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>19. Set colors manually (HEX) (Stacked Bar graph)</div>
+<div class=graph><a href="img//example19stack.eps"><img src="img//example19stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --colors "#ff0000,#00ff00" --stack</div>
+</div>
+<div class=example>
 <a name="example19"></a>
-<font color=#333333>19. Box around the legend (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example19line.eps"><img src="img//example19line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>19. Set colors manually (HEX) (Line graph)</div>
+<div class=graph><a href="img//example19line.eps"><img src="img//example19line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --colors "#ff0000,#00ff00" --line</div>
+</div>
+<div class=example>
 <a name="example19"></a>
-<font color=#333333>19. Box around the legend (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example19hmap.eps"><img src="img//example19hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>19. Set colors manually (HEX) (Heat map)</div>
+<div class=graph><a href="img//example19hmap.eps"><img src="img//example19hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --colors "#ff0000,#00ff00" --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example20"></a>
-<font color=#333333>20. Manually place legend at (1,2.5) (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example20bar.eps"><img src="img//example20bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,at1x2.5 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>20. Change dimensions (width X height) (Bar graph)</div>
+<div class=graph><a href="img//example20bar.eps"><img src="img//example20bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --size 0.4x0.5 --bar</div>
+</div>
+<div class=example>
 <a name="example20"></a>
-<font color=#333333>20. Manually place legend at (1,2.5) (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example20stack.eps"><img src="img//example20stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,at1x2.5 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>20. Change dimensions (width X height) (Stacked Bar graph)</div>
+<div class=graph><a href="img//example20stack.eps"><img src="img//example20stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --size 0.4x0.5 --stack</div>
+</div>
+<div class=example>
 <a name="example20"></a>
-<font color=#333333>20. Manually place legend at (1,2.5) (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example20line.eps"><img src="img//example20line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,at1x2.5 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>20. Change dimensions (width X height) (Line graph)</div>
+<div class=graph><a href="img//example20line.eps"><img src="img//example20line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --size 0.4x0.5 --line</div>
+</div>
+<div class=example>
 <a name="example20"></a>
-<font color=#333333>20. Manually place legend at (1,2.5) (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example20hmap.eps"><img src="img//example20hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,at1x2.5 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>20. Change dimensions (width X height) (Heat map)</div>
+<div class=graph><a href="img//example20hmap.eps"><img src="img//example20hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --size 0.4x0.5 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example21"></a>
-<font color=#333333>21. Place legend outside the graph (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example21bar.eps"><img src="img//example21bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,out --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>21. Turn OFF the legend (Bar graph)</div>
+<div class=graph><a href="img//example21bar.eps"><img src="img//example21bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend off --bar</div>
+</div>
+<div class=example>
 <a name="example21"></a>
-<font color=#333333>21. Place legend outside the graph (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example21stack.eps"><img src="img//example21stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,out --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>21. Turn OFF the legend (Stacked Bar graph)</div>
+<div class=graph><a href="img//example21stack.eps"><img src="img//example21stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend off --stack</div>
+</div>
+<div class=example>
 <a name="example21"></a>
-<font color=#333333>21. Place legend outside the graph (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example21line.eps"><img src="img//example21line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,out --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>21. Turn OFF the legend (Line graph)</div>
+<div class=graph><a href="img//example21line.eps"><img src="img//example21line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend off --line</div>
+</div>
+<div class=example>
 <a name="example21"></a>
-<font color=#333333>21. Place legend outside the graph (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example21hmap.eps"><img src="img//example21hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,out --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>21. Turn OFF the legend (Heat map)</div>
+<div class=graph><a href="img//example21hmap.eps"><img src="img//example21hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend off --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example22"></a>
-<font color=#333333>22. Normalize to i2 and opt3 (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example22bar.eps"><img src="img//example22bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>22. Box around the legend (Bar graph)</div>
+<div class=graph><a href="img//example22bar.eps"><img src="img//example22bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box --bar</div>
+</div>
+<div class=example>
 <a name="example22"></a>
-<font color=#333333>22. Normalize to i2 and opt3 (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example22stack.eps"><img src="img//example22stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>22. Box around the legend (Stacked Bar graph)</div>
+<div class=graph><a href="img//example22stack.eps"><img src="img//example22stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box --stack</div>
+</div>
+<div class=example>
 <a name="example22"></a>
-<font color=#333333>22. Normalize to i2 and opt3 (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example22line.eps"><img src="img//example22line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>22. Box around the legend (Line graph)</div>
+<div class=graph><a href="img//example22line.eps"><img src="img//example22line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box --line</div>
+</div>
+<div class=example>
 <a name="example22"></a>
-<font color=#333333>22. Normalize to i2 and opt3 (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example22hmap.eps"><img src="img//example22hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>22. Box around the legend (Heat map)</div>
+<div class=graph><a href="img//example22hmap.eps"><img src="img//example22hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example23"></a>
-<font color=#333333>23. Normalize to i2 and opt3 + PERCENT (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example23bar.eps"><img src="img//example23bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --percent --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>23. Manually place legend at (1,2.5) (Bar graph)</div>
+<div class=graph><a href="img//example23bar.eps"><img src="img//example23bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,at1x2.5 --bar</div>
+</div>
+<div class=example>
 <a name="example23"></a>
-<font color=#333333>23. Normalize to i2 and opt3 + PERCENT (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example23stack.eps"><img src="img//example23stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --percent --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>23. Manually place legend at (1,2.5) (Stacked Bar graph)</div>
+<div class=graph><a href="img//example23stack.eps"><img src="img//example23stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,at1x2.5 --stack</div>
+</div>
+<div class=example>
 <a name="example23"></a>
-<font color=#333333>23. Normalize to i2 and opt3 + PERCENT (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example23line.eps"><img src="img//example23line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --percent --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>23. Manually place legend at (1,2.5) (Line graph)</div>
+<div class=graph><a href="img//example23line.eps"><img src="img//example23line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,at1x2.5 --line</div>
+</div>
+<div class=example>
 <a name="example23"></a>
-<font color=#333333>23. Normalize to i2 and opt3 + PERCENT (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example23hmap.eps"><img src="img//example23hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --percent --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>23. Manually place legend at (1,2.5) (Heat map)</div>
+<div class=graph><a href="img//example23hmap.eps"><img src="img//example23hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,at1x2.5 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example24"></a>
-<font color=#333333>24. Calculate the average over (all) -y 0,1,2 (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example24bar.eps"><img src="img//example24bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1,2 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>24. Place legend outside the graph (Bar graph)</div>
+<div class=graph><a href="img//example24bar.eps"><img src="img//example24bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,out --bar</div>
+</div>
+<div class=example>
 <a name="example24"></a>
-<font color=#333333>24. Calculate the average over (all) -y 0,1,2 (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example24stack.eps"><img src="img//example24stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1,2 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>24. Place legend outside the graph (Stacked Bar graph)</div>
+<div class=graph><a href="img//example24stack.eps"><img src="img//example24stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,out --stack</div>
+</div>
+<div class=example>
 <a name="example24"></a>
-<font color=#333333>24. Calculate the average over (all) -y 0,1,2 (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example24line.eps"><img src="img//example24line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1,2 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>24. Place legend outside the graph (Line graph)</div>
+<div class=graph><a href="img//example24line.eps"><img src="img//example24line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,out --line</div>
+</div>
+<div class=example>
 <a name="example24"></a>
-<font color=#333333>24. Calculate the average over (all) -y 0,1,2 (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example24hmap.eps"><img src="img//example24hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1,2 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>24. Place legend outside the graph (Heat map)</div>
+<div class=graph><a href="img//example24hmap.eps"><img src="img//example24hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --legend box,out --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example25"></a>
-<font color=#333333>25. Calculate the average over (only) -y 0,1 (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example25bar.eps"><img src="img//example25bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>25. Normalize to i2 and opt3 (Bar graph)</div>
+<div class=graph><a href="img//example25bar.eps"><img src="img//example25bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --bar</div>
+</div>
+<div class=example>
 <a name="example25"></a>
-<font color=#333333>25. Calculate the average over (only) -y 0,1 (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example25stack.eps"><img src="img//example25stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>25. Normalize to i2 and opt3 (Stacked Bar graph)</div>
+<div class=graph><a href="img//example25stack.eps"><img src="img//example25stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --stack</div>
+</div>
+<div class=example>
 <a name="example25"></a>
-<font color=#333333>25. Calculate the average over (only) -y 0,1 (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example25line.eps"><img src="img//example25line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>25. Normalize to i2 and opt3 (Line graph)</div>
+<div class=graph><a href="img//example25line.eps"><img src="img//example25line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --line</div>
+</div>
+<div class=example>
 <a name="example25"></a>
-<font color=#333333>25. Calculate the average over (only) -y 0,1 (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example25hmap.eps"><img src="img//example25hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>25. Normalize to i2 and opt3 (Heat map)</div>
+<div class=graph><a href="img//example25hmap.eps"><img src="img//example25hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example26"></a>
-<font color=#333333>26. Calculate the average over (all) -x 0,1 (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example26bar.eps"><img src="img//example26bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xavg 0,1 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>26. Normalize to i2 and opt3 + PERCENT (Bar graph)</div>
+<div class=graph><a href="img//example26bar.eps"><img src="img//example26bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --percent --bar</div>
+</div>
+<div class=example>
 <a name="example26"></a>
-<font color=#333333>26. Calculate the average over (all) -x 0,1 (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example26stack.eps"><img src="img//example26stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xavg 0,1 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>26. Normalize to i2 and opt3 + PERCENT (Stacked Bar graph)</div>
+<div class=graph><a href="img//example26stack.eps"><img src="img//example26stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --percent --stack</div>
+</div>
+<div class=example>
 <a name="example26"></a>
-<font color=#333333>26. Calculate the average over (all) -x 0,1 (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example26line.eps"><img src="img//example26line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xavg 0,1 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>26. Normalize to i2 and opt3 + PERCENT (Line graph)</div>
+<div class=graph><a href="img//example26line.eps"><img src="img//example26line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --percent --line</div>
+</div>
+<div class=example>
 <a name="example26"></a>
-<font color=#333333>26. Calculate the average over (all) -x 0,1 (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example26hmap.eps"><img src="img//example26hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xavg 0,1 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>26. Normalize to i2 and opt3 + PERCENT (Heat map)</div>
+<div class=graph><a href="img//example26hmap.eps"><img src="img//example26hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ynorm "i2 opt3" --percent --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example27"></a>
-<font color=#333333>27. Hide (mask) output -y opt1 (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example27bar.eps"><img src="img//example27bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ymask 0,1,1 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>27. Calculate the average over (all) -y 0,1,2 (Bar graph)</div>
+<div class=graph><a href="img//example27bar.eps"><img src="img//example27bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1,2 --bar</div>
+</div>
+<div class=example>
 <a name="example27"></a>
-<font color=#333333>27. Hide (mask) output -y opt1 (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example27stack.eps"><img src="img//example27stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ymask 0,1,1 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>27. Calculate the average over (all) -y 0,1,2 (Stacked Bar graph)</div>
+<div class=graph><a href="img//example27stack.eps"><img src="img//example27stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1,2 --stack</div>
+</div>
+<div class=example>
 <a name="example27"></a>
-<font color=#333333>27. Hide (mask) output -y opt1 (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example27line.eps"><img src="img//example27line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ymask 0,1,1 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>27. Calculate the average over (all) -y 0,1,2 (Line graph)</div>
+<div class=graph><a href="img//example27line.eps"><img src="img//example27line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1,2 --line</div>
+</div>
+<div class=example>
 <a name="example27"></a>
-<font color=#333333>27. Hide (mask) output -y opt1 (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example27hmap.eps"><img src="img//example27hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ymask 0,1,1 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>27. Calculate the average over (all) -y 0,1,2 (Heat map)</div>
+<div class=graph><a href="img//example27hmap.eps"><img src="img//example27hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1,2 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example28"></a>
-<font color=#333333>28. Hide (mask) output -x i1 (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example28bar.eps"><img src="img//example28bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xmask 0,1 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>28. Calculate the average over (only) -y 0,1 (Bar graph)</div>
+<div class=graph><a href="img//example28bar.eps"><img src="img//example28bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1 --bar</div>
+</div>
+<div class=example>
 <a name="example28"></a>
-<font color=#333333>28. Hide (mask) output -x i1 (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example28stack.eps"><img src="img//example28stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xmask 0,1 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>28. Calculate the average over (only) -y 0,1 (Stacked Bar graph)</div>
+<div class=graph><a href="img//example28stack.eps"><img src="img//example28stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1 --stack</div>
+</div>
+<div class=example>
 <a name="example28"></a>
-<font color=#333333>28. Hide (mask) output -x i1 (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example28line.eps"><img src="img//example28line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xmask 0,1 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>28. Calculate the average over (only) -y 0,1 (Line graph)</div>
+<div class=graph><a href="img//example28line.eps"><img src="img//example28line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1 --line</div>
+</div>
+<div class=example>
 <a name="example28"></a>
-<font color=#333333>28. Hide (mask) output -x i1 (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example28hmap.eps"><img src="img//example28hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xmask 0,1 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input1.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1:1
+<div class=description>28. Calculate the average over (only) -y 0,1 (Heat map)</div>
+<div class=graph><a href="img//example28hmap.eps"><img src="img//example28hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --yavg 0,1 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
 perf_i1_opt2:1.2
 perf_i1_opt3:1.3
 perf_i2_opt1:1.8
 perf_i2_opt2:1.84
-perf_i2_opt3:1.91
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
 <a name="example29"></a>
-<font color=#333333>29. Clustered Graph (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example29bar.eps"><img src="img//example29bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>29. Calculate the average over (all) -x 0,1 (Bar graph)</div>
+<div class=graph><a href="img//example29bar.eps"><img src="img//example29bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xavg 0,1 --bar</div>
+</div>
+<div class=example>
 <a name="example29"></a>
-<font color=#333333>29. Clustered Graph (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example29stack.eps"><img src="img//example29stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>29. Calculate the average over (all) -x 0,1 (Stacked Bar graph)</div>
+<div class=graph><a href="img//example29stack.eps"><img src="img//example29stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xavg 0,1 --stack</div>
+</div>
+<div class=example>
 <a name="example29"></a>
-<font color=#333333>29. Clustered Graph (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example29line.eps"><img src="img//example29line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
+<div class=description>29. Calculate the average over (all) -x 0,1 (Line graph)</div>
+<div class=graph><a href="img//example29line.eps"><img src="img//example29line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xavg 0,1 --line</div>
+</div>
+<div class=example>
 <a name="example29"></a>
-<font color=#333333>29. Clustered Graph (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example29hmap.eps"><img src="img//example29hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input2.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1_var1:1
+<div class=description>29. Calculate the average over (all) -x 0,1 (Heat map)</div>
+<div class=graph><a href="img//example29hmap.eps"><img src="img//example29hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xavg 0,1 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
+perf_i1_opt2:1.2
+perf_i1_opt3:1.3
+perf_i2_opt1:1.8
+perf_i2_opt2:1.84
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
+<a name="example30"></a>
+<div class=description>30. Hide (mask) output -y opt1 (Bar graph)</div>
+<div class=graph><a href="img//example30bar.eps"><img src="img//example30bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ymask 0,1,1 --bar</div>
+</div>
+<div class=example>
+<a name="example30"></a>
+<div class=description>30. Hide (mask) output -y opt1 (Stacked Bar graph)</div>
+<div class=graph><a href="img//example30stack.eps"><img src="img//example30stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ymask 0,1,1 --stack</div>
+</div>
+<div class=example>
+<a name="example30"></a>
+<div class=description>30. Hide (mask) output -y opt1 (Line graph)</div>
+<div class=graph><a href="img//example30line.eps"><img src="img//example30line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ymask 0,1,1 --line</div>
+</div>
+<div class=example>
+<a name="example30"></a>
+<div class=description>30. Hide (mask) output -y opt1 (Heat map)</div>
+<div class=graph><a href="img//example30hmap.eps"><img src="img//example30hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --ymask 0,1,1 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
+perf_i1_opt2:1.2
+perf_i1_opt3:1.3
+perf_i2_opt1:1.8
+perf_i2_opt2:1.84
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
+<a name="example31"></a>
+<div class=description>31. Hide (mask) output -x i1 (Bar graph)</div>
+<div class=graph><a href="img//example31bar.eps"><img src="img//example31bar.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xmask 0,1 --bar</div>
+</div>
+<div class=example>
+<a name="example31"></a>
+<div class=description>31. Hide (mask) output -x i1 (Stacked Bar graph)</div>
+<div class=graph><a href="img//example31stack.eps"><img src="img//example31stack.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xmask 0,1 --stack</div>
+</div>
+<div class=example>
+<a name="example31"></a>
+<div class=description>31. Hide (mask) output -x i1 (Line graph)</div>
+<div class=graph><a href="img//example31line.eps"><img src="img//example31line.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xmask 0,1 --line</div>
+</div>
+<div class=example>
+<a name="example31"></a>
+<div class=description>31. Hide (mask) output -x i1 (Heat map)</div>
+<div class=graph><a href="img//example31hmap.eps"><img src="img//example31hmap.png"></a></div>
+<div class=code>moufoplot -d input1.dat -x i1,i2 -y opt1,opt2,opt3 --xmask 0,1 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input1.dat</div>
+<div class=datafile><pre>perf_i1_opt1:1
+perf_i1_opt2:1.2
+perf_i1_opt3:1.3
+perf_i2_opt1:1.8
+perf_i2_opt2:1.84
+perf_i2_opt3:1.91</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
+<a name="example32"></a>
+<div class=description>32. Clustered Graph (Bar graph)</div>
+<div class=graph><a href="img//example32bar.eps"><img src="img//example32bar.png"></a></div>
+<div class=code>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --bar</div>
+</div>
+<div class=example>
+<a name="example32"></a>
+<div class=description>32. Clustered Graph (Stacked Bar graph)</div>
+<div class=graph><a href="img//example32stack.eps"><img src="img//example32stack.png"></a></div>
+<div class=code>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --stack</div>
+</div>
+<div class=example>
+<a name="example32"></a>
+<div class=description>32. Clustered Graph (Line graph)</div>
+<div class=graph><a href="img//example32line.eps"><img src="img//example32line.png"></a></div>
+<div class=code>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --line</div>
+</div>
+<div class=example>
+<a name="example32"></a>
+<div class=description>32. Clustered Graph (Heat map)</div>
+<div class=graph><a href="img//example32hmap.eps"><img src="img//example32hmap.png"></a></div>
+<div class=code>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input2.dat</div>
+<div class=datafile><pre>perf_i1_opt1_var1:1
 perf_i1_opt1_var2:0.9
 perf_i1_opt1_var3:0.8
 perf_i1_opt2_var1:1.2
@@ -2306,77 +1310,38 @@ perf_i2_opt2_var2:1.61
 perf_i2_opt2_var3:1.50
 perf_i2_opt3_var1:1.91
 perf_i2_opt3_var2:1.75
-perf_i2_opt3_var3:1.83
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example30"></a>
-<font color=#333333>30. Clustered Graph With Title and Labels (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example30bar.eps"><img src="img//example30bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --title "Clustered graph" --xlabel "I-variable" --ylabel "Optimizations" --zlabel "Variables"  --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example30"></a>
-<font color=#333333>30. Clustered Graph With Title and Labels (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example30stack.eps"><img src="img//example30stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --title "Clustered graph" --xlabel "I-variable" --ylabel "Optimizations" --zlabel "Variables"  --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example30"></a>
-<font color=#333333>30. Clustered Graph With Title and Labels (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example30line.eps"><img src="img//example30line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --title "Clustered graph" --xlabel "I-variable" --ylabel "Optimizations" --zlabel "Variables"  --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example30"></a>
-<font color=#333333>30. Clustered Graph With Title and Labels (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example30hmap.eps"><img src="img//example30hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --title "Clustered graph" --xlabel "I-variable" --ylabel "Optimizations" --zlabel "Variables"  --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input2.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1_var1:1
+perf_i2_opt3_var3:1.83</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=row>
+<div class=example>
+<a name="example33"></a>
+<div class=description>33. Clustered Graph With Title and Labels (Bar graph)</div>
+<div class=graph><a href="img//example33bar.eps"><img src="img//example33bar.png"></a></div>
+<div class=code>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --title "Clustered graph" --xlabel "I-variable" --ylabel "Optimizations" --zlabel "Variables"  --bar</div>
+</div>
+<div class=example>
+<a name="example33"></a>
+<div class=description>33. Clustered Graph With Title and Labels (Stacked Bar graph)</div>
+<div class=graph><a href="img//example33stack.eps"><img src="img//example33stack.png"></a></div>
+<div class=code>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --title "Clustered graph" --xlabel "I-variable" --ylabel "Optimizations" --zlabel "Variables"  --stack</div>
+</div>
+<div class=example>
+<a name="example33"></a>
+<div class=description>33. Clustered Graph With Title and Labels (Line graph)</div>
+<div class=graph><a href="img//example33line.eps"><img src="img//example33line.png"></a></div>
+<div class=code>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --title "Clustered graph" --xlabel "I-variable" --ylabel "Optimizations" --zlabel "Variables"  --line</div>
+</div>
+<div class=example>
+<a name="example33"></a>
+<div class=description>33. Clustered Graph With Title and Labels (Heat map)</div>
+<div class=graph><a href="img//example33hmap.eps"><img src="img//example33hmap.png"></a></div>
+<div class=code>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --title "Clustered graph" --xlabel "I-variable" --ylabel "Optimizations" --zlabel "Variables"  --hmap</div>
+</div>
+<div class=example>
+<div class=descr-datafile>input2.dat</div>
+<div class=datafile><pre>perf_i1_opt1_var1:1
 perf_i1_opt1_var2:0.9
 perf_i1_opt1_var3:0.8
 perf_i1_opt2_var1:1.2
@@ -2393,98 +1358,12 @@ perf_i2_opt2_var2:1.61
 perf_i2_opt2_var3:1.50
 perf_i2_opt3_var1:1.91
 perf_i2_opt3_var2:1.75
-perf_i2_opt3_var3:1.83
-</pre>
-</td></tr></table>
-</td>
-</tr>
-<tr>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example31"></a>
-<font color=#333333>31. Stacked graph (Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example31bar.eps"><img src="img//example31bar.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --stack  --bar</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example31"></a>
-<font color=#333333>31. Stacked graph (Stacked Bar graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example31stack.eps"><img src="img//example31stack.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --stack  --stack</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example31"></a>
-<font color=#333333>31. Stacked graph (Line graph)</font>
-</td></tr>
-<tr><td>
-<a href="img//example31line.eps"><img src="img//example31line.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --stack  --line</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table border=0 style="width: 250px; height: 250px"><tr><td colspan=2 align=center bgcolor=#6699CC>
-<a name="example31"></a>
-<font color=#333333>31. Stacked graph (Heat map)</font>
-</td></tr>
-<tr><td>
-<a href="img//example31hmap.eps"><img src="img//example31hmap.png"></a>
-</td>
-</tr>
-<tr><td colspan=2 align=center bgcolor=#DFDFDF>
-<font color=#333333>moufoplot -d input2.dat -x i1,i2 -y opt1,opt2,opt3 -z var1,var2,var3 --stack  --hmap</font>
-</td></tr>
-</table>
-<br/>
-</td>
-<td>
-<table style="height: 250px"><tr><td bgcolor=#dd2222>input2.dat</td>
-</tr><tr><td bgcolor=#F0F0F0>
-<pre>
-perf_i1_opt1_var1:1
-perf_i1_opt1_var2:0.9
-perf_i1_opt1_var3:0.8
-perf_i1_opt2_var1:1.2
-perf_i1_opt2_var2:1.11
-perf_i1_opt2_var3:1.15
-perf_i1_opt3_var1:1.3
-perf_i1_opt3_var2:1.28
-perf_i1_opt3_var3:1.41
-perf_i2_opt1_var1:1.8
-perf_i2_opt1_var2:1.7
-perf_i2_opt1_var3:1.5
-perf_i2_opt2_var1:1.84
-perf_i2_opt2_var2:1.61
-perf_i2_opt2_var3:1.50
-perf_i2_opt3_var1:1.91
-perf_i2_opt3_var2:1.75
-perf_i2_opt3_var3:1.83
-</pre>
-</td></tr></table>
-</td>
-</tr>
-</table>
+perf_i2_opt3_var3:1.83</pre></div>
+</div>
+</div>
+<div class=newline></div>
+<div class=newline></div>
+<hr/>MoufoPlot is GPLv3 software. For any bugs/suggestions/comments please contact me at vDOTporpodasATedDOTacDOTuk
+
 </body>
 </html>

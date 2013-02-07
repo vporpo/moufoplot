@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0 EPSF-2.0
 %%Title: img//example27bar.eps
 %%Creator: gnuplot 4.4 patchlevel 0
-%%CreationDate: Sun Sep 30 04:27:22 2012
+%%CreationDate: Thu Feb  7 12:18:06 2013
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 230 176
 %%EndComments
@@ -50,7 +50,7 @@ SDict begin [
   /Author (cowbob)
 %  /Producer (gnuplot)
 %  /Keywords ()
-  /CreationDate (Sun Sep 30 04:27:22 2012)
+  /CreationDate (Thu Feb  7 12:18:06 2013)
   /DOCINFO pdfmark
 end
 } ifelse
@@ -601,22 +601,42 @@ stroke
 ] -53.3 MRshow
 1.000 UL
 LTb
-1550 756 M
+1182 756 M
 0 63 V
 stroke
-1550 672 M
+1182 672 M
+currentpoint gsave translate -90 rotate 0 0 moveto
+[ [(Helvetica) 160.0 0.0 true true 0 (opt1)]
+] -53.3 MLshow
+grestore
+1.000 UL
+LTb
+1734 756 M
+0 63 V
+stroke
+1734 672 M
 currentpoint gsave translate -90 rotate 0 0 moveto
 [ [(Helvetica) 160.0 0.0 true true 0 (opt2)]
 ] -53.3 MLshow
 grestore
 1.000 UL
 LTb
-2469 756 M
+2285 756 M
 0 63 V
 stroke
-2469 672 M
+2285 672 M
 currentpoint gsave translate -90 rotate 0 0 moveto
 [ [(Helvetica) 160.0 0.0 true true 0 (opt3)]
+] -53.3 MLshow
+grestore
+1.000 UL
+LTb
+2837 756 M
+0 63 V
+stroke
+2837 672 M
+currentpoint gsave translate -90 rotate 0 0 moveto
+[ [(Helvetica) 160.0 0.0 true true 0 (avg)]
 ] -53.3 MLshow
 grestore
 1.000 UL
@@ -654,22 +674,40 @@ LCa setrgbcolor
 0 -62 V
 Z stroke
 LT0
-0.13 0.13 0.00 C 1.000 1243 756 308 717 BoxColFill
+0.13 0.13 0.00 C 1.000 998 756 185 598 BoxColFill
 LCa setrgbcolor
-1243 756 N
-0 716 V
-307 0 V
-0 -716 V
--307 0 V
+998 756 N
+0 597 V
+184 0 V
+0 -597 V
+-184 0 V
 Z stroke
 LT0
-0.13 0.13 0.00 C 1.000 2163 756 307 777 BoxColFill
+0.13 0.13 0.00 C 1.000 1550 756 185 717 BoxColFill
 LCa setrgbcolor
-2163 756 N
+1550 756 N
+0 716 V
+184 0 V
+0 -716 V
+-184 0 V
+Z stroke
+LT0
+0.13 0.13 0.00 C 1.000 2101 756 185 777 BoxColFill
+LCa setrgbcolor
+2101 756 N
 0 776 V
-306 0 V
+184 0 V
 0 -776 V
--306 0 V
+-184 0 V
+Z stroke
+LT0
+0.13 0.13 0.00 C 1.000 2653 756 185 697 BoxColFill
+LCa setrgbcolor
+2653 756 N
+0 696 V
+184 0 V
+0 -696 V
+-184 0 V
 Z stroke
 LT0
 0.13 0.13 0.00 C % End plot #1
@@ -690,22 +728,40 @@ LCa setrgbcolor
 0 -62 V
 Z stroke
 LT0
-0.80 0.67 0.00 C 1.000 1550 756 307 1099 BoxColFill
+0.80 0.67 0.00 C 1.000 1182 756 185 1075 BoxColFill
 LCa setrgbcolor
-1550 756 N
-0 1098 V
-306 0 V
-0 -1098 V
--306 0 V
+1182 756 N
+0 1074 V
+184 0 V
+0 -1074 V
+-184 0 V
 Z stroke
 LT0
-0.80 0.67 0.00 C 1.000 2469 756 308 1141 BoxColFill
+0.80 0.67 0.00 C 1.000 1734 756 185 1099 BoxColFill
 LCa setrgbcolor
-2469 756 N
+1734 756 N
+0 1098 V
+184 0 V
+0 -1098 V
+-184 0 V
+Z stroke
+LT0
+0.80 0.67 0.00 C 1.000 2285 756 185 1141 BoxColFill
+LCa setrgbcolor
+2285 756 N
 0 1140 V
-307 0 V
+184 0 V
 0 -1140 V
--307 0 V
+-184 0 V
+Z stroke
+LT0
+0.80 0.67 0.00 C 1.000 2837 756 185 1105 BoxColFill
+LCa setrgbcolor
+2837 756 N
+0 1104 V
+184 0 V
+0 -1104 V
+-184 0 V
 Z stroke
 LT0
 0.80 0.67 0.00 C % End plot #2
@@ -727,21 +783,23 @@ showpage
 %%Trailer
 %%DocumentFonts: Helvetica
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MoufoPlot 0.01 , gnuplot 4.4 patchlevel 0
+%% MoufoPlot 0.02 , gnuplot 4.4 patchlevel 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --ymask "0,1,1" --bar --out "img//example27bar.eps" --noviewer
+%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --yavg "0,1,2" --bar --out "img//example27bar.eps" --noviewer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% moufoplot data: /tmp/moufoplot.data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% NULL i1 i2
 %% # 
+%% opt1 1.00000000000000000000 1.80000000000000000000
 %% opt2 1.20000000000000000000 1.84000000000000000000
 %% opt3 1.30000000000000000000 1.91000000000000000000
+%% avg 1.16666666666666666666 1.85000000000000000000
 %% 
 %% 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot .gp: moufoplot.gp
+%% moufoplot .gp: /tmp/moufoplot.gp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set term postscript eps enhanced color
 %% set output "img//example27bar.eps"

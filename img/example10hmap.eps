@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0 EPSF-2.0
 %%Title: img//example10hmap.eps
 %%Creator: gnuplot 4.4 patchlevel 0
-%%CreationDate: Sun Sep 30 04:26:26 2012
+%%CreationDate: Thu Feb  7 12:17:14 2013
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 230 176
 %%EndComments
@@ -50,7 +50,7 @@ SDict begin [
   /Author (cowbob)
 %  /Producer (gnuplot)
 %  /Keywords ()
-  /CreationDate (Sun Sep 30 04:26:26 2012)
+  /CreationDate (Thu Feb  7 12:17:14 2013)
   /DOCINFO pdfmark
 end
 } ifelse
@@ -516,32 +516,32 @@ Color InterpolatedColor or { % COLOUR vs. GRAY map
 } ifelse
 1.000 UL
 LTb
-630 882 M
+630 840 M
 63 0 V
 2163 0 R
 -63 0 V
 stroke
-546 882 M
+546 840 M
 [ [(Helvetica) 160.0 0.0 true true 0 (opt1)]
 ] -53.3 MRshow
 1.000 UL
 LTb
-630 1470 M
+630 1344 M
 63 0 V
 2163 0 R
 -63 0 V
 stroke
-546 1470 M
+546 1344 M
 [ [(Helvetica) 160.0 0.0 true true 0 (opt2)]
 ] -53.3 MRshow
 1.000 UL
 LTb
-630 2058 M
+630 1848 M
 63 0 V
 2163 0 R
 -63 0 V
 stroke
-546 2058 M
+546 1848 M
 [ [(Helvetica) 160.0 0.0 true true 0 (opt3)]
 ] -53.3 MRshow
 1.000 UL
@@ -568,10 +568,10 @@ grestore
 LTb
 1.000 UL
 LTb
-630 2352 N
+630 2100 N
 630 588 L
 2226 0 V
-0 1764 V
+0 1512 V
 -2226 0 V
 Z stroke
 LCb setrgbcolor
@@ -579,6 +579,9 @@ LCb setrgbcolor
 [ [(Helvetica) 160.0 0.0 true true 0 ( )]
 ] -53.3 MCshow
 LTb
+1743 2310 M
+[ [(Helvetica) 180.0 0.0 true true 0 (This is the title)]
+] -60.0 MCshow
 1.000 UP
 1.000 UL
 LTb
@@ -588,15 +591,15 @@ LT0
 LTb
 /Helvetica findfont 140 scalefont setfont
 %%%%BeginImage
-gsave 630 2352 N 630 588 L 2856 588 L 2856 2352 L Z clip
+gsave 630 2100 N 630 588 L 2856 588 L 2856 2100 L Z clip
 InterpretLevel1 {
   %% Construct a box instead of image
   LTb
-  630 2352 M
+  630 2100 M
   2226 0 V
-  0 -1764 V
+  0 -1512 V
   -2226 0 V
-  630 2352 L
+  630 2100 L
   40 -110 R
   (PS level 2 image) Lshow
   % Read data but ignore it
@@ -604,8 +607,8 @@ InterpretLevel1 {
   currentfile imagebuf readstring
 } {
 gsave
-630 2352 translate
-2226 -1764 scale
+630 2100 translate
+2226 -1512 scale
 %%%%BeginPalette
 [ /Indexed
   /DeviceRGB 255
@@ -667,15 +670,15 @@ grestore
 % End plot #1
 1.000 UL
 LTb
-630 2352 N
+630 2100 N
 630 588 L
 2226 0 V
-0 1764 V
+0 1512 V
 -2226 0 V
 Z stroke
 stroke gsave	%% draw gray scale smooth box
 maxcolors 0 gt {/imax maxcolors def} {/imax 1024 def} ifelse
-2912 588 translate 111 1764 scale 0 setlinewidth
+2912 588 translate 111 1512 scale 0 setlinewidth
 /ystep 1 imax div def /y0 0 def /ii 0 def
 { y0 g 0 y0 N 1 0 V 0 ystep V -1 0 f
 /y0 y0 ystep add def /ii ii 1 add def
@@ -685,9 +688,9 @@ grestore 0 setgray
 LTb
 2912 588 N
 111 0 V
-0 1764 V
+0 1512 V
 -111 0 V
-0 -1764 V
+0 -1512 V
 Z stroke
 1.000 UL
 LTb
@@ -703,105 +706,105 @@ stroke
 LTb
 2912 588 M
 63 0 V
-48 176 R
+48 151 R
 -63 0 V
 stroke
-3107 764 M
+3107 739 M
 [ [(Helvetica) 160.0 0.0 true true 0 ( 1.1)]
 ] -53.3 MLshow
 1.000 UL
 LTb
-2912 764 M
+2912 739 M
 63 0 V
-48 176 R
+48 151 R
 -63 0 V
 stroke
-3107 940 M
+3107 890 M
 [ [(Helvetica) 160.0 0.0 true true 0 ( 1.2)]
 ] -53.3 MLshow
 1.000 UL
 LTb
-2912 940 M
+2912 890 M
 63 0 V
-48 177 R
+48 151 R
 -63 0 V
 stroke
-3107 1117 M
+3107 1041 M
 [ [(Helvetica) 160.0 0.0 true true 0 ( 1.3)]
 ] -53.3 MLshow
 1.000 UL
 LTb
-2912 1117 M
+2912 1041 M
 63 0 V
-48 176 R
+48 151 R
 -63 0 V
 stroke
-3107 1293 M
+3107 1192 M
 [ [(Helvetica) 160.0 0.0 true true 0 ( 1.4)]
 ] -53.3 MLshow
 1.000 UL
 LTb
-2912 1293 M
+2912 1192 M
 63 0 V
-48 177 R
+48 152 R
 -63 0 V
 stroke
-3107 1470 M
+3107 1344 M
 [ [(Helvetica) 160.0 0.0 true true 0 ( 1.5)]
 ] -53.3 MLshow
 1.000 UL
 LTb
-2912 1470 M
+2912 1344 M
 63 0 V
-48 176 R
+48 151 R
+-63 0 V
+stroke
+3107 1495 M
+[ [(Helvetica) 160.0 0.0 true true 0 ( 1.6)]
+] -53.3 MLshow
+1.000 UL
+LTb
+2912 1495 M
+63 0 V
+48 151 R
 -63 0 V
 stroke
 3107 1646 M
-[ [(Helvetica) 160.0 0.0 true true 0 ( 1.6)]
+[ [(Helvetica) 160.0 0.0 true true 0 ( 1.7)]
 ] -53.3 MLshow
 1.000 UL
 LTb
 2912 1646 M
 63 0 V
-48 176 R
+48 151 R
 -63 0 V
 stroke
-3107 1822 M
-[ [(Helvetica) 160.0 0.0 true true 0 ( 1.7)]
-] -53.3 MLshow
-1.000 UL
-LTb
-2912 1822 M
-63 0 V
-48 177 R
--63 0 V
-stroke
-3107 1999 M
+3107 1797 M
 [ [(Helvetica) 160.0 0.0 true true 0 ( 1.8)]
 ] -53.3 MLshow
 1.000 UL
 LTb
-2912 1999 M
+2912 1797 M
 63 0 V
-48 176 R
+48 151 R
 -63 0 V
 stroke
-3107 2175 M
+3107 1948 M
 [ [(Helvetica) 160.0 0.0 true true 0 ( 1.9)]
 ] -53.3 MLshow
 1.000 UL
 LTb
-2912 2175 M
+2912 1948 M
 63 0 V
-48 177 R
+48 152 R
 -63 0 V
 stroke
-3107 2352 M
+3107 2100 M
 [ [(Helvetica) 160.0 0.0 true true 0 ( 2)]
 ] -53.3 MLshow
 1.000 UL
 LTb
-2912 2352 M
+2912 2100 M
 63 0 V
 stroke
 LCb setrgbcolor
@@ -817,9 +820,9 @@ showpage
 %%Trailer
 %%DocumentFonts: Helvetica
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MoufoPlot 0.01 , gnuplot 4.4 patchlevel 0
+%% MoufoPlot 0.02 , gnuplot 4.4 patchlevel 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --yrange "0,2,0.5" --hmap --out "img//example10hmap.eps" --noviewer
+%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --title "This is the title" --hmap --out "img//example10hmap.eps" --noviewer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% moufoplot data: /tmp/moufoplot.data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -828,7 +831,7 @@ showpage
 %% 1.3 1.91 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot .gp: moufoplot.gp
+%% moufoplot .gp: /tmp/moufoplot.gp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set term postscript eps enhanced color
 %% set output "img//example10hmap.eps"
@@ -845,6 +848,7 @@ showpage
 %% set cblabel ""
 %% set cbtics
 %% unset key
+%% set title "This is the title" 
 %% set xlabel " " offset 0,-0.8
 %% set xtics ("i1" 0,"i2" 1)
 %% set ytics ("opt1" 0,"opt2" 1,"opt3" 2)

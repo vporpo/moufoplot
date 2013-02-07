@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0 EPSF-2.0
 %%Title: img//example27line.eps
 %%Creator: gnuplot 4.4 patchlevel 0
-%%CreationDate: Sun Sep 30 04:27:24 2012
+%%CreationDate: Thu Feb  7 12:18:08 2013
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 230 176
 %%EndComments
@@ -50,7 +50,7 @@ SDict begin [
   /Author (cowbob)
 %  /Producer (gnuplot)
 %  /Keywords ()
-  /CreationDate (Sun Sep 30 04:27:24 2012)
+  /CreationDate (Thu Feb  7 12:18:08 2013)
   /DOCINFO pdfmark
 end
 } ifelse
@@ -606,7 +606,27 @@ LTb
 stroke
 630 672 M
 currentpoint gsave translate -90 rotate 0 0 moveto
+[ [(Helvetica) 160.0 0.0 true true 0 (opt1)]
+] -53.3 MLshow
+grestore
+1.000 UL
+LTb
+1550 756 M
+0 63 V
+stroke
+1550 672 M
+currentpoint gsave translate -90 rotate 0 0 moveto
 [ [(Helvetica) 160.0 0.0 true true 0 (opt2)]
+] -53.3 MLshow
+grestore
+1.000 UL
+LTb
+2469 756 M
+0 63 V
+stroke
+2469 672 M
+currentpoint gsave translate -90 rotate 0 0 moveto
+[ [(Helvetica) 160.0 0.0 true true 0 (opt3)]
 ] -53.3 MLshow
 grestore
 1.000 UL
@@ -616,7 +636,7 @@ LTb
 stroke
 3389 672 M
 currentpoint gsave translate -90 rotate 0 0 moveto
-[ [(Helvetica) 160.0 0.0 true true 0 (opt3)]
+[ [(Helvetica) 160.0 0.0 true true 0 (avg)]
 ] -53.3 MLshow
 grestore
 1.000 UL
@@ -648,10 +668,14 @@ LT0
 LT0
 0.13 0.13 0.00 C 2822 2226 M
 399 0 V
-630 1472 M
-2759 60 V
-630 1472 Pnt
-3389 1532 Pnt
+630 1353 M
+920 119 V
+919 60 V
+920 -80 V
+630 1353 Pnt
+1550 1472 Pnt
+2469 1532 Pnt
+3389 1452 Pnt
 3021 2226 Pnt
 % End plot #1
 % Begin plot #2
@@ -665,10 +689,14 @@ LT0
 LT0
 0.80 0.67 0.00 C 2822 2100 M
 399 0 V
-630 1854 M
-2759 42 V
-630 1854 Pls
-3389 1896 Pls
+630 1830 M
+920 24 V
+919 42 V
+920 -36 V
+630 1830 Pls
+1550 1854 Pls
+2469 1896 Pls
+3389 1860 Pls
 3021 2100 Pls
 % End plot #2
 1.000 UL
@@ -689,21 +717,23 @@ showpage
 %%Trailer
 %%DocumentFonts: Helvetica
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MoufoPlot 0.01 , gnuplot 4.4 patchlevel 0
+%% MoufoPlot 0.02 , gnuplot 4.4 patchlevel 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --ymask "0,1,1" --line --out "img//example27line.eps" --noviewer
+%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --yavg "0,1,2" --line --out "img//example27line.eps" --noviewer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% moufoplot data: /tmp/moufoplot.data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% NULL i1 i2
 %% # 
+%% opt1 1.00000000000000000000 1.80000000000000000000
 %% opt2 1.20000000000000000000 1.84000000000000000000
 %% opt3 1.30000000000000000000 1.91000000000000000000
+%% avg 1.16666666666666666666 1.85000000000000000000
 %% 
 %% 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot .gp: moufoplot.gp
+%% moufoplot .gp: /tmp/moufoplot.gp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set term postscript eps enhanced color
 %% set output "img//example27line.eps"

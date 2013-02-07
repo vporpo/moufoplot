@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0 EPSF-2.0
 %%Title: img//example0bar.eps
 %%Creator: gnuplot 4.4 patchlevel 0
-%%CreationDate: Sun Sep 30 04:25:53 2012
+%%CreationDate: Thu Feb  7 12:16:39 2013
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 230 176
 %%EndComments
@@ -50,7 +50,7 @@ SDict begin [
   /Author (cowbob)
 %  /Producer (gnuplot)
 %  /Keywords ()
-  /CreationDate (Sun Sep 30 04:25:53 2012)
+  /CreationDate (Thu Feb  7 12:16:39 2013)
   /DOCINFO pdfmark
 end
 } ifelse
@@ -637,13 +637,13 @@ LCa setrgbcolor
 0 -62 V
 Z stroke
 LT0
-0.13 0.13 0.00 C 1.000 1435 560 231 641 BoxColFill
+0.13 0.13 0.00 C 1.000 1458 560 277 641 BoxColFill
 LCa setrgbcolor
-1435 560 N
+1458 560 N
 0 640 V
-230 0 V
+276 0 V
 0 -640 V
--230 0 V
+-276 0 V
 Z stroke
 LT0
 0.13 0.13 0.00 C % End plot #1
@@ -664,13 +664,13 @@ LCa setrgbcolor
 0 -62 V
 Z stroke
 LT0
-0.80 0.67 0.00 C 1.000 1665 560 231 1068 BoxColFill
+0.80 0.67 0.00 C 1.000 1734 560 277 1068 BoxColFill
 LCa setrgbcolor
-1665 560 N
+1734 560 N
 0 1067 V
-230 0 V
+276 0 V
 0 -1067 V
--230 0 V
+-276 0 V
 Z stroke
 LT0
 0.80 0.67 0.00 C % End plot #2
@@ -691,13 +691,13 @@ LCa setrgbcolor
 0 -62 V
 Z stroke
 LT0
-0.00 0.00 0.67 C 1.000 1895 560 230 1281 BoxColFill
+0.00 0.00 0.67 C 1.000 2010 560 276 1281 BoxColFill
 LCa setrgbcolor
-1895 560 N
+2010 560 N
 0 1280 V
-229 0 V
+275 0 V
 0 -1280 V
--229 0 V
+-275 0 V
 Z stroke
 LT0
 0.00 0.00 0.67 C % End plot #3
@@ -718,43 +718,16 @@ LCa setrgbcolor
 0 -62 V
 Z stroke
 LT0
-0.00 0.73 0.00 C 1.000 2124 560 231 854 BoxColFill
+0.00 0.73 0.00 C 1.000 2285 560 277 854 BoxColFill
 LCa setrgbcolor
-2124 560 N
+2285 560 N
 0 853 V
-230 0 V
+276 0 V
 0 -853 V
--230 0 V
+-276 0 V
 Z stroke
 LT0
 0.00 0.73 0.00 C % End plot #4
-% Begin plot #5
-3.000 UL
-LT0
-0.67 0.00 0.00 C LCb setrgbcolor
-2738 1722 M
-[ [(Helvetica) 140.0 0.0 true true 0 (e)]
-] -46.7 MRshow
-LT0
-0.67 0.00 0.00 C 1.000 2822 1691 399 63 BoxColFill
-LCa setrgbcolor
-2822 1691 N
-399 0 V
-0 62 V
--399 0 V
-0 -62 V
-Z stroke
-LT0
-0.67 0.00 0.00 C 1.000 2354 560 231 470 BoxColFill
-LCa setrgbcolor
-2354 560 N
-0 469 V
-230 0 V
-0 -469 V
--230 0 V
-Z stroke
-LT0
-0.67 0.00 0.00 C % End plot #5
 1.000 UL
 LTb
 630 2352 N
@@ -773,20 +746,20 @@ showpage
 %%Trailer
 %%DocumentFonts: Helvetica
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MoufoPlot 0.01 , gnuplot 4.4 patchlevel 0
+%% MoufoPlot 0.02 , gnuplot 4.4 patchlevel 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot  -d "input0.dat" -x "a,b,c,d,e" --bar --out "img//example0bar.eps" --noviewer
+%% moufoplot  -d "input0.dat" -x "a,b,c,d" --bar --out "img//example0bar.eps" --noviewer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% moufoplot data: /tmp/moufoplot.data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% NULL a b c d e
+%% NULL a b c d
 %% # 
-%% "" 1.50000000000000000000 2.50000000000000000000 3.00000000000000000000 2.00000000000000000000 1.10000000000000000000
+%% "" 1.50000000000000000000 2.50000000000000000000 3.00000000000000000000 2.00000000000000000000
 %% 
 %% 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot .gp: moufoplot.gp
+%% moufoplot .gp: /tmp/moufoplot.gp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set term postscript eps enhanced color
 %% set output "img//example0bar.eps"
@@ -807,4 +780,4 @@ showpage
 %% set style fill solid 1.0 border lt "black"
 %% set grid ytics ls 10 lt rgb "black"
 %% set xlabel " " offset 0,-0.8
-%% plot  "/tmp/moufoplot.data" using 2:xtic(1) with histograms title columnheader(2) lt 1 lw 3 lc rgb "#202000", "/tmp/moufoplot.data" using 3:xtic(1) with histograms title columnheader(3) lt 1 lw 3 lc rgb "#ccaa00", "/tmp/moufoplot.data" using 4:xtic(1) with histograms title columnheader(4) lt 1 lw 3 lc rgb "#0000AA", "/tmp/moufoplot.data" using 5:xtic(1) with histograms title columnheader(5) lt 1 lw 3 lc rgb "#00BB00", "/tmp/moufoplot.data" using 6:xtic(1) with histograms title columnheader(6) lt 1 lw 3 lc rgb "#AA0000"
+%% plot  "/tmp/moufoplot.data" using 2:xtic(1) with histograms title columnheader(2) lt 1 lw 3 lc rgb "#202000", "/tmp/moufoplot.data" using 3:xtic(1) with histograms title columnheader(3) lt 1 lw 3 lc rgb "#ccaa00", "/tmp/moufoplot.data" using 4:xtic(1) with histograms title columnheader(4) lt 1 lw 3 lc rgb "#0000AA", "/tmp/moufoplot.data" using 5:xtic(1) with histograms title columnheader(5) lt 1 lw 3 lc rgb "#00BB00"

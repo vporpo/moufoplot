@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0 EPSF-2.0
 %%Title: img//example1line.eps
 %%Creator: gnuplot 4.4 patchlevel 0
-%%CreationDate: Sun Sep 30 04:25:57 2012
+%%CreationDate: Thu Feb  7 12:16:43 2013
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 230 176
 %%EndComments
@@ -50,7 +50,7 @@ SDict begin [
   /Author (cowbob)
 %  /Producer (gnuplot)
 %  /Keywords ()
-  /CreationDate (Sun Sep 30 04:25:57 2012)
+  /CreationDate (Thu Feb  7 12:16:43 2013)
   /DOCINFO pdfmark
 end
 } ifelse
@@ -554,7 +554,9 @@ LTb
 1.000 UL
 LTa
 630 1840 M
-2759 0 V
+2024 0 V
+651 0 R
+84 0 V
 stroke
 LTb
 630 1840 M
@@ -570,7 +572,9 @@ LTb
 1.000 UL
 LTa
 630 2096 M
-2759 0 V
+2024 0 V
+651 0 R
+84 0 V
 stroke
 LTb
 630 2096 M
@@ -620,36 +624,76 @@ LTb
 1.375 UP
 3.000 UL
 LT0
-0.13 0.13 0.00 C 630 1200 M
+0.13 0.13 0.00 C LCb setrgbcolor
+2738 2226 M
+[ [(Helvetica) 140.0 0.0 true true 0 (a)]
+] -46.7 MRshow
+LT0
+0.13 0.13 0.00 C 2822 2226 M
+399 0 V
+630 1200 M
 630 1200 Pnt
+3021 2226 Pnt
 % End plot #1
 % Begin plot #2
 1.375 UP
 3.000 UL
 LT0
-0.80 0.67 0.00 C 630 1627 M
+0.80 0.67 0.00 C LCb setrgbcolor
+2738 2100 M
+[ [(Helvetica) 140.0 0.0 true true 0 (b)]
+] -46.7 MRshow
+LT0
+0.80 0.67 0.00 C 2822 2100 M
+399 0 V
+630 1627 M
 630 1627 Pls
+3021 2100 Pls
 % End plot #2
 % Begin plot #3
 1.375 UP
 3.000 UL
 LT0
-0.00 0.00 0.67 C 630 1840 M
+0.00 0.00 0.67 C LCb setrgbcolor
+2738 1974 M
+[ [(Helvetica) 140.0 0.0 true true 0 (c)]
+] -46.7 MRshow
+LT0
+0.00 0.00 0.67 C 2822 1974 M
+399 0 V
+630 1840 M
 630 1840 Crs
+3021 1974 Crs
 % End plot #3
 % Begin plot #4
 1.375 UP
 3.000 UL
 LT0
-0.00 0.73 0.00 C 630 1413 M
+0.00 0.73 0.00 C LCb setrgbcolor
+2738 1848 M
+[ [(Helvetica) 140.0 0.0 true true 0 (d)]
+] -46.7 MRshow
+LT0
+0.00 0.73 0.00 C 2822 1848 M
+399 0 V
+630 1413 M
 630 1413 Star
+3021 1848 Star
 % End plot #4
 % Begin plot #5
 1.375 UP
 3.000 UL
 LT0
-0.67 0.00 0.00 C 630 1029 M
+0.67 0.00 0.00 C LCb setrgbcolor
+2738 1722 M
+[ [(Helvetica) 140.0 0.0 true true 0 (e)]
+] -46.7 MRshow
+LT0
+0.67 0.00 0.00 C 2822 1722 M
+399 0 V
+630 1029 M
 630 1029 Box
+3021 1722 Box
 % End plot #5
 1.000 UL
 LTb
@@ -669,20 +713,20 @@ showpage
 %%Trailer
 %%DocumentFonts: Helvetica
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MoufoPlot 0.01 , gnuplot 4.4 patchlevel 0
+%% MoufoPlot 0.02 , gnuplot 4.4 patchlevel 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot  -d "input0.dat" -x "a,b,c,d,e" --noxtags --line --out "img//example1line.eps" --noviewer
+%% moufoplot  -d "input0.dat" -x "@" --line --out "img//example1line.eps" --noviewer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% moufoplot data: /tmp/moufoplot.data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% NULL "" "" "" "" ""
+%% NULL a b c d e
 %% # 
 %% "" 1.50000000000000000000 2.50000000000000000000 3.00000000000000000000 2.00000000000000000000 1.10000000000000000000
 %% 
 %% 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot .gp: moufoplot.gp
+%% moufoplot .gp: /tmp/moufoplot.gp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set term postscript eps enhanced color
 %% set output "img//example1line.eps"

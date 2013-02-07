@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0 EPSF-2.0
 %%Title: img//example18line.eps
 %%Creator: gnuplot 4.4 patchlevel 0
-%%CreationDate: Sun Sep 30 04:26:52 2012
+%%CreationDate: Thu Feb  7 12:17:39 2013
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 230 176
 %%EndComments
@@ -50,7 +50,7 @@ SDict begin [
   /Author (cowbob)
 %  /Producer (gnuplot)
 %  /Keywords ()
-  /CreationDate (Sun Sep 30 04:26:52 2012)
+  /CreationDate (Thu Feb  7 12:17:39 2013)
   /DOCINFO pdfmark
 end
 } ifelse
@@ -570,7 +570,9 @@ LTb
 1.000 UL
 LTa
 630 2124 M
-2759 0 V
+1940 0 V
+735 0 R
+84 0 V
 stroke
 LTb
 630 2124 M
@@ -649,23 +651,39 @@ LTb
 1.375 UP
 3.000 UL
 LT0
-0.13 0.13 0.00 C 630 1353 M
+0.13 0.13 0.00 C LCb setrgbcolor
+2738 2226 M
+[ [(Helvetica) 140.0 0.0 true true 0 (i1)]
+] -46.7 MRshow
+LT0
+0.13 0.13 0.00 C 2822 2226 M
+399 0 V
+630 1353 M
 1380 119 V
 1379 60 V
 630 1353 Pnt
 2010 1472 Pnt
 3389 1532 Pnt
+3021 2226 Pnt
 % End plot #1
 % Begin plot #2
 1.375 UP
 3.000 UL
 LT0
-0.80 0.67 0.00 C 630 1830 M
+0.80 0.67 0.00 C LCb setrgbcolor
+2738 2100 M
+[ [(Helvetica) 140.0 0.0 true true 0 (i2)]
+] -46.7 MRshow
+LT0
+0.80 0.67 0.00 C 2822 2100 M
+399 0 V
+630 1830 M
 1380 24 V
 1379 42 V
 630 1830 Pls
 2010 1854 Pls
 3389 1896 Pls
+3021 2100 Pls
 % End plot #2
 1.000 UL
 LTb
@@ -685,9 +703,9 @@ showpage
 %%Trailer
 %%DocumentFonts: Helvetica
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MoufoPlot 0.01 , gnuplot 4.4 patchlevel 0
+%% MoufoPlot 0.02 , gnuplot 4.4 patchlevel 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --legend "off" --line --out "img//example18line.eps" --noviewer
+%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --barw "0.5" --line --out "img//example18line.eps" --noviewer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% moufoplot data: /tmp/moufoplot.data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -700,7 +718,7 @@ showpage
 %% 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot .gp: moufoplot.gp
+%% moufoplot .gp: /tmp/moufoplot.gp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set term postscript eps enhanced color
 %% set output "img//example18line.eps"
@@ -713,7 +731,7 @@ showpage
 %% set title font ",18" 
 %% set ylabel font ",16" 
 %% set xlabel font ",16" 
-%% set key samplen 1 off
+%% set key inside top
 %% set ytics .38200000000000000000
 %% set yrange[0:2.67400000000000000000]
 %% set xrange[0:]

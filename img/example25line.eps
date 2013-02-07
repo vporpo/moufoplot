@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0 EPSF-2.0
 %%Title: img//example25line.eps
 %%Creator: gnuplot 4.4 patchlevel 0
-%%CreationDate: Sun Sep 30 04:27:17 2012
+%%CreationDate: Thu Feb  7 12:18:01 2013
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 230 176
 %%EndComments
@@ -50,7 +50,7 @@ SDict begin [
   /Author (cowbob)
 %  /Producer (gnuplot)
 %  /Keywords ()
-  /CreationDate (Sun Sep 30 04:27:17 2012)
+  /CreationDate (Thu Feb  7 12:18:01 2013)
   /DOCINFO pdfmark
 end
 } ifelse
@@ -499,7 +499,7 @@ LTb
 -63 0 V
 stroke
 546 984 M
-[ [(Helvetica) 160.0 0.0 true true 0 (0.38)]
+[ [(Helvetica) 160.0 0.0 true true 0 (0.20)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -515,7 +515,7 @@ LTb
 -63 0 V
 stroke
 546 1212 M
-[ [(Helvetica) 160.0 0.0 true true 0 (0.76)]
+[ [(Helvetica) 160.0 0.0 true true 0 (0.40)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -531,7 +531,7 @@ LTb
 -63 0 V
 stroke
 546 1440 M
-[ [(Helvetica) 160.0 0.0 true true 0 (1.15)]
+[ [(Helvetica) 160.0 0.0 true true 0 (0.60)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -547,7 +547,7 @@ LTb
 -63 0 V
 stroke
 546 1668 M
-[ [(Helvetica) 160.0 0.0 true true 0 (1.53)]
+[ [(Helvetica) 160.0 0.0 true true 0 (0.80)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -563,7 +563,7 @@ LTb
 -63 0 V
 stroke
 546 1896 M
-[ [(Helvetica) 160.0 0.0 true true 0 (1.91)]
+[ [(Helvetica) 160.0 0.0 true true 0 (1.00)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -581,7 +581,7 @@ LTb
 -63 0 V
 stroke
 546 2124 M
-[ [(Helvetica) 160.0 0.0 true true 0 (2.29)]
+[ [(Helvetica) 160.0 0.0 true true 0 (1.20)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -597,7 +597,7 @@ LTb
 -63 0 V
 stroke
 546 2352 M
-[ [(Helvetica) 160.0 0.0 true true 0 (2.67)]
+[ [(Helvetica) 160.0 0.0 true true 0 (1.40)]
 ] -53.3 MRshow
 1.000 UL
 LTb
@@ -611,22 +611,12 @@ currentpoint gsave translate -90 rotate 0 0 moveto
 grestore
 1.000 UL
 LTb
-1550 756 M
+2010 756 M
 0 63 V
 stroke
-1550 672 M
+2010 672 M
 currentpoint gsave translate -90 rotate 0 0 moveto
 [ [(Helvetica) 160.0 0.0 true true 0 (opt2)]
-] -53.3 MLshow
-grestore
-1.000 UL
-LTb
-2469 756 M
-0 63 V
-stroke
-2469 672 M
-currentpoint gsave translate -90 rotate 0 0 moveto
-[ [(Helvetica) 160.0 0.0 true true 0 (opt3)]
 ] -53.3 MLshow
 grestore
 1.000 UL
@@ -636,7 +626,7 @@ LTb
 stroke
 3389 672 M
 currentpoint gsave translate -90 rotate 0 0 moveto
-[ [(Helvetica) 160.0 0.0 true true 0 (avg)]
+[ [(Helvetica) 160.0 0.0 true true 0 (opt3)]
 ] -53.3 MLshow
 grestore
 1.000 UL
@@ -669,13 +659,11 @@ LT0
 0.13 0.13 0.00 C 2822 2226 M
 399 0 V
 630 1353 M
-920 119 V
-919 60 V
-920 -119 V
+1380 119 V
+1379 60 V
 630 1353 Pnt
-1550 1472 Pnt
-2469 1532 Pnt
-3389 1413 Pnt
+2010 1472 Pnt
+3389 1532 Pnt
 3021 2226 Pnt
 % End plot #1
 % Begin plot #2
@@ -690,13 +678,11 @@ LT0
 0.80 0.67 0.00 C 2822 2100 M
 399 0 V
 630 1830 M
-920 24 V
-919 42 V
-920 -54 V
+1380 24 V
+1379 42 V
 630 1830 Pls
-1550 1854 Pls
-2469 1896 Pls
-3389 1842 Pls
+2010 1854 Pls
+3389 1896 Pls
 3021 2100 Pls
 % End plot #2
 1.000 UL
@@ -717,23 +703,22 @@ showpage
 %%Trailer
 %%DocumentFonts: Helvetica
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MoufoPlot 0.01 , gnuplot 4.4 patchlevel 0
+%% MoufoPlot 0.02 , gnuplot 4.4 patchlevel 0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --yavg "0,1" --line --out "img//example25line.eps" --noviewer
+%% moufoplot  -d "input1.dat" -x "i1,i2" -y "opt1,opt2,opt3" --ynorm "i2 opt3" --line --out "img//example25line.eps" --noviewer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% moufoplot data: /tmp/moufoplot.data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% NULL i1 i2
 %% # 
-%% opt1 1.00000000000000000000 1.80000000000000000000
-%% opt2 1.20000000000000000000 1.84000000000000000000
-%% opt3 1.30000000000000000000 1.91000000000000000000
-%% avg 1.10000000000000000000 1.82000000000000000000
+%% opt1 .52356020942408376963 .94240837696335078534
+%% opt2 .62827225130890052356 .96335078534031413612
+%% opt3 .68062827225130890052 1.00000000000000000000
 %% 
 %% 
 %% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% moufoplot .gp: moufoplot.gp
+%% moufoplot .gp: /tmp/moufoplot.gp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% set term postscript eps enhanced color
 %% set output "img//example25line.eps"
@@ -747,8 +732,8 @@ showpage
 %% set ylabel font ",16" 
 %% set xlabel font ",16" 
 %% set key inside top
-%% set ytics .38200000000000000000
-%% set yrange[0:2.67400000000000000000]
+%% set ytics .20000000000000000000
+%% set yrange[0:1.40000000000000000000]
 %% set xrange[0:]
 %% set xlabel " " offset 0,-0.8
 %% plot  "/tmp/moufoplot.data" using 2:xtic(1) with linespoints title columnheader(2) lw 3 ps 1.37500000000000000000 pt 0 lt 1 lc rgb "#202000", "/tmp/moufoplot.data" using 3:xtic(1) with linespoints title columnheader(3) lw 3 ps 1.37500000000000000000 pt 1 lt 1 lc rgb "#ccaa00"
