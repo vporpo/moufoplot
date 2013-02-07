@@ -200,23 +200,25 @@ get_all()
    fi
 }
 
-
-# Input: DIR MATCHES
+# Search in DIR for files that match FILTERS. Upon error, nclude ERROR_MSG
+# in the output message.
+# Upon success, return the value of the single match in RETVAL
+# Input: DIR FILTERS ERROR_MSG(optional)
 # Output: The number that matches
 # Example: get_match i2 jpeg d1 opt2
 #          Returns the number contained in jpeg_opt2_i2_d1
 get_match_dir ()
 {
-    local DIR=$1
-    local matches=$2
-    local exit_on_multiple_matches=$3
+    local DIR=${1}
+    local filters=${2}
+    local error_msg=${3}
     local grep_cmd=""
     local out=""
 
-    # echo "Matching... ${matches}"
+    # echo "Matching... ${filters}"
 
     set_ifs ", "
-    for match in $matches; do
+    for match in $filters; do
 	grep_cmd="${grep_cmd}|egrep \"_${match}_|^${match}_|_${match}\\$|^${match}\\$\""
     done
     reset_ifs
@@ -226,15 +228,15 @@ get_match_dir ()
 
     local filename=`eval ${grep_cmd}`
     local count_files=`echo $filename|wc -w`
-    if [ ${count_files} -ne 1 ]&&[ "${exit_on_multiple_matches}" == "" ]; then
+    if [ ${count_files} -ne 1 ]; then
 	if [ "${ignore_filter}" == "YES" ]&&[ ${count_files} -eq 0 ];then
-	    echo -e "\nWARNING: Filter -f: ${matches} matches ${count_files} files in ${DIR} !!!"
+	    echo -e "\nWARNING: ${error_msg} Filter -f: ${filters} matches ${count_files} files in ${DIR} !!!"
 	    RETVAL=""
 	    return
 	else
-	    echo -e "\nERROR: Filter: ${matches} matches ${count_files} files in ${DIR} !!!"
+	    echo -e "\nERROR: ${error_msg} Filter: ${filters} matches ${count_files} files in ${DIR} !!!"
     	    echo -e "The following files all match the filter:\n$filename"
-	    echo -e "Please add more constraints into the filter ${matches}."
+	    echo -e "Please add more constraints into the filter ${filters}."
     	    exit 1
 	fi
     fi
@@ -245,37 +247,45 @@ get_match_dir ()
 }
 
 
+
+# Search in FILE for lines that match FILTERS. Upon error, nclude ERROR_MSG
+# in the output message.
+# Upon success, return the value of the single match in RETVAL
+# Input: FILE FILTERS ERROR_MSG(optional)
+# Output: The number that matches
+# Example: get_match i2 jpeg d1 opt2
+#          Returns the number contained in jpeg_opt2_i2_d1
 get_match_file ()
 {
-    local DIR=$1
-    local matches=$2
-    local exit_on_multiple_matches=$3
+    local FILE=${1}
+    local filters=${2}
+    local error_msg=${3}
     local grep_cmd=""
     local out=""
 
-    # echo "Matching... ${matches}"
+    # echo "Matching... ${filters}"
 
     set_ifs ", "
-    for match in $matches; do
+    for match in $filters; do
 	grep_cmd="${grep_cmd}|egrep \"_${match}_|^${match}_|_${match}:|^${match}:\""  #1st change \\$->:
     done
     reset_ifs
 
-    grep_cmd="cat ${DIR}${grep_cmd}"  #2nd change "cat"
+    grep_cmd="cat ${FILE}${grep_cmd}"  #2nd change "cat"
     # echo "GREP_CMD: $grep_cmd"
 
     local filename=`eval ${grep_cmd}`
     # echo "filename: ${filename}"
     local count_files=`echo $filename|wc -l`  #3rd change
-    if [ ${count_files} -ne 1 ]&&[ "${exit_on_multiple_matches}" == "" ]; then
+    if [ ${count_files} -ne 1 ]; then
 	if [ "${ignore_filter}" == "YES" ]&&[ ${count_files} -eq 0 ];then
-	    echo -e "\nWARNING: Filter -f: ${matches} matches ${count_files} lines in ${DIR} !!!" #4th change files->lines
+	    echo -e "\nWARNING: ${error_msg} Filter -f: ${filters} matches ${count_files} lines in ${FILE} !!!" #4th change files->lines
 	    RETVAL=""
 	    return
 	else
-	    echo -e "\nERROR: Filter: ${matches} matches ${count_files} lines in ${DIR} !!!" #5th change files->lines
+	    echo -e "\nERROR: ${error_msg} Filter: ${filters} matches ${count_files} lines in ${FILE} !!!" #5th change files->lines
     	    echo -e "The following lines all match the filter:\n$filename"
-	    echo -e "Please add more more constraints to the filter ${matches}."
+	    echo -e "Please add more more constraints to the filter ${filters}."
     	    exit 1
 	fi
     fi
@@ -291,12 +301,13 @@ get_match()
 {
     local dir=${1}
     local opts=${2}
-    local ignore_filter=${3}
+    local error_msg=${3}
+    local ignore_filter=${4}
 
    if [ -d "${DIR}" ];then
-       get_match_dir "${dir}" "${opts}"
+       get_match_dir "${dir}" "${opts}" "${error_msg}"
    elif [ -f "${DIR}" ];then
-       get_match_file "${dir}" "${opts}"
+       get_match_file "${dir}" "${opts}" "${error_msg}"
    else
        print_err "ERROR: ${DIR} not a file or directory.\n"
        exit 1
@@ -365,7 +376,9 @@ get_file_value()
 {
     eval local file="$1"
     local data=`cat ${file}`
-    echo "Reading value from ${file}... ${data}"
+    if [ ! "${silent}" == "YES" ];then
+	echo "Reading value from ${file}... ${data}"
+    fi
     if [ "$data" == "" ]; then
 	if [ "${ignore_filter}" == "YES" ];then
 	    echo "WARNING: ignoring empty ${file}."
@@ -962,7 +975,7 @@ create_data_file()
 
 		if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
 		    local opts="${x} ${y} ${z} ${filter}"
-		    get_match "${DIR}" "$opts" "${ignore_filter}"
+		    get_match "${DIR}" "$opts" "create_data_file" "${ignore_filter}"
 		    file_val=${RETVAL}
 
 	            # Normalization on the X axis
@@ -1072,7 +1085,7 @@ create_data_file_hmap()
 	    fi
 	    if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
 		local opts="${x} ${y} ${filter}"
-		get_match "$DIR" "$opts"
+		get_match "$DIR" "$opts" "create_data_file_hmap"
 		local file_val=${RETVAL}
 		if [ "${percent}" != "" ];then
 		    file_val=`echo "${file_val} * 100" |bc -l`
@@ -1119,19 +1132,23 @@ check_if_arguments_exist()
     local vals1=$1
     local vals2=$2
     local vals3=$3
+    local vals4=$4
     local dir=$4
     local val1
     local val2
     local val3
+    local val4
     for val1 in ${vals1}; do
 	for val2 in ${vals2}; do
 	    for val3 in ${vals3}; do
-		get_match "${DIR}" "${val1} ${val2} ${val3}" "NO"
-		local match=${RETVAL}
-		if [ "${match}" == "" ]; then
-		    echo "ERROR: Filters: ${val1} ${val2} ${val3} are too restrictive! Can't find match in ${DIR}."
-		    exit 1
-		fi
+		for val4 in ${vals4}; do
+		    get_match "${DIR}" "${val1} ${val2} ${val3} ${val4}" "check_if_arguments_exist" "NO"
+		    local match=${RETVAL}
+		    if [ "${match}" == "" ]; then
+			echo "ERROR: Filters: ${val1} ${val2} ${val3} are too restrictive! Can't find match in ${DIR}."
+			exit 1
+		    fi
+		done
 	    done
 	done
     done
@@ -1180,7 +1197,7 @@ sanity_checks()
 	fi
     fi
 
-    check_if_arguments_exist "${x_vals}" "${y_vals}" "${others}" "${DIR}"
+    check_if_arguments_exist "${x_vals}" "${y_vals}" "${z_vals}" "${others}" "${DIR}"
     if [ $? -ne 0 ]; then exit 1; fi    
 
     if [ "${x_norm}" != "" ]&&[ "${y_norm}" ]; then
@@ -1543,7 +1560,7 @@ get_normalize_values()
     local ni=0
     local xn
     for xn in ${x_norm};do
-	get_match "${DIR}" "${xn} ${others}"
+	get_match "${DIR}" "${xn} ${others}" "get_normalize_values X" 
 	local xnorm_val=${RETVAL}
 	x_norm_array[${ni}]=${xnorm_val}
 	ni=$((ni + 1))
@@ -1566,7 +1583,7 @@ get_normalize_values()
     local ni=0
     local yn
     for yn in ${y_norm};do
-	get_match "${DIR}" "${yn} ${others}"
+	get_match "${DIR}" "${yn} ${others}" "get_normalize_values Y"
 	local ynorm_val=${RETVAL}
 	y_norm_array[${ni}]=${ynorm_val}
 	ni=$((ni + 1))
@@ -2494,7 +2511,7 @@ usage()
     print_msg "   --yformat \"format\"         : (Opt) Format of the y tags.\n"
     print_msg "   --ytics NUM                  : (Opt) Number of tics on Y.\n"
     print_msg "   --yrange MIN,MAX,STEP        : (Opt) Range of Y tics.\n"
-    print_msg "   --colors,-c \"#color1,#color2...\": (Opt) User defined colors.\n"
+    print_msg "   --colors,-c \"#color1,#color2...\": (Opt) User defined colors USE:\"quotes\".\n"
     print_msg "   --gap <number>               : (Opt) The gap between clusters.\n"
     print_msg "   --xmask <bitmap>             : (Opt) Disable X bars with 0.\n"
     print_msg "   --ymask <bitmap>             : (Opt) Disable Y bars with 0.\n"
@@ -2502,7 +2519,7 @@ usage()
     print_msg "   --xavg <0,1,2,3,...>         : (Opt) Avg over selected X.\n"
     print_msg "   --yavg <0,1,2,3,...>         : (Opt) Avg over selected Y.\n"
     print_msg "   --ignore,-i                  : (Opt) Ignore Filter ERROR.\n"
-    print_msg "   --percent                    : (Opt) Change Y axis to show % vals.\n"
+    print_msg "   --percent                    : (Opt) Change Y axis to show %% vals.\n"
     print_msg "   --noviewer                   : (Opt) Disable launching the VIEWER.\n"
     print_msg "   --viewer <file viewer>       : (Opt) Prefer to use VIEWER.\n"
     print_msg "   --barw <bar width>           : (Opt) Set the bar width.\n"
