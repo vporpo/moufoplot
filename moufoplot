@@ -810,7 +810,7 @@ create_tics()
 	    fi
 
 	    if [ "${noy_tags}" == "YES" ]; then
-		local tag=""
+		local tag="\"\""
 	    else
 		local tag="${ytags_array[${yi}]}"
 	    fi

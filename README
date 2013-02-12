@@ -1,5 +1,5 @@
  MoufoPlot README
- Copyright (C) 2012 Vasileios Porpodas <v DOT porpodas AT ed.ac.uk>
+ Copyright (C) 2012,2013 Vasileios Porpodas <v DOT porpodas AT ed.ac.uk>
 
  MoufoPlot is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free
@@ -28,6 +28,7 @@ About
  It completely decouples the process of generating the measurements from the
  process of plotting them. 
 
+ Official page: https://github.com/vporpo/moufoplot
 
 Features
 --------
@@ -38,7 +39,7 @@ Features
     Line graphs 
     2D Heat maps
  4. Platform independent (bash script).
- 5. On-the-fly generation of average. (EXPERIMENTAL).
+ 5. On-the-fly generation of average/normalized values. (EXPERIMENTAL).
 
 
 Installation
@@ -56,7 +57,11 @@ Installation
 Basic Concepts
 --------------
  1. Generate Data
-   The input of MoufPlot should be placed in a directory (let's say data/).
+   There are two ways:
+   A) Using a single file with all the data
+   B) Using lots of files, each with a single number in it.
+
+   In A) the input of MoufPlot should be placed in a directory (let's say data/).
    Each data number should be placed in a single file. 
    The file name is crucial:
     a. Obviously each file name should be unique
@@ -66,6 +71,21 @@ Basic Concepts
    simulating cycles of a processor with a 4k sized cache of associativity 8.
    Similarly an energy measurement of a size:2k,assoc:8 configuration would be
    size2k_assoc8_energy.
+
+   In B) the input of MoufoPlot is a simple text file (say data.txt).
+   Each line of the file is in the format: "name:value".
+   The "name" should be encoded in the same way as the files in A).
+   That is:
+    a. Obviously each file name should be unique
+    b. It should encode the parameters used to generate this data, 
+       separated by '_'
+   For example: size4k_assoc8_cycles is a valid name that corresponds to the 
+   simulating cycles of a processor with a 4k sized cache of associativity 8.
+   Similarly an energy measurement of a size:2k,assoc:8 configuration would be
+   size2k_assoc8_energy.
+   The data.txt file might then look like this:
+      size4k_assoc8_cycles: 377823
+      size2k_assoc8_energy: 428032
 
 2. Select Data
   a. Select what to put on each axis:
@@ -108,25 +128,33 @@ Example
   1) x,y,z are numbers in {1,2,3}, {100,200,300,400,500}, {4.1, 4.2} 
      respectively
   2) <TYPE> is one of {TIME,ENERGY,AREA}
-  We use this exact encoding as the file name where each of the simulation 
-  result will be placed.
+
+  We use this exact encoding as 
+  A) the line name or
+  B) the file name 
+  where each of the simulation will be placed.
   For example the simulation results for A=1, B=300, C=4.2 will be placed in:
-   A1_B300_C4.2_TIME
-   A1_B300_C4.2_ENERGY
-   A1_B300_C4.2_AREA
+  A) the data.txt file as in:
+    A1_B300_C4.2_TIME: 123
+    A1_B300_C4.2_ENERGY: 456
+    A1_B300_C4.2_AREA: 789
+
+  B) the data/ directory should contain the following files:
+    A1_B300_C4.2_TIME
+    A1_B300_C4.2_ENERGY
+    A1_B300_C4.2_AREA
+  each one containing the numbers 123, 456, 789 respectively.
+
 
  3. Plotting using MoufoPlot
  - - - - - - - - - - - - - -
   A. Let's say we want to plot TIME for A in {1,2,3} and B=200, C=4.1
-  moufoplot -x A1,A2,A3 -f "B200 C4.1 TIME"
-
+    A) moufoplot -d data.txt -x A1,A2,A3 -f "B200 C4.1 TIME"
+    B) moufoplot -d data/ -x A1,A2,A3 -f "B200 C4.1 TIME"
   B. Let's say we want to plot TIME for A in {1,2,3} and B in {100,200}, C=4.1
-  moufoplot -x A1,A2,A3 -y B100,B200 -f "C4.1 TIME"
+    A) moufoplot -d data.txt -x A1,A2,A3 -y B100,B200 -f "C4.1 TIME"
+    A) moufoplot -d data/ -x A1,A2,A3 -y B100,B200 -f "C4.1 TIME"
 
-
-More Examples
---------------
- Check out the examples/ directory.
- Each of the sub-folders contains an example set of data in the data/ directory
- and some sample MoufoPlot commands in the moufoplot_cmd* files.
- You can directly run the moufoplot_cmd* files to see the output.
+More Examples/Documentation
+---------------------------
+ Check out the examples/index.html using your favourite web browser.

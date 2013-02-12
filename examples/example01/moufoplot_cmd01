@@ -1,3 +1,0 @@
-#!/bin/bash
-../../moufoplot -d data/ --bar -x size4k,size8k,size16k -y assoc2,assoc4 -f cycles
-

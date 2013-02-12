@@ -1,2 +1,0 @@
-#!/bin/bash
-../../moufoplot -d data/ --bar -x size4k,size8k,size16k -y assoc2,assoc4 -f cycles --legend box --xrotate -20 --title "Performance results" --xlabel "Cache size" --ylabel "Cache associativity" --xnorm "size4k assoc2 cycles"
