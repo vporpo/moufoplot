@@ -1869,12 +1869,18 @@ parse_colors()
 	color_array[3]="#ccaa00" # light yellow
 	color_array[4]="#0000AA" # dark blue
 	color_array[5]="#00BB00" # light green
-	color_array[6]="#AA0000" # red
-	color_array[7]="#6699ff" # light blue
+	color_array[6]="#ffdb66" # light yellow
+	color_array[7]="#AA0000" # red
+	color_array[8]="#6699ff" # light blue
+	color_array[9]="#7b5b46" # brown
+
+
+	# color_array[8]="#887700" # light orange
+	# color_array[9]="#11e7c1" # light green
+
+	# color_array[9]="#c900c9" # light purple
 	color_array[10]="#006f00" # dark orange
-	color_array[8]="#887700" # light orange
-	color_array[12]="#555555"
-	color_array[9]="#c900c9" # light purple
+	color_array[12]="#5c5a4d" # grey
 	color_array[11]="#dddddd"
 
 	color_array[13]="#00ff00"
