@@ -17,9 +17,17 @@
 # along with MoufoPlot; see the file COPYING3.  If not see
 # <http://www.gnu.org/licenses/>.
 
-moufoplot_version="0.02"
+# Changelog
+# ---------
+# v0.03 05JUN2013 Added restore function. Regenerate and modify graphs from 
+#                 existing moufoplot .eps files.
 
 
+MOUFOPLOT_STRING="MoufoPlot"
+moufoplot_version="0.03"
+
+MOUFOPLOT_GP_STRING="moufoplot .gp:"
+MOUFOPLOT_DATA_STRING="moufoplot data:"
 
 # Printing Functions:
 # 1. Print regular message. This gets turned off in silent mode.
@@ -908,7 +916,7 @@ create_data_file()
     set_ifs "${IFS_CHAR}" # Let ',' be the separator character
 
     local data="NULL"
-    
+
     local xi=0
     for x in ${x_array}; do
 	if [ "${nox_tags}" == "YES" ]||[ "${no_x}" == "1" ];then
@@ -1512,6 +1520,17 @@ sanity_checks()
     fi
 }
 
+# Return the directory for FILE_PATH
+# For example if FILE_PATH is foo/bar/file.tar
+# This function returns foo/bar/
+get_dir()
+{
+    local file_path=${1}
+    local fname=${file_path##*/}
+    local dir=`echo ${file_path} | sed "s/${fname}$//"`
+    RETVAL=${dir}
+}
+
 set_defaults()
 {
     # set default size
@@ -1527,6 +1546,14 @@ set_defaults()
     # noappend
     if [ "${no_append}" != "YES" ];then
 	no_append="NO"
+    fi
+
+    # If output file is in a directory which does not exist, create it
+    get_dir ${epsfile}
+    local dir=${RETVAL}
+    if [ ! -d ${dir} ]; then
+	print_msg "Directory ${dir} missing. Creating it..."
+	mkdir -p ${dir}
     fi
 }
 
@@ -2206,18 +2233,88 @@ parse_vals()
     fi
 }
 
+# Display a waiting bar /-\
+wait_bar()
+{
+    if [ ! ${wait_bar_i} ]; then
+	wait_bar_i=0
+	print_msg "-"
+    fi
+
+    if [ $((${wait_bar_i} % 3)) -eq 0 ]; then
+	print_msg "\b/"
+    elif [ $((${wait_bar_i} % 3)) -eq 1 ]; then
+	print_msg "\b-"
+    elif [ $((${wait_bar_i} % 3)) -eq 2 ]; then
+	print_msg "\b/"
+    fi
+    wait_bar_i=$((${wait_bar_i} + 1))
+}
+
+
+# Read data from INPUT_FILE starting from STRING_START up to STRING_STOP and 
+# dump it to OUTPUT_FILE
+restore_data()
+{
+    local input_file=${1}
+    local string_start=${2}
+    local string_stop=${3}
+    local output_file=${4}
+
+    local TMPDIR="/tmp/moufoplot.data.tmp"
+    cat ${input_file} | grep "%%" > ${TMPDIR}
+    echo "" > ${output_file}
+    local parse_line=0
+    print_msg "Restoring data... "
+    while read line; do
+	wait_bar
+        # echo ${line}
+	echo ${line}|grep "${string_stop}" > /dev/null
+	if [ ${?} -eq 0 ]; then
+		# echo "END PARSING"
+	    parse_line=0
+	fi 
+	if [ ${parse_line} -eq 1 ]; then
+		# echo "DUMPING"
+	    local newline=`echo -e "${line}\n"|sed 's/%//g'`
+	    # Only write to output if non-empty
+	    if [ `echo ${newline} | wc -w` -gt 0 ]; then
+		echo ${newline} >> ${output_file}
+	    fi 
+	fi
+	echo ${line}|grep "${string_start}" > /dev/null
+	if [ ${?} -eq 0 ]; then
+		# echo "START PARSING"
+	    parse_line=1
+	fi 
+    done < ${TMPDIR}
+    print_msg "\bDONE\n"
+
+    # Sanity check. Check if the data file is empty
+    local data_size=`cat ${output_file} | wc -c`
+    if [ ! ${?} -eq 0 ]||[ ${data_size} -eq 0 ]; then
+	echo "Hmm... Sanity check for ${output_file} failed."
+	exit 1
+    fi
+}
+
 parse_arguments()
 {
     local short_args="hd:x:y:z:f:t:c:iv"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
 title:,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,xnorm:,ynorm:,ynormv:,xrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
-zmask:,xavg:,yavg:,percent,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,viewer:,xlabeloffset:,\
-ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version"
-    local args=`getopt -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"`
+zmask:,xavg:,yavg:,percent,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
+ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:"
+    local getoptcmd="getopt -a -o ${short_args} -l ${long_args} -n getopt.sh -- ${@}"
+    local getoptcmd_set_args="local args=\`${getoptcmd}\`"
+    # echo $getoptcmd_set_args
+    eval $getoptcmd_set_args > /dev/null
     local args_array=($args)
     # getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
-    getopt -Q -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
+    # eval "getopt -a -Q -q -o ${short_args} -l ${long_args} -n getopt.sh -- $@" > /dev/null
+    eval "${getoptcmd}" > /dev/null
+
     if [ $? != 0 ]||[ "${args_array[0]}" == "--" ] ;then
 	echo "Bad argument(s), printing help and exiting."
 	usage
@@ -2277,6 +2374,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version"
 	    "--pntsize"|"-pntsize") point_size="$2";shift;;
 	    "--pnttype"|"-pnttype") point_type="$2";shift;;
 	    "--noviewer"|"-noviewer") no_viewer="YES";;
+	    "--forceviewer"|"-forceviewer") no_viewer="NO";;
 	    "--viewer"|"-viewer") eps_viewer="$2";shift;;
 	    "--data"|"-data") data_file="$2";shift;;
 	    "--gp"|"-gp") gpfname="$2";shift;;
@@ -2284,6 +2382,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version"
 	    "--noappend"|"-noappend") no_append="YES";;
 	    "--outformat"|"-outformat") out_format="$2";shift;;
 	    "--silent"|"-silent") silent="YES";;
+	    "--regen"|"-regen") regen="$2";shift;;
 	    "--version"|"-version"|"-v") version; exit 0;;
 	    "--") break;
 	esac
@@ -2300,20 +2399,32 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version"
 	shift
     done
 
+    if [ "${data_file}" == "" ];then
+	data_file="/tmp/moufoplot.data"
+    fi
+
+
+    # If we are regenerating a .eps file, then use the data points from it
+    if [ ! ${IGNORE_REGEN} ]&&[ ${regen} ];then
+	if [ ! -f ${regen} ];then
+	    echo "ERROR: Regen file: ${regen} does not exist."
+	    exit 1
+	fi
+	# echo "Early exit..."
+	return
+    fi
+
     # DIR
     if [ "${DIR}" == "" ];then
-	DIR="${PWD}"
 	print_err "ERROR: No data selected! Please specify with -d / --dir.\n"
 	exit 1
     fi
 
+
+
     # Check if plot type is not set. If so default to bargraph
     if [ "${plot_type}" == "" ];then
 	plot_type="bargraph"
-    fi
-
-    if [ "${data_file}" == "" ];then
-	data_file="/tmp/moufoplot.data"
     fi
 
     parse_vals
@@ -2463,9 +2574,11 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version"
     print_msg "| output file: ${epsfile}\n"
     print_msg "| Dont append data to eps: ${no_append}\n"
     print_msg "| noviewer: ${no_viewer}\n"
+    print_msg "| forceviewer: ${no_viewer}\n"
     print_msg "| viewer: ${eps_viewer}\n"
     print_msg "| outformat: ${out_format}\n"
     print_msg "| silent: ${silent}\n"
+    print_msg "| regen: ${regen}\n"
     print_msg "+-------------------------------+\n"
 
 }
@@ -2473,7 +2586,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version"
 version()
 {
     # local script_name=${0##*/}
-    echo "MoufoPlot ${moufoplot_version}"
+    echo "${MOUFOPLOT_STRING} ${moufoplot_version}"
 }
 
 usage()
@@ -2527,6 +2640,7 @@ usage()
     print_msg "   --ignore,-i                  : (Opt) Ignore Filter ERROR.\n"
     print_msg "   --percent                    : (Opt) Change Y axis to show %% vals.\n"
     print_msg "   --noviewer                   : (Opt) Disable launching the VIEWER.\n"
+    print_msg "   --forceviewer                : (Opt) Force enable the VIEWER.\n"
     print_msg "   --viewer <file viewer>       : (Opt) Prefer to use VIEWER.\n"
     print_msg "   --barw <bar width>           : (Opt) Set the bar width.\n"
     print_msg "   --linew <line width>         : (Opt) Set the line width.\n"
@@ -2536,6 +2650,7 @@ usage()
     print_msg "   --noappend                   : (Opt) Dont append moufoplot data to eps.\n"
     print_msg "   --outformat <eps|png|jpeg>   : (Opt) Select output file format.\n"
     print_msg "   --silent                     : (Opt) Silent output on screen.\n"
+    print_msg "   --regen                      : (Opt) Regenerate graph from .eps file.\n"
     print_msg "   --version (or -v)            : Print version and exit.\n"
     print_msg "   --help                       : Print this help screen.\n"
     exit 1
@@ -2559,13 +2674,13 @@ append_data_to_eps()
 
     print_msg "Appending numerical data (${data_file}) to ${epsfile}...\n"
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
-    echo "%% moufoplot data: ${data_file}" >> ${epsfile}
+    echo "%% ${MOUFOPLOT_DATA_STRING} ${data_file}" >> ${epsfile}
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
     cat ${data_file} | sed 's/^/%% /' >> ${epsfile}
 
     print_msg "Appending .gp file (${gpfname}) to ${epsfile}...\n"
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
-    echo "%% moufoplot .gp: ${gpfname}" >> ${epsfile}
+    echo "%% ${MOUFOPLOT_GP_STRING} ${gpfname}" >> ${epsfile}
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
     cat ${gpfname} | sed 's/^/%% /' >> ${epsfile}
 }
@@ -2609,17 +2724,134 @@ check_if_gnuplot_exists()
     fi
 }
 
+# Check if the name of DIR looks like a directory.
+check_if_directory()
+{
+    local dir=${1}
+    echo ${dir} | grep "/$"
+    if [ ${?} -eq 0 ]; then
+	RETVAL=1
+    else
+	RETVAL=''
+    fi
+}
+
+
+# Read the data existing in DATA_FILE in gnuplot data format and generate 
+# a moufoplot compatible input data file. Place results in OUTPUT_FILE
+regenerate_data()
+{
+    local data_file=${1}
+    local output_file=${2}
+    local i=-1
+    local x_array
+    local current_y
+    local current_z
+
+
+    local OTHERS_TAG
+    local o_tag
+    for o_tag in ${others}; do 
+	OTHERS_TAG="${OTHERS_TAG}_${o_tag}"
+    done
+    # Remove leading/trailing '_'
+    OTHERS_TAG=`echo ${OTHERS_TAG} | sed 's/^_//' | sed 's/_$//'`
+
+    # If a directory, create it
+    check_if_directory "${output_file}"
+    local is_dir=${RETVAL}
+    if [ ${is_dir} ]; then
+	if [ ! -d ${output_file} ]; then
+	    mkdir -p ${output_file}
+	fi
+    else 
+	echo "" > ${output_file}
+    fi
+
+    while read line; do
+	# echo ${line}
+
+	# Skip empty lines
+	words_in_line=`echo ${line}|wc -w`
+	if [ ${words_in_line} -eq 0 ];then
+	    continue
+	fi 
+
+	i=$((${i} + 1))
+	# X axis
+	if [ ${i} -eq 0 ];then
+	    x_array=(`echo ${line} | cut -f 2- -d " "`)
+	    continue
+	else
+	        # Z axis
+	    local first=`echo ${line}|cut -f 1 -d " "`
+	    if [ ${first} == "#" ];then
+		current_z=`echo ${line}|cut -f 2 -d " "`
+		continue
+	    else
+                # Y axis
+		current_y=${first}
+	    fi
+	fi
+
+	# Parse the numbers
+	local wi=0
+	for word in `echo ${line}|cut -f 2- -d " "`; do
+	    local TAG=${x_array[${wi}]}_${current_y}_${current_z}_${OTHERS_TAG}
+
+	    if [ "${is_dir}" ];then
+		echo "0${word}" > ${output_file}/${TAG}
+	    else
+		echo ${TAG}:0${word} >> ${output_file}
+	    fi
+	    wi=$((${wi} + 1))
+	done
+	
+    done < ${data_file}
+}
+
+
 moufoplot()
 {
     check_if_gnuplot_exists
     IFS_CNT=0
     IFS_CHAR=','
-    parse_arguments "$@"
+    local CMD_ARGS=${@}
+    parse_arguments ${CMD_ARGS}
     if [ $? -ne 0 ]; then exit 1; fi
+
+    # If we are retrieving the arguments from the .eps file, we have to re-parse
+    # the args.
+    if [ ${regen} ];then 
+	local tmp_moufoplot_options_file=/tmp/moufoplot.options.tmp
+	restore_data "${regen}" "${MOUFOPLOT_STRING} " "${MOUFOPLOT_DATA_STRING}" "${tmp_moufoplot_options_file}"
+	local args=`cat ${tmp_moufoplot_options_file} | sed 's/moufoplot //'`
+	print_msg "Regenerated ${MOUFOPLOT_STRING} command:\n ${args}\n"
+
+	# Data points used to regenerate moufoplot data from them
+	print_msg "Restoring data points from ${regen} --> ${data_file} ... "
+	restore_data "${regen}" "${MOUFOPLOT_DATA_STRING}" "${MOUFOPLOT_GP_STRING}" "${data_file}"
+	print_file ${data_file}
+
+	# Get info like DATA_FILE, DIR etc.
+	parse_arguments ${args}
+
+	regenerate_data ${data_file} ${DIR}
+	print_msg "Regenerated Data (in ${DIR}):\n"
+	print_file ${DIR}
+
+	# Now that the DATA_FILE is populated, reparse the args
+	IGNORE_REGEN=1
+	# local CMD_ARGS_QUOTED=`echo ${CMD_ARGS}|sed 's/\"/\\\"/g'`
+	# echo "QUOTED: ${CMD_ARGS_QUOTED}"
+	# echo ${args}
+	parse_arguments ${args} ${CMD_ARGS}
+    fi
 
     sanity_checks
     set_defaults
-    if [ $? -ne 0 ]; then exit 1; fi
+    # if [ $? -ne 0 ]; then exit 1; fi
+
 
     if [ "${plot_type}" == "heatmap" ];then
 	create_data_file_hmap "${others}"
@@ -2631,7 +2863,7 @@ moufoplot()
 	create_data_file "" "${others}"
 	gp_line_options
     elif [ "${plot_type}" == "stacked" ];then
-	create_data_file "rowstacked" "${others}" 
+	create_data_file "rowstacked" "${others}"
 	gp_bar_options "rowstacked"
     fi
 
@@ -2656,6 +2888,26 @@ moufoplot()
     fi
 }
 
+# Fix the argument form, :
+# From: -arg "OPTION1 OPTION2"  OR -arg 'OPTION1 OPTION2'
+# To  : -arg \"OPTION1 OPTION2\" 
+while [ 0 ]; do
+    if [ "${1}" ]; then
+	arg=${1}
+	echo ${arg} |grep "^-" > /dev/null
+	# If -option OR --option
+	if [ ${?} -eq 0 ]; then
+	    arg_esc=${arg}
+	else
+	    arg_esc="\"${arg}\""
+	fi
+	args_escaped="${args_escaped} ${arg_esc}"
+	shift
+	# echo ${args_escaped}
+    else
+	break
+    fi
+done
 init_ifs
-moufoplot "$@"
+moufoplot "${args_escaped}"
 
