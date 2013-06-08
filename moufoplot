@@ -19,15 +19,20 @@
 
 # Changelog
 # ---------
+# v0.04 06JUN2013 .eps files generated contain the moufoplot data. Regeneration
+#                 of graphs works much better this way.
+#                 
 # v0.03 05JUN2013 Added restore function. Regenerate and modify graphs from 
 #                 existing moufoplot .eps files.
 
 
 MOUFOPLOT_STRING="MoufoPlot"
-moufoplot_version="0.03"
+moufoplot_version="0.04"
 
 MOUFOPLOT_GP_STRING="moufoplot .gp:"
-MOUFOPLOT_DATA_STRING="moufoplot data:"
+MOUFOPLOT_GP_DATA_STRING="moufoplot data:"
+MOUFOPLOT_DATA_STRING="moufodata:"
+MOUFOPLOT_DATA_END_STRING="end_moufodata:"
 
 # Printing Functions:
 # 1. Print regular message. This gets turned off in silent mode.
@@ -2263,9 +2268,15 @@ restore_data()
 
     local TMPDIR="/tmp/moufoplot.data.tmp"
     cat ${input_file} | grep "%%" > ${TMPDIR}
-    echo "" > ${output_file}
+    # echo "" > ${output_file}
+    if [ -f "${output_file}" ];then
+	rm ${output_file}
+    else
+	print_msg "ERROR: in: rm ${output_file}"
+	exit 1
+    fi
     local parse_line=0
-    print_msg "Restoring data... "
+    print_msg "Restoring data... \n"
     while read line; do
 	wait_bar
         # echo ${line}
@@ -2308,7 +2319,7 @@ zmask:,xavg:,yavg:,percent,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,for
 ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:"
     local getoptcmd="getopt -a -o ${short_args} -l ${long_args} -n getopt.sh -- ${@}"
     local getoptcmd_set_args="local args=\`${getoptcmd}\`"
-    # echo $getoptcmd_set_args
+    # echo "GETOPT: $getoptcmd_set_args"
     eval $getoptcmd_set_args > /dev/null
     local args_array=($args)
     # getopt -q -o "${short_args}" -l "${long_args}" -n "getopt.sh" -- "$@"
@@ -2320,6 +2331,8 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	usage
 	exit 1
     fi
+
+
     eval set -- "$args"
     while true; do
 
@@ -2674,7 +2687,7 @@ append_data_to_eps()
 
     print_msg "Appending numerical data (${data_file}) to ${epsfile}...\n"
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
-    echo "%% ${MOUFOPLOT_DATA_STRING} ${data_file}" >> ${epsfile}
+    echo "%% ${MOUFOPLOT_GP_DATA_STRING} ${data_file}" >> ${epsfile}
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
     cat ${data_file} | sed 's/^/%% /' >> ${epsfile}
 
@@ -2683,6 +2696,30 @@ append_data_to_eps()
     echo "%% ${MOUFOPLOT_GP_STRING} ${gpfname}" >> ${epsfile}
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
     cat ${gpfname} | sed 's/^/%% /' >> ${epsfile}
+
+
+    print_msg "Appending data to ${epsfile}...\n"
+    echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
+    local moufodata_file
+    if [ -d "${DIR}" ];then
+	moufodata_file=/tmp/moufodata.data
+    else
+	moufodata_file=${DIR}
+    fi
+    echo "%% ${MOUFOPLOT_DATA_STRING} ${moufodata_file}" >> ${epsfile}
+    echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
+    if [ -d "${DIR}" ]; then
+	local file
+	for file in `ls -1 ${DIR}`; do
+	    local value=`cat ${file}`
+	    echo "%% ${file}:${value}" >> ${epsfile}
+	done
+    else
+	cat ${DIR} | sed 's/^/%% /' >> ${epsfile}
+    fi
+    echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}  
+    echo "%% ${MOUFOPLOT_DATA_END_STRING} ${moufodata_file}" >> ${epsfile}
+    echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}  
 }
 
 
@@ -2737,6 +2774,62 @@ check_if_directory()
 }
 
 
+# Return the common filters in FIRST and SECOND
+# For example if FIRST=isnsns_cl0 and SECOND=insns_cl1
+# this function will return "insns"
+get_matches()
+{
+    local first=${1}
+    local second=${2}
+
+    # echo "1:${first} 2:${second}"
+    local all_matches=""
+    local f
+    set_ifs "_"
+    for f in ${first}; do 
+	local match=`echo ${second}|grep -o ${f}`
+	if [ ${?} -eq 0 ]; then
+	    all_matches="${all_matches}_${match}"
+	fi
+    done
+    reset_ifs
+
+    # echo "get_matches: ${all_matches}"
+    RETVAL=`echo ${all_matches} | sed 's/^_//' | sed 's/_$//'`
+}
+
+# Return the underlying filter in X_FILTERS
+# For example if -x insns_cl0,insns_cl1 there is a hidden
+# underlying filter "insns"
+get_hidden_filters()
+{
+    local x_filters=${1}
+    local x_filter
+    local x_tag
+    local last_filter=`echo ${x_filters}|cut -f 1 -d ","`
+    local match=${first_match}
+    set_ifs ","
+    for x_filter in ${x_filters}; do
+	get_matches "${last_filter}" "${x_filter}"
+	match=${RETVAL}
+	# echo "MATCH:  ->${match}<-"
+	last_filter=${x_filter}
+    done
+    reset_ifs
+    # echo FINAL MATCH: ${match}
+    echo ${match}
+}
+
+# Strip INPUT from surrounding STRING
+# Example: INPUT=_foo_bar_  STRING="_"
+#          return "foo_bar"
+strip()
+{
+    local input=${1}
+    local string=${2}
+    echo ${input} | sed "s/^${string}//" | sed "s/${string}$//"
+}
+
 # Read the data existing in DATA_FILE in gnuplot data format and generate 
 # a moufoplot compatible input data file. Place results in OUTPUT_FILE
 regenerate_data()
@@ -2751,9 +2844,23 @@ regenerate_data()
 
     local OTHERS_TAG
     local o_tag
+    # Extra tags include: 1) the -filter, 2) the common filters in -x,-y,-z
     for o_tag in ${others}; do 
 	OTHERS_TAG="${OTHERS_TAG}_${o_tag}"
     done
+
+    local HIDDENT_TAG=""
+    get_hidden_filters ${x_vals}
+    HIDDEN_TAG="${HIDDEN_TAG}_${RETVAL}"
+    HIDDEN_TAG=`strip "${HIDDEN_TAG}" "_"`
+    get_hidden_filters ${y_vals}
+    HIDDEN_TAG="${HIDDEN_TAG}_${RETVAL}"
+    HIDDEN_TAG=`strip "${HIDDEN_TAG}" "_"`
+    get_hidden_filters ${y_vals}
+    HIDDEN_TAG="${HIDDEN_TAG}_${RETVAL}"
+    HIDDEN_TAG=`strip "${HIDDEN_TAG}" "_"`
+    print_msg "Hidden tag: ${HIDDEN_TAG}\n"
+
     # Remove leading/trailing '_'
     OTHERS_TAG=`echo ${OTHERS_TAG} | sed 's/^_//' | sed 's/_$//'`
 
@@ -2797,7 +2904,11 @@ regenerate_data()
 	# Parse the numbers
 	local wi=0
 	for word in `echo ${line}|cut -f 2- -d " "`; do
-	    local TAG=${x_array[${wi}]}_${current_y}_${current_z}_${OTHERS_TAG}
+	    if [ "${current_z}" != "#" ];then
+		local TAG=${x_array[${wi}]}_${current_y}_${current_z}_${OTHERS_TAG}_${HIDDEN_TAG}
+	    else 
+		local TAG=${x_array[${wi}]}_${current_y}_${OTHERS_TAG}_${HIDDEN_TAG}
+	    fi
 
 	    if [ "${is_dir}" ];then
 		echo "0${word}" > ${output_file}/${TAG}
@@ -2823,29 +2934,56 @@ moufoplot()
     # If we are retrieving the arguments from the .eps file, we have to re-parse
     # the args.
     if [ ${regen} ];then 
+	# See if .eps file contains the moufodata
+	# If so, then retrieve it from there
+	cat ${regen} | egrep "^%% ${MOUFOPLOT_DATA_STRING}" > /dev/null
+	local moufodata_exists=${?}
+
 	local tmp_moufoplot_options_file=/tmp/moufoplot.options.tmp
-	restore_data "${regen}" "${MOUFOPLOT_STRING} " "${MOUFOPLOT_DATA_STRING}" "${tmp_moufoplot_options_file}"
+	restore_data "${regen}" "${MOUFOPLOT_STRING} " "${MOUFOPLOT_GP_DATA_STRING}" "${tmp_moufoplot_options_file}"
 	local args=`cat ${tmp_moufoplot_options_file} | sed 's/moufoplot //'`
 	print_msg "Regenerated ${MOUFOPLOT_STRING} command:\n ${args}\n"
 
 	# Data points used to regenerate moufoplot data from them
-	print_msg "Restoring data points from ${regen} --> ${data_file} ... "
-	restore_data "${regen}" "${MOUFOPLOT_DATA_STRING}" "${MOUFOPLOT_GP_STRING}" "${data_file}"
+	print_msg "Restoring data points from ${regen} --> ${data_file} ... \n"
+	echo "" > ${data_file}
+	restore_data "${regen}" "${MOUFOPLOT_GP_DATA_STRING}" "${MOUFOPLOT_GP_STRING}" "${data_file}"
 	print_file ${data_file}
 
 	# Get info like DATA_FILE, DIR etc.
 	parse_arguments ${args}
 
-	regenerate_data ${data_file} ${DIR}
-	print_msg "Regenerated Data (in ${DIR}):\n"
-	print_file ${DIR}
+	if [ ${moufodata_exists} -eq 0 ];then
+	    local moufodata_file=/tmp/moufodata.data
+	    echo "" > ${moufodata_file}
+	    restore_data "${regen}" "${MOUFOPLOT_DATA_STRING} " "${MOUFOPLOT_DATA_END_STRING}" "${moufodata_file}"
+	    print_msg "Regenerated moufodata:\n"
+	    print_file ${moufodata_file}
+	    read
+	else
+	    print_msg "******************************************************\n"
+	    print_msg "No moufodata found on ${regen}.\n"
+	    print_msg "This is probably because ${regen} has been generated\n"
+	    print_msg "by some old version of ${MOUFOPLOT_STRING}.\n"
+	    print_msg "I will try my best to retrieve the data.\n"
+	    print_msg "Press enter to continue...\n"
+	    print_msg "******************************************************\n"
+	    read
+	    regenerate_data ${data_file} ${DIR}
+	    print_msg "Regenerated Data (in ${DIR}):\n"
+	    print_file ${DIR}
+	fi 
 
 	# Now that the DATA_FILE is populated, reparse the args
 	IGNORE_REGEN=1
 	# local CMD_ARGS_QUOTED=`echo ${CMD_ARGS}|sed 's/\"/\\\"/g'`
 	# echo "QUOTED: ${CMD_ARGS_QUOTED}"
 	# echo ${args}
+
 	parse_arguments ${args} ${CMD_ARGS}
+	if [ ${moufodata_exists} -eq 0 ];then 
+	    DIR=${moufodata_file}
+	fi
     fi
 
     sanity_checks
