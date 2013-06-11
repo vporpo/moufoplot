@@ -58,6 +58,53 @@ print_file()
 }
 
 
+debug_stack()
+{
+    local i=0
+    while [ ${i} -lt ${IFS_CNT} ]; do
+	print_err "|%s" "${IFS_STACK[${i}]}"
+	i=$((${i} + 1))
+    done
+    print_err "|\n"
+}
+# set IFS to the given value and save the previous one
+set_ifs()
+{
+    local CURRENT_IFS="${1}"
+    IFS="${CURRENT_IFS}"
+    IFS_STACK[${IFS_CNT}]="${IFS_PREV}"
+    IFS_PREV="${CURRENT_IFS}"
+    IFS_CNT=$((IFS_CNT + 1))
+    # echo "set_ifs: ->${CURRENT_IFS}<-, stack_cnt:${IFS_CNT}"
+    # debug_stack
+}
+
+# reset IFS to the last one
+reset_ifs()
+{
+    local IFS_CNT_PREV=$((IFS_CNT - 1))
+    if [ ${IFS_CNT_PREV} -ge 0 ];then
+	local IFS_CURRENT=${IFS_STACK[${IFS_CNT_PREV}]}
+	IFS=${IFS_CURRENT}
+
+    # According to bash man page, the default IFS is:``<space><tab><new-line>''
+    # You can only set it back to normal by "unset IFS"
+	if [ ${IFS_CNT_PREV} -eq 0 ]; then
+	    unset IFS
+	fi 
+
+	IFS_CNT=${IFS_CNT_PREV}
+	# echo "reset_ifs: ->${IFS_CURRENT}<-, stack_cnt:${IFS_CNT}"
+	IFS_PREV="${IFS_CURRENT}"
+	# debug_stack
+
+    else
+	echo "Too many reset_ifs !!!"
+	debug_stack
+	exit 1
+    fi
+}
+
 
 # Input: FILE
 # Output: A string with all the parts separated by space
@@ -213,6 +260,19 @@ get_all()
    fi
 }
 
+regen_suggest()
+{
+    if [ "${regen}" ]; then
+	echo ""
+	echo "------------ Run MoufoPlot manually ----------------"
+	echo "-regen detected."
+	echo "Please use these arguments (skipping --regen) to manually re-run the command, fixing any issues yourself."
+	echo ""
+	echo "${args}"
+    fi 
+}
+
+
 # Search in DIR for files that match FILTERS. Upon error, nclude ERROR_MSG
 # in the output message.
 # Upon success, return the value of the single match in RETVAL
@@ -250,6 +310,7 @@ get_match_dir ()
 	    echo -e "\nERROR: ${error_msg} Filter: ${filters} matches ${count_files} files in ${DIR} !!!"
     	    echo -e "The following files all match the filter:\n$filename"
 	    echo -e "Please add more constraints into the filter ${filters}."
+	    regen_suggest
     	    exit 1
 	fi
     fi
@@ -258,7 +319,6 @@ get_match_dir ()
     RETVAL=${out}
     get_file_value "${DIR}/${RETVAL}"
 }
-
 
 
 # Search in FILE for lines that match FILTERS. Upon error, nclude ERROR_MSG
@@ -299,6 +359,7 @@ get_match_file ()
 	    echo -e "\nERROR: ${error_msg} Filter: ${filters} matches ${count_files} lines in ${FILE} !!!" #5th change files->lines
     	    echo -e "The following lines all match the filter:\n$filename"
 	    echo -e "Please add more more constraints to the filter ${filters}."
+	    regen_suggest
     	    exit 1
 	fi
     fi
@@ -841,45 +902,6 @@ create_tics()
 init_ifs()
 {
     IFS_PREV=" "
-}
-
-debug_stack()
-{
-    local i=0
-    while [ ${i} -lt ${IFS_CNT} ]; do
-	print_err "|%s" "${IFS_STACK[${i}]}"
-	i=$((${i} + 1))
-    done
-    print_err "|\n"
-}
-# set IFS to the given value and save the previous one
-set_ifs()
-{
-    local CURRENT_IFS="${1}"
-    IFS="${CURRENT_IFS}"
-    IFS_STACK[${IFS_CNT}]="${IFS_PREV}"
-    IFS_PREV="${CURRENT_IFS}"
-    IFS_CNT=$((IFS_CNT + 1))
-    # echo "set_ifs: ->${CURRENT_IFS}<-, stack_cnt:${IFS_CNT}"
-    # debug_stack
-}
-
-# reset IFS to the last one
-reset_ifs()
-{
-    local IFS_CNT_PREV=$((IFS_CNT - 1))
-    if [ ${IFS_CNT_PREV} -ge 0 ];then
-	local IFS_CURRENT=${IFS_STACK[${IFS_CNT_PREV}]}
-	IFS=${IFS_CURRENT}
-	IFS_CNT=${IFS_CNT_PREV}
-	# echo "reset_ifs: ->${IFS_CURRENT}<-, stack_cnt:${IFS_CNT}"
-	IFS_PREV="${IFS_CURRENT}"
-	# debug_stack
-    else
-	echo "Too many reset_ifs !!!"
-	debug_stack
-	exit 1
-    fi
 }
 
 find_min_max()
@@ -2276,7 +2298,7 @@ restore_data()
 	exit 1
     fi
     local parse_line=0
-    print_msg "Restoring data... \n"
+    printf "Restoring data... \n"
     while read line; do
 	wait_bar
         # echo ${line}
@@ -2711,7 +2733,7 @@ append_data_to_eps()
     if [ -d "${DIR}" ]; then
 	local file
 	for file in `ls -1 ${DIR}`; do
-	    local value=`cat ${file}`
+	    local value=`cat "${DIR}/${file}"`
 	    echo "%% ${file}:${value}" >> ${epsfile}
 	done
     else
@@ -2787,7 +2809,7 @@ get_matches()
     local f
     set_ifs "_"
     for f in ${first}; do 
-	local match=`echo ${second}|grep -o ${f}`
+	local match=`echo _${second}_|grep -o _${f}_`
 	if [ ${?} -eq 0 ]; then
 	    all_matches="${all_matches}_${match}"
 	fi
@@ -2796,6 +2818,16 @@ get_matches()
 
     # echo "get_matches: ${all_matches}"
     RETVAL=`echo ${all_matches} | sed 's/^_//' | sed 's/_$//'`
+}
+
+# Strip INPUT from surrounding STRING
+# Example: INPUT=_foo_bar_  STRING="_"
+#          return "foo_bar"
+strip()
+{
+    local input=${1}
+    local string=${2}
+    echo ${input} | sed "s/^${string}//" | sed "s/${string}$//"
 }
 
 # Return the underlying filter in X_FILTERS
@@ -2817,18 +2849,9 @@ get_hidden_filters()
     done
     reset_ifs
     # echo FINAL MATCH: ${match}
-    echo ${match}
+    echo `strip "${match}" "_"`
 }
 
-# Strip INPUT from surrounding STRING
-# Example: INPUT=_foo_bar_  STRING="_"
-#          return "foo_bar"
-strip()
-{
-    local input=${1}
-    local string=${2}
-    echo ${input} | sed "s/^${string}//" | sed "s/${string}$//"
-}
 
 # Read the data existing in DATA_FILE in gnuplot data format and generate 
 # a moufoplot compatible input data file. Place results in OUTPUT_FILE
@@ -2859,10 +2882,16 @@ regenerate_data()
     get_hidden_filters ${y_vals}
     HIDDEN_TAG="${HIDDEN_TAG}_${RETVAL}"
     HIDDEN_TAG=`strip "${HIDDEN_TAG}" "_"`
-    print_msg "Hidden tag: ${HIDDEN_TAG}\n"
+    printf "HIDDEN_TAG:${HIDDEN_TAG}\n"
 
     # Remove leading/trailing '_'
     OTHERS_TAG=`echo ${OTHERS_TAG} | sed 's/^_//' | sed 's/_$//'`
+    printf "OTHERS_TAG:${OTHERS_TAG}\n"
+
+    local EXTRA_TAGS="${HIDDEN_TAG}_${OTHERS_TAG}"
+    EXTRA_TAGS=`strip "${EXTRA_TAGS}" "_"`
+    printf "EXTRA_TAGS:${EXTRA_TAGS}\n"
+    
 
     # If a directory, create it
     check_if_directory "${output_file}"
@@ -2905,9 +2934,9 @@ regenerate_data()
 	local wi=0
 	for word in `echo ${line}|cut -f 2- -d " "`; do
 	    if [ "${current_z}" != "#" ];then
-		local TAG=${x_array[${wi}]}_${current_y}_${current_z}_${OTHERS_TAG}_${HIDDEN_TAG}
+		local TAG=${x_array[${wi}]}_${current_y}_${current_z}_${EXTRA_TAGS}
 	    else 
-		local TAG=${x_array[${wi}]}_${current_y}_${OTHERS_TAG}_${HIDDEN_TAG}
+		local TAG=${x_array[${wi}]}_${current_y}_${EXTRA_TAGS}
 	    fi
 
 	    if [ "${is_dir}" ];then
@@ -2959,19 +2988,23 @@ moufoplot()
 	    restore_data "${regen}" "${MOUFOPLOT_DATA_STRING} " "${MOUFOPLOT_DATA_END_STRING}" "${moufodata_file}"
 	    print_msg "Regenerated moufodata:\n"
 	    print_file ${moufodata_file}
-	    read
 	else
-	    print_msg "******************************************************\n"
-	    print_msg "No moufodata found on ${regen}.\n"
-	    print_msg "This is probably because ${regen} has been generated\n"
-	    print_msg "by some old version of ${MOUFOPLOT_STRING}.\n"
-	    print_msg "I will try my best to retrieve the data.\n"
-	    print_msg "Press enter to continue...\n"
-	    print_msg "******************************************************\n"
+	    printf "******************************************************\n"
+	    printf "No moufodata found on ${regen}.\n"
+	    printf "This is probably because ${regen} has been generated\n"
+	    printf "by some old version of ${MOUFOPLOT_STRING}.\n"
+	    printf "I will try my best to retrieve the data.\n"
+	    printf "Press enter to continue...\n"
+	    printf "******************************************************\n"
 	    read
+	    printf "Regenerating data from ${data_file} into ${DIR}...\n"
 	    regenerate_data ${data_file} ${DIR}
-	    print_msg "Regenerated Data (in ${DIR}):\n"
-	    print_file ${DIR}
+	    printf "\nRegenerated Data (in ${DIR}):\n"
+	    if [ -d "${DIR}" ]; then
+		ls -1 ${DIR}
+	    elif [ -f "${DIR}" ]; then
+		cat ${DIR}
+	    fi
 	fi 
 
 	# Now that the DATA_FILE is populated, reparse the args
