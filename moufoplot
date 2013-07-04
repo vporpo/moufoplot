@@ -2733,6 +2733,14 @@ append_data_to_eps()
     if [ -d "${DIR}" ]; then
 	local file
 	for file in `ls -1 ${DIR}`; do
+
+	    # Skip files that don't contain just one number. FIXME???
+	    local count_words=`head ${DIR}/${file} -n 5 | wc -w`
+	    if [ ${count_words} -ne 1 ]; then
+		echo "skipping ${DIR}/${file}..."
+		continue;
+	    fi
+
 	    local value=`cat "${DIR}/${file}"`
 	    echo "%% ${file}:${value}" >> ${epsfile}
 	done
