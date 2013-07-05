@@ -19,6 +19,8 @@
 
 # Changelog
 # ---------
+# v0.05 05JUL2013 Added geo-mean support
+#
 # v0.04 06JUN2013 .eps files generated contain the moufoplot data. Regeneration
 #                 of graphs works much better this way.
 #                 
@@ -27,7 +29,7 @@
 
 
 MOUFOPLOT_STRING="MoufoPlot"
-moufoplot_version="0.04"
+moufoplot_version="0.05"
 
 MOUFOPLOT_GP_STRING="moufoplot .gp:"
 MOUFOPLOT_GP_DATA_STRING="moufoplot data:"
@@ -714,7 +716,6 @@ gp_bar_options()
 	done
     else
 	local zi=0
-	# for z in ${z_vals}; do
 	while [ ${zi} -lt ${max_z} ];do
 	    local cmn=2
 
@@ -740,8 +741,7 @@ gp_bar_options()
 		else
 		    local title_stuff="notitle"
 		fi
-		plot_cmd="${plot_cmd} \"${data_file}\" index ${zi} using ${cmn}:xtic(1) with histograms ${title_stuff} lt 1 lw ${line_width} lc rgb \"${color}\","
-
+		plot_cmd="${plot_cmd} \"${data_file}\" index ${zi} using ${cmn}:xtic(1) with histograms ${title_stuff} lt ${line_type_array[${xi}]} lw ${line_width} lc rgb \"${color}\","
 		cmn=$((cmn+1))
 		xi=$((${xi} + 1))
 	    done
@@ -1000,7 +1000,12 @@ create_data_file()
 	    fi
 
 	    local sum_x_all=0
-	    local sumx="0"
+	    local sumx
+	    if [ ${x_geomean_flag} ]; then
+		sumx=1
+	    else
+		sumx=0
+	    fi
 	    local xi=0
 
 	    for x in ${x_array}; do
@@ -1008,8 +1013,20 @@ create_data_file()
 		    x=""
 		fi
 
-		if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
+			
+
+		if [ "${y_avg}" ]&&[ ${yi} -eq $((${max_y} - 1)) ];then
+			file_val=`echo "(${ysum[${xi}]}) / ${avg_max_y}" | bc -l`
+		elif [ "${x_avg}" ]&&[ ${xi} -eq $((${max_x} - 1)) ]; then
+		    if [ ${xi} -eq $((${max_x} - 1)) ];then
+			file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
+		    fi
+		else 
+
+
+		# if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
 		    local opts="${x} ${y} ${z} ${filter}"
+		    echo ${xi}/${max_x},${opts}
 		    get_match "${DIR}" "$opts" "create_data_file" "${ignore_filter}"
 		    file_val=${RETVAL}
 
@@ -1025,13 +1042,6 @@ create_data_file()
 
 		    if [ "${percent}" != "" ];then
 			file_val=`echo "${file_val} * 100" |bc -l`
-		    fi
-		else
-		    if [ ${yi} -eq ${max_y} ];then
-			file_val=`echo "(${ysum[${xi}]}) / ${avg_max_y}" | bc -l`
-		    fi
-		    if [ ${xi} -eq ${max_x} ];then
-			file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
 		    fi
 		fi
 		sum_x_all=`echo "${sum_x_all} + ${file_val}" | bc -l`
@@ -1050,12 +1060,20 @@ create_data_file()
 
 		in_array ${xi} "${x_avg_array[@]}"
 		if [ $? -eq 0 ];then
-		    sumx="${sumx} + ${file_val}"
+		    if [ ${x_geomean_flag} ]; then
+			sumx="${sumx} * ${file_val}"
+		    else
+			sumx="${sumx} + ${file_val}"
+		    fi
 		fi
 
 		in_array ${yi} "${y_avg_array[@]}"
 		if [ $? -eq 0 ];then
-		    ysum[${xi}]="${ysum[${xi}]} + ${file_val}"
+		    if [ ${y_geomean_flag} ]; then
+			ysum[${xi}]="${ysum[${xi}]} * ${file_val}"
+		    else
+			ysum[${xi}]="${ysum[${xi}]} + ${file_val}"
+		    fi 
 		fi
 
 		xi=$((${xi} + 1))
@@ -1105,46 +1123,62 @@ create_data_file_hmap()
     set_ifs "${IFS_CHAR}" # Let ',' be the separator character
 
     local data=""
-
     local xi=0, yi=0, zi=0
     for y in ${y_array}; do
 	if [ "${no_y}" == "1" ];then
 	    y=""
 	fi
-	local sumx="0"
+	local sumx
+	if [ "${x_geomean_flag}" ]; then
+	    sumx=1
+	else
+	    sumx=0
+	fi 
 	local xi=0
 
 	for x in ${x_array}; do
 	    if [ "${no_x}" == "1" ];then
 		x=""
 	    fi
-	    if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
+
+	    if [ "${y_avg}" ]&&[ ${yi} -eq $((${max_y} - 1)) ];then
+		file_val=`echo "(${sumy[${xi}]}) / ${avg_max_y}" | bc -l`
+	    elif [ "${x_avg}" ]&&[ ${xi} -eq $((${max_x} - 1)) ];then
+		file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
+	    else
+	    # if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
 		local opts="${x} ${y} ${filter}"
 		get_match "$DIR" "$opts" "create_data_file_hmap"
 		local file_val=${RETVAL}
 		if [ "${percent}" != "" ];then
 		    file_val=`echo "${file_val} * 100" |bc -l`
 		fi
-	    else
-		if [ ${yi} -eq ${max_y} ];then
-		    file_val=`echo "(${sumy[${xi}]}) / ${avg_max_y}" | bc -l`
-		fi
-		if [ ${xi} -eq ${max_x} ];then
-		    file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
-		fi
 	    fi
 	    if [ "${x_mask_array[${xi}]}" != "0" ]&&[ "${y_mask_array[${yi}]}" != "0" ];then
 		data="${data}${file_val} "
 	    fi
 
+
 	    in_array ${xi} "${x_avg_array[@]}"
 	    if [ $? -eq 0 ];then
-		sumx="${sumx} + ${file_val}"
+		if [ "${x_geomean_flag}" ]; then
+		    sumx="${sumx} * ${file_val}"
+		else
+		    sumx="${sumx} + ${file_val}"
+		fi 
 	    fi
 
 	    in_array ${yi} "${y_avg_array[@]}"
 	    if [ $? -eq 0 ];then
-		sumy[${xi}]="${sumy[${xi}]} + ${file_val}"
+		if [ "${y_geomean_flag}" ]; then
+		    if [ "${sumy[${xi}]}" == "" ];then
+			sumy[${xi}]=${file_val}
+		    else
+			sumy[${xi}]="${sumy[${xi}]} * ${file_val}"
+		    fi 
+		else 
+		    sumy[${xi}]="0${sumy[${xi}]} + ${file_val}"
+		fi
 	    fi
 	    xi=$((${xi} + 1))
 	done
@@ -1233,6 +1267,7 @@ sanity_checks()
     fi
 
     check_if_arguments_exist "${x_vals}" "${y_vals}" "${z_vals}" "${others}" "${DIR}"
+
     if [ $? -ne 0 ]; then exit 1; fi    
 
     if [ "${x_norm}" != "" ]&&[ "${y_norm}" ]; then
@@ -2017,7 +2052,7 @@ parse_pnttype()
     else
 	# Set default value
 	local i=0;
-	while [ ${i} -lt ${max_x} ]; do
+	while [ ${i} -lt $((${max_x} + 1)) ]; do
 	    point_type_array[${i}]=${i}
 	    i=$((i + 1))
 	done
@@ -2045,7 +2080,7 @@ parse_linetype()
     else
 	# Set default value
 	local i=0;
-	while [ ${i} -lt ${max_x} ]; do
+	while [ ${i} -lt $((${max_x} + 1)) ]; do
 	    line_type_array[${i}]=1
 	    i=$((i + 1))
 	done
@@ -2227,37 +2262,6 @@ parse_vals()
 	no_x=1
     fi
 
-    # avg
-    set_ifs ", "
-    max_x=0
-    for x in ${x_array}; do
-	max_x=$((${max_x} + 1))
-    done
-    max_y=0
-    for y in ${y_array}; do
-	max_y=$((${max_y} + 1))
-    done
-    max_z=0
-    for z in ${z_array}; do
-	max_z=$((${max_z} + 1))
-    done
-    reset_ifs
-
-
-    if [ "${x_avg}" != "" ];then
-	x_array="${x_array},avg"
-	x_vals=${x_array}
-    fi
-
-    if [ "${y_avg}" != "" ];then
-    	y_array="${y_array},avg"
-	y_vals=${y_array}
-	local yi=0
-	while [ ${yi} -lt ${max_x} ];do
-	    ysum[${yi}]="0"
-	    yi=$((${yi} + 1))
-	done
-    fi
 }
 
 # Display a waiting bar /-\
@@ -2338,7 +2342,7 @@ parse_arguments()
 title:,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,xnorm:,ynorm:,ynormv:,xrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
-ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:"
+ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo"
     local getoptcmd="getopt -a -o ${short_args} -l ${long_args} -n getopt.sh -- ${@}"
     local getoptcmd_set_args="local args=\`${getoptcmd}\`"
     # echo "GETOPT: $getoptcmd_set_args"
@@ -2402,6 +2406,8 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--zmask"|"-zmask") z_mask="$2";shift;;
 	    "--xavg"|"-xavg") x_avg="$2";shift;;
 	    "--yavg"|"-yavg") y_avg="$2";shift;;
+	    "--xgeo"|"-xgeo") x_geomean_flag="YES";;
+	    "--ygeo"|"-ygeo") y_geomean_flag="YES";;
 	    "--percent"|"-percent") percent="YES";;
 	    "--barw"|"-barw") bar_width="$2";shift;;
 	    "--linew"|"-linew") line_width="$2";shift;;
@@ -2463,6 +2469,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     fi
 
     parse_vals
+    calculate_max_xyz		# Initial calculation (without avg)
 
     parse_tags
 
@@ -2594,9 +2601,12 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     if [ "${gpfname}" == "" ];then
 	gpfname="/tmp/moufoplot.gp"
     fi
+    rm ${gpfname}
 
     print_msg "| xavg: ${x_avg}\n"
     print_msg "| yavg: ${y_avg}\n"
+    print_msg "| xgeo: ${x_geomean_flag}\n"
+    print_msg "| ygeo: ${y_geomean_flag}\n"
     print_msg "| percent: ${percent}\n"
     print_msg "| bar width: ${bar_width}\n"
     print_msg "| line width: ${line_width}\n"
@@ -2672,6 +2682,8 @@ usage()
     print_msg "   --zmask <bitmap>             : (Opt) Disable Z bars with 0.\n"
     print_msg "   --xavg <0,1,2,3,...>         : (Opt) Avg over selected X.\n"
     print_msg "   --yavg <0,1,2,3,...>         : (Opt) Avg over selected Y.\n"
+    print_msg "   --xgeo                       : (Opt) Use with --xavg to enable geomean.\n"    
+    print_msg "   --ygeo                       : (Opt) Use with --yavg to enable geomean.\n"
     print_msg "   --ignore,-i                  : (Opt) Ignore Filter ERROR.\n"
     print_msg "   --percent                    : (Opt) Change Y axis to show %% vals.\n"
     print_msg "   --noviewer                   : (Opt) Disable launching the VIEWER.\n"
@@ -2959,6 +2971,79 @@ regenerate_data()
     done < ${data_file}
 }
 
+calculate_max_xyz()
+{
+    set_ifs ", "
+    max_x=0
+    for x in ${x_array}; do
+	max_x=$((${max_x} + 1))
+    done
+    max_y=0
+    for y in ${y_array}; do
+	max_y=$((${max_y} + 1))
+    done
+    max_z=0
+    for z in ${z_array}; do
+	max_z=$((${max_z} + 1))
+    done
+    reset_ifs
+}
+
+# If we use --xavg or --yavg then we append "avg" to the vals.
+append_avg_vals()
+{
+    if [ "${x_avg}" != "" ];then
+	x_array="${x_array},avg"
+	x_vals=${x_array}
+    fi
+
+    if [ "${y_avg}" != "" ];then
+    	y_array="${y_array},avg"
+	y_vals=${y_array}
+    fi
+
+
+    # avg
+
+    calculate_max_xyz		# re-calculate (with avg)
+
+    if [ "${y_avg}" != "" ];then
+	local yi=0
+	while [ ${yi} -lt ${max_x} ];do
+	    if [ ${y_geomean_flag} ]; then
+		ysum[${yi}]="1"
+	    else
+		ysum[${yi}]="0"
+	    fi
+	    yi=$((${yi} + 1))
+	done
+    fi
+
+}
+
+append_avg_tags()
+{
+    local avg_tag
+    if [ "${x_avg}" != "" ];then
+	if [ ${x_geomean_flag} ]; then
+	    avg_tag="geo"
+	else
+	    avg_tag="avg"
+	fi
+	x_tags=${x_tags},${avg_tag}
+	xtags_array[${#xtags_array[@]}]=${avg_tag}
+    fi
+
+    if [ "${y_avg}" != "" ];then
+	if [ ${y_geomean_flag} ]; then
+	    avg_tag="geo"
+	else
+	    avg_tag="avg"
+	fi
+	y_tags=${y_tags},${avg_tag}
+	ytags_array[${#ytags_array[@]}]=${avg_tag}
+    fi
+}
 
 moufoplot()
 {
@@ -3029,6 +3114,11 @@ moufoplot()
     fi
 
     sanity_checks
+
+    append_avg_vals
+    append_avg_tags
+
+
     set_defaults
     # if [ $? -ne 0 ]; then exit 1; fi
 
