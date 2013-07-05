@@ -2735,8 +2735,9 @@ append_data_to_eps()
 	for file in `ls -1 ${DIR}`; do
 
 	    # Skip files that don't contain just one number. FIXME???
+	    local count_lines=`head ${DIR}/${file} -n 5 | wc -l`
 	    local count_words=`head ${DIR}/${file} -n 5 | wc -w`
-	    if [ ${count_words} -ne 1 ]; then
+	    if ([ ${count_lines} -ne 0 ]&&[ ${count_lines} -ne 1 ])||[ ${count_words} -ne 1 ]; then
 		echo "skipping ${DIR}/${file}..."
 		continue;
 	    fi
