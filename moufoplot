@@ -1016,9 +1016,15 @@ create_data_file()
 			
 
 		if [ "${y_avg}" ]&&[ ${yi} -eq $((${max_y} - 1)) ];then
+		    if [ "${y_geomean_flag}" ]; then
+			file_val=`echo "e(l(${ysum[${xi}]}) / ${avg_max_y})" | bc -l` # root of
+		    else 
 			file_val=`echo "(${ysum[${xi}]}) / ${avg_max_y}" | bc -l`
+		    fi 
 		elif [ "${x_avg}" ]&&[ ${xi} -eq $((${max_x} - 1)) ]; then
-		    if [ ${xi} -eq $((${max_x} - 1)) ];then
+		    if [ "${x_geomean_flag}" ]; then
+			file_val=`echo "e(l(${sumx}) / ${avg_max_x})" | bc -l` # root of
+		    else
 			file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
 		    fi
 		else 
@@ -1142,9 +1148,17 @@ create_data_file_hmap()
 	    fi
 
 	    if [ "${y_avg}" ]&&[ ${yi} -eq $((${max_y} - 1)) ];then
-		file_val=`echo "(${sumy[${xi}]}) / ${avg_max_y}" | bc -l`
+		if [ "${y_geomean_flag}" ]; then
+		    file_val=`echo "e(l(${sumy[${xi}]}) / ${avg_max_y})" | bc -l` # root of
+		else 
+		    file_val=`echo "(${sumy[${xi}]}) / ${avg_max_y}" | bc -l`
+		fi 
 	    elif [ "${x_avg}" ]&&[ ${xi} -eq $((${max_x} - 1)) ];then
-		file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
+		if [ "${x_geomean_flag}" ]; then
+		    file_val=`echo "e(l(${sumx}) / ${avg_max_x})" | bc -l` # root of
+		else
+		    file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
+		fi
 	    else
 	    # if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
 		local opts="${x} ${y} ${filter}"
