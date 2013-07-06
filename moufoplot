@@ -451,7 +451,8 @@ fix_exponential()
 get_file_value()
 {
     eval local file="$1"
-    local data=`cat ${file}`
+    # local data=`cat ${file}`
+    local data=$(< ${file})
     if [ ! "${silent}" == "YES" ];then
 	echo "Reading value from ${file}... ${data}"
     fi
@@ -485,14 +486,16 @@ normalize()
 	mkdir ${OUT_DIR}
     fi
 
-    NOED_i1_d1=`cat ${RES_DIR}/*_NOED_i1_d1`
+    # value=`cat ${RES_DIR}/*_NOED_i1_d1`
+    local value=$(< ${RES_DIR}/*_NOED_i1_d1) # Performance optimization
 
     local results=`ls -1 ${RES_DIR}`
 
     for result in ${results}; do
 	result_path="${RES_DIR}/${result}"
-	result_num=`cat ${result_path}`
-	normalized_result_num=`echo "${result_num}/${NOED_i1_d1}" | bc -l`
+	# result_num=`cat ${result_path}`
+	result_num=$(< ${result_path}) # Performance optimization
+	normalized_result_num=`echo "${result_num}/${value}" | bc -l`
 	normalized_result_path="${OUT_DIR}/${result}"
 	echo ${normalized_result_num} > ${normalized_result_path}
     done
@@ -577,9 +580,10 @@ gp_output()
     echo "set output \"${epsfile}\"" >>${gpfname}
 }
 
-gp_xtics_rotate()
+gp_xytics_rotate()
 {
     echo "set xtics rotate by ${x_tics_rotate} offset character 0,0 nomirror" >> ${gpfname}
+    echo "set ytics rotate by ${y_tics_rotate} offset character 0,0 nomirror" >> ${gpfname}
 }
 
 gp_title()
@@ -659,7 +663,7 @@ gp_bar_options()
     gp_terminal
     gp_output
     gp_size
-    gp_xtics_rotate
+    gp_xytics_rotate
     gp_set_grid
     gp_xy_format
     gp_fonts
@@ -763,7 +767,7 @@ gp_line_options()
     gp_terminal
     gp_output
     gp_size
-    gp_xtics_rotate
+    gp_xytics_rotate
     gp_set_grid
     gp_xy_format
     gp_fonts
@@ -804,7 +808,7 @@ gp_hmap_options()
     gp_terminal
     gp_output
     gp_size
-    gp_xtics_rotate
+    gp_xytics_rotate
     gp_xy_format
     gp_fonts
 
@@ -1032,7 +1036,6 @@ create_data_file()
 
 		# if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
 		    local opts="${x} ${y} ${z} ${filter}"
-		    echo ${xi}/${max_x},${opts}
 		    get_match "${DIR}" "$opts" "create_data_file" "${ignore_filter}"
 		    file_val=${RETVAL}
 
@@ -1293,10 +1296,19 @@ sanity_checks()
 	is_integer ${x_tics_rotate}
 	local angle_is_integer=${RETVAL}
 	if [ "${angle_is_integer}" == "no" ];then
-	    echo "ERROR: X label rotate must be an integer, not: ${x_tics_rotate}."
+	    echo "ERROR: X rotate must be an integer, not: ${x_tics_rotate}."
 	    exit 1
 	fi
     fi
+    if [ "${y_tics_rotate}" != "" ];then
+	is_integer ${y_tics_rotate}
+	local angle_is_integer=${RETVAL}
+	if [ "${angle_is_integer}" == "no" ];then
+	    echo "ERROR: Y rotate must be an integer, not: ${y_tics_rotate}."
+	    exit 1
+	fi
+    fi
+
 
     # size is number
     if [ "${size_param}" != "" ];then
@@ -1908,7 +1920,7 @@ get_max_xtag_len()
     reset_ifs
 }
 
-parse_xrotate()
+parse_xyrotate()
 {
     if [ "${x_tics_rotate}" == "" ];then
 	get_max_xtag_len
@@ -1919,6 +1931,10 @@ parse_xrotate()
 	else
 	    x_tics_rotate=-90
 	fi
+    fi
+
+    if [ "${y_tics_rotate}" == "" ];then
+	y_tics_rotate=0
     fi
 }
 
@@ -2353,7 +2369,7 @@ parse_arguments()
 {
     local short_args="hd:x:y:z:f:t:c:iv"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
-title:,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,xnorm:,ynorm:,ynormv:,xrotate:,\
+title:,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,xnorm:,ynorm:,ynormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
 ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo"
@@ -2406,6 +2422,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--ynorm"|"-ynorm") y_norm="$2";shift;;
 	    "--ynormv"|"-ynormv") y_normv="$2";shift;;
 	    "--xrotate"|"-xrotate") x_tics_rotate="$2";shift;;
+	    "--yrotate"|"-yrotate") y_tics_rotate="$2";shift;;
 	    "--legend"|"-legend") legend_params="$2";shift;;
 	    "--size"|"-size") size_param="$2";shift;;
 	    "--xformat"|"-xformat") x_format="$2";shift;;
@@ -2487,7 +2504,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 
     parse_tags
 
-    parse_xrotate		# After parse_tags, parse_vals
+    parse_xyrotate		# After parse_tags, parse_vals
 
     parse_percent 		# Must run before parse_legend
     parse_yformat		# After parse_percent
@@ -2562,6 +2579,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     print_msg "| y norm filters: ${y_norm}\n"
     print_msg "| y norm values: ${y_normv}\n"
     print_msg "| x tags rotate: ${x_tics_rotate}\n"
+    print_msg "| y tags rotate: ${y_tics_rotate}\n"
     print_msg "| Legend: ${legend_params}\n"
     print_msg "| Size: ${size_param}\n"
     print_msg "| Xformat: ${x_format}\n"
@@ -2615,7 +2633,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     if [ "${gpfname}" == "" ];then
 	gpfname="/tmp/moufoplot.gp"
     fi
-    rm ${gpfname}
+    # rm ${gpfname}
 
     print_msg "| xavg: ${x_avg}\n"
     print_msg "| yavg: ${y_avg}\n"
@@ -2681,6 +2699,7 @@ usage()
     print_msg "   --ynorm \"<y norm filters>\" : (Opt) Normalization filter Y.\n"
     print_msg "   --ynormv \"<y norm values>\" : (Opt) Normalization values Y.\n"
     print_msg "   --xrotate \"<angle>\"        : (Opt) Rotate angle for X tags.\n"
+    print_msg "   --yrotate \"<angle>\"        : (Opt) Rotate angle for Y tags.\n"
     print_msg "   --legend \"<parameters>\"    : (Opt) Control legend attrib.\n"
     print_msg "         Params: on/off, in/out, top/bottom/center, right/left,\n"
     print_msg "                 horizontal/vertical, ljust,rjust, small, box, atMxN\n"
@@ -2768,7 +2787,8 @@ append_data_to_eps()
 		continue;
 	    fi
 
-	    local value=`cat "${DIR}/${file}"`
+	    # local value=`cat "${DIR}/${file}"`
+	    local value=$(< "${DIR}/${file}") # Performance optimization
 	    echo "%% ${file}:${value}" >> ${epsfile}
 	done
     else
