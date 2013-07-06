@@ -3060,7 +3060,7 @@ append_avg_tags()
     local avg_tag
     if [ "${x_avg}" != "" ];then
 	if [ ${x_geomean_flag} ]; then
-	    avg_tag="geo"
+	    avg_tag="GMean"
 	else
 	    avg_tag="avg"
 	fi
@@ -3070,7 +3070,7 @@ append_avg_tags()
 
     if [ "${y_avg}" != "" ];then
 	if [ ${y_geomean_flag} ]; then
-	    avg_tag="geo"
+	    avg_tag="GMean"
 	else
 	    avg_tag="avg"
 	fi
