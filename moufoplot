@@ -378,7 +378,6 @@ get_match()
     local dir=${1}
     local opts=${2}
     local error_msg=${3}
-    local ignore_filter=${4}
 
    if [ -d "${DIR}" ];then
        get_match_dir "${dir}" "${opts}" "${error_msg}"
@@ -998,6 +997,11 @@ create_data_file()
 		normalize_value=`echo ${y_norm_array[${yi}]}*1.0|bc -l`
 	    fi
 
+	    # Normalization on the Z axis
+	    if [ "${z_norm_array[${zi}]}" != "" ];then
+		normalize_value=`echo ${z_norm_array[${zi}]}*1.0|bc -l`
+	    fi
+
 	    # skip Y tag (masked Y)
 	    if [ "${y_mask_array[${yi}]}" != "0" ];then
 		data="${data}${ytag}"
@@ -1036,7 +1040,7 @@ create_data_file()
 
 		# if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
 		    local opts="${x} ${y} ${z} ${filter}"
-		    get_match "${DIR}" "$opts" "create_data_file" "${ignore_filter}"
+		    get_match "${DIR}" "$opts" "create_data_file"
 		    file_val=${RETVAL}
 
 	            # Normalization on the X axis
@@ -1070,7 +1074,15 @@ create_data_file()
 		in_array ${xi} "${x_avg_array[@]}"
 		if [ $? -eq 0 ];then
 		    if [ ${x_geomean_flag} ]; then
-			sumx="${sumx} * ${file_val}"
+			if [ "${ignore_filter}" == "YES" ]; then
+			    if [ "${file_val}" != "0" ];then
+				sumx="${sumx} * ${file_val}"
+			    else
+				sumx="${sumx} * 1"
+			    fi
+			else
+			    sumx="${sumx} * ${file_val}"
+			fi
 		    else
 			sumx="${sumx} + ${file_val}"
 		    fi
@@ -1079,7 +1091,15 @@ create_data_file()
 		in_array ${yi} "${y_avg_array[@]}"
 		if [ $? -eq 0 ];then
 		    if [ ${y_geomean_flag} ]; then
-			ysum[${xi}]="${ysum[${xi}]} * ${file_val}"
+			if [ "${ignore_filter}" == "YES" ]; then
+			    if [ "${file_val}" != "0" ];then
+				ysum[${xi}]="${ysum[${xi}]} * ${file_val}"
+			    else
+				ysum[${xi}]="${ysum[${xi}]} * 1"
+			    fi
+			else
+			    ysum[${xi}]="${ysum[${xi}]} * ${file_val}"
+			fi
 		    else
 			ysum[${xi}]="${ysum[${xi}]} + ${file_val}"
 		    fi 
@@ -1179,7 +1199,15 @@ create_data_file_hmap()
 	    in_array ${xi} "${x_avg_array[@]}"
 	    if [ $? -eq 0 ];then
 		if [ "${x_geomean_flag}" ]; then
-		    sumx="${sumx} * ${file_val}"
+		    if [ "${ignore_filter}" == "YES" ]; then
+			if [ "${file_val}" != "0" ];then
+			    sumx="${sumx} * ${file_val}"
+			else
+			    sumx="${sumx} * 1"
+			fi
+		    else
+			sumx="${sumx} * ${file_val}"
+		    fi 
 		else
 		    sumx="${sumx} + ${file_val}"
 		fi 
@@ -1191,7 +1219,15 @@ create_data_file_hmap()
 		    if [ "${sumy[${xi}]}" == "" ];then
 			sumy[${xi}]=${file_val}
 		    else
-			sumy[${xi}]="${sumy[${xi}]} * ${file_val}"
+			if [ "${ignore_filter}" == "YES" ]; then
+			    if [ "${file_val}" != "0" ];then
+				ysum[${xi}]="${ysum[${xi}]} * ${file_val}"
+			    else
+				ysum[${xi}]="${ysum[${xi}]} * 1"
+			    fi
+			else
+			    sumy[${xi}]="${sumy[${xi}]} * ${file_val}"
+			fi 
 		    fi 
 		else 
 		    sumy[${xi}]="0${sumy[${xi}]} + ${file_val}"
@@ -1287,10 +1323,19 @@ sanity_checks()
 
     if [ $? -ne 0 ]; then exit 1; fi    
 
-    if [ "${x_norm}" != "" ]&&[ "${y_norm}" ]; then
+    if [ "${x_norm}" != "" ]&&[ "${y_norm}" != "" ]; then
 	echo "ERROR: Can't enable BOTH --xnorm AND --ynorm"
 	exit 1
     fi
+    if [ "${x_norm}" != "" ]&&[ "${z_norm}" != "" ]; then
+	echo "ERROR: Can't enable BOTH --xnorm AND --znorm"
+	exit 1
+    fi
+    if [ "${y_norm}" != "" ]&&[ "${z_norm}" != "" ]; then
+	echo "ERROR: Can't enable BOTH --ynorm AND --znorm"
+	exit 1
+    fi
+
 
     if [ "${x_tics_rotate}" != "" ];then
 	is_integer ${x_tics_rotate}
@@ -1648,6 +1693,7 @@ set_defaults()
 get_normalize_values_nums()
 {
     local ni
+    local yn
     for yn in ${y_normv}; do
 	is_number ${yn}
 	local is=${RETVAL}
@@ -1658,6 +1704,18 @@ get_normalize_values_nums()
 	y_norm_array[${ni}]=${yn}
 	ni=$((${ni} + 1))
     done
+    local zn
+    for zn in ${z_normv}; do
+	is_number ${zn}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: -znormv ${z_normv}: ${zn} must be a number!"
+	    exit 1
+	fi
+	z_norm_array[${ni}]=${zn}
+	ni=$((${ni} + 1))
+    done
+
 }
 
 
@@ -1665,7 +1723,7 @@ get_normalize_values_nums()
 get_normalize_values()
 {
     # If values are given, dont use filters
-    if [ "$y_normv" != "" ]||[ "$x_normv" != "" ];then
+    if [ "$y_normv" != "" ]||[ "$x_normv" != "" ]||[ "${z_normv}" != "" ];then
 	return
     fi
 
@@ -1675,7 +1733,7 @@ get_normalize_values()
     local ni=0
     local xn
     for xn in ${x_norm};do
-	get_match "${DIR}" "${xn} ${others}" "get_normalize_values X" 
+	get_match "${DIR}" "${xn} ${others}" "get_normalize_values X" "1"
 	local xnorm_val=${RETVAL}
 	x_norm_array[${ni}]=${xnorm_val}
 	ni=$((ni + 1))
@@ -1706,7 +1764,7 @@ get_normalize_values()
 
     local yi=0
     local y
-    for y in ${x_vals};do
+    for y in ${y_vals};do
 	if [ "${y_norm_array[${yi}]}" == "" ];then
 	    y_norm_array[${yi}]=${y_norm_array[0]}
 	fi
@@ -1715,7 +1773,31 @@ get_normalize_values()
     print_msg "Done!\n"
     print_msg "Y norm values: ${y_norm_array[@]}"
     print_msg "\n"
+
+
+    print_msg "Getting Z normalization values from filters... \n"
+    local ni=0
+    local zn
+    for zn in ${z_norm};do
+	get_match "${DIR}" "${zn} ${others}" "get_normalize_values Z"
+	local znorm_val=${RETVAL}
+	z_norm_array[${ni}]=${znorm_val}
+	ni=$((ni + 1))
+    done
+
+    local zi=0
+    local z
+    for z in ${z_vals};do
+	if [ "${z_norm_array[${zi}]}" == "" ];then
+	    z_norm_array[${zi}]=${z_norm_array[0]}
+	fi
+	zi=$((zi + 1))
+    done
+    print_msg "Done!\n"
+    print_msg "Z norm values: ${z_norm_array[@]}"
+    print_msg "\n"
     reset_ifs
+
 }
 
 parse_legend()
@@ -2369,7 +2451,8 @@ parse_arguments()
 {
     local short_args="hd:x:y:z:f:t:c:iv"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
-title:,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,xnorm:,ynorm:,ynormv:,xrotate:,yrotate:,\
+title:,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
+xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
 ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo"
@@ -2420,7 +2503,10 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--stack"|"-stack") plot_type="stacked";;
 	    "--xnorm"|"-xnorm") x_norm="$2";shift;;
 	    "--ynorm"|"-ynorm") y_norm="$2";shift;;
+	    "--znorm"|"-znorm") z_norm="$2";shift;;
+	    "--xnormv"|"-xnormv") x_normv="$2";shift;;
 	    "--ynormv"|"-ynormv") y_normv="$2";shift;;
+	    "--znormv"|"-znormv") z_normv="$2";shift;;
 	    "--xrotate"|"-xrotate") x_tics_rotate="$2";shift;;
 	    "--yrotate"|"-yrotate") y_tics_rotate="$2";shift;;
 	    "--legend"|"-legend") legend_params="$2";shift;;
@@ -2577,6 +2663,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     print_msg "| ztagsoffset: ${z_tags_offset}\n"
     print_msg "| x norm filters: ${x_norm}\n"
     print_msg "| y norm filters: ${y_norm}\n"
+    print_msg "| z norm filters: ${z_norm}\n"
     print_msg "| y norm values: ${y_normv}\n"
     print_msg "| x tags rotate: ${x_tics_rotate}\n"
     print_msg "| y tags rotate: ${y_tics_rotate}\n"
@@ -2697,7 +2784,9 @@ usage()
     print_msg "   --ztagsoffset <ztags offset> : (Opt) Set the offset of z tags.\n"
     print_msg "   --xnorm \"<x norm filters>\" : (Opt) Normalization filter X.\n"
     print_msg "   --ynorm \"<y norm filters>\" : (Opt) Normalization filter Y.\n"
+    print_msg "   --znorm \"<z norm filters>\" : (Opt) Normalization filter Z.\n"
     print_msg "   --ynormv \"<y norm values>\" : (Opt) Normalization values Y.\n"
+    print_msg "   --znormv \"<z norm values>\" : (Opt) Normalization values Z.\n"
     print_msg "   --xrotate \"<angle>\"        : (Opt) Rotate angle for X tags.\n"
     print_msg "   --yrotate \"<angle>\"        : (Opt) Rotate angle for Y tags.\n"
     print_msg "   --legend \"<parameters>\"    : (Opt) Control legend attrib.\n"
@@ -2752,7 +2841,7 @@ append_data_to_eps()
     # echo $@ | sed 's/^/%% /' >> ${epsfile}
     echo "moufoplot ${arguments_saved}" | sed 's/^/%% /' >> ${epsfile}
 
-    print_msg "Appending numerical data (${data_file}) to ${epsfile}...\n"
+    print_msg "Appending numerical data (${data_file}) to ${epsfile}... Use --noappend to stop it.\n"
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
     echo "%% ${MOUFOPLOT_GP_DATA_STRING} ${data_file}" >> ${epsfile}
     echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" >> ${epsfile}
@@ -3086,6 +3175,7 @@ moufoplot()
     IFS_CHAR=','
     local CMD_ARGS=${@}
     parse_arguments ${CMD_ARGS}
+
     if [ $? -ne 0 ]; then exit 1; fi
 
     # If we are retrieving the arguments from the .eps file, we have to re-parse
