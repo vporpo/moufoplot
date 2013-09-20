@@ -2377,8 +2377,18 @@ parse_vals()
 }
 
 # Display a waiting bar /-\
+wait_cnt=0
 wait_bar()
 {
+    # Wait print throttling
+    if [ ${wait_cnt} -lt 20 ]; then
+	wait_cnt=$((${wait_cnt} + 1))
+	return;
+    else
+	wait_cnt=0
+    fi
+
+
     if [ ! ${wait_bar_i} ]; then
 	wait_bar_i=0
 	print_msg "-"
@@ -2408,10 +2418,8 @@ restore_data()
     cat ${input_file} | grep "%%" > ${TMPDIR}
     # echo "" > ${output_file}
     if [ -f "${output_file}" ];then
+	echo "Removing ${output_file}"
 	rm ${output_file}
-    else
-	print_msg "ERROR: in: rm ${output_file}"
-	exit 1
     fi
     local parse_line=0
     printf "Restoring data... \n"
@@ -2440,6 +2448,10 @@ restore_data()
     print_msg "\bDONE\n"
 
     # Sanity check. Check if the data file is empty
+    if [ ! -f ${output_file} ]; then
+	echo "No data to restore"
+	exit 1
+    fi
     local data_size=`cat ${output_file} | wc -c`
     if [ ! ${?} -eq 0 ]||[ ${data_size} -eq 0 ]; then
 	echo "Hmm... Sanity check for ${output_file} failed."
@@ -2565,7 +2577,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     # If we are regenerating a .eps file, then use the data points from it
     if [ ! ${IGNORE_REGEN} ]&&[ ${regen} ];then
 	if [ ! -f ${regen} ];then
-	    echo "ERROR: Regen file: ${regen} does not exist."
+	    echo "ERROR: Regen file: ${PWD}/${regen} does not exist. Check the file path."
 	    exit 1
 	fi
 	# echo "Early exit..."
