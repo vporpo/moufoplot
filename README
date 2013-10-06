@@ -58,8 +58,8 @@ Basic Concepts
 --------------
  1. Generate Data
    There are two ways:
-   A) Using a single file with all the data
-   B) Using lots of files, each with a single number in it.
+   A) Using lots of files, each with a single number in it.
+   B) Using a single file with all the data
 
    In A) the input of MoufPlot should be placed in a directory (let's say data/).
    Each data number should be placed in a single file. 
@@ -76,7 +76,7 @@ Basic Concepts
    Each line of the file is in the format: "name:value".
    The "name" should be encoded in the same way as the files in A).
    That is:
-    a. Obviously each file name should be unique
+    a. It should be unique
     b. It should encode the parameters used to generate this data, 
        separated by '_'
    For example: size4k_assoc8_cycles is a valid name that corresponds to the 
