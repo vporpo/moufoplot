@@ -367,7 +367,7 @@ get_match_file ()
     fi
     # echo $filename
     # out="${filename} ${out}"
-    local number=`echo ${filename} | egrep -o ":.+" | sed 's/://'`
+    local number=`echo ${filename} | egrep -o ":.+" | sed 's/://' | sed 's/ //g'`
     # echo "NUMBER:${number}"
     fix_exponential ${number}
 }
