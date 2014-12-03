@@ -1675,6 +1675,23 @@ get_dir()
     RETVAL=${dir}
 }
 
+# Return a unique file in the form BASE.NUM.SUFFIX
+# E.g. moufoplot.0009.eps
+get_free_file()
+{
+    local suffix=${1}
+    local base="moufoplot"
+    local cnt=0
+    local num=`printf "%04d" ${cnt}`
+    local fname="${base}.${num}.${suffix}"
+    while [ -f ${fname} ]; do
+	cnt=$((${cnt} + 1))
+	local num=`printf "%04d" ${cnt}`
+	fname="${base}.${num}.${suffix}"
+    done
+    echo ${fname}
+}
+
 set_defaults()
 {
     # set default size
@@ -1684,7 +1701,8 @@ set_defaults()
     fi
 
     if [ "${epsfile}" == "" ];then
-	epsfile="_moufoplot.${suffix}"
+	local filebase=`get_free_file "${suffix}"`
+	epsfile="${filebase}"
     fi
 
     # noappend
