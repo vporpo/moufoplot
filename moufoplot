@@ -1684,7 +1684,7 @@ get_free_file()
     local cnt=0
     local num=`printf "%04d" ${cnt}`
     local fname="${base}.${num}.${suffix}"
-    local last_fname
+    local last_fname=${fname}
     while [ -f ${fname} ]; do
 	last_fname=${fname}
 	cnt=$((${cnt} + 1))
