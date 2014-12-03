@@ -1056,6 +1056,9 @@ create_data_file()
 		    if [ "${percent}" != "" ];then
 			file_val=`echo "${file_val} * 100" |bc -l`
 		    fi
+		    if [ "${speedup}" != "" ];then
+			file_val=`echo "1/${file_val}" |bc -l`
+		    fi
 		fi
 		sum_x_all=`echo "${sum_x_all} + ${file_val}" | bc -l`
 
@@ -1651,6 +1654,14 @@ sanity_checks()
 	gp_terminal_cmd="postscript eps enhanced color"
 	suffix="eps"
     fi
+
+    # Speedup requires normalization!
+    if [ "${speedup}" != "" ]; then
+	if [ "${x_norm}" == "" ]&&[ "${y_norm}" == "" ]&&[ "${z_norm}" == "" ];then
+	    echo "ERROR: -speedup requires normalization! e.g. --ynorm ..."
+	    exit 1
+	fi
+    fi
 }
 
 # Return the directory for FILE_PATH
@@ -2240,6 +2251,19 @@ parse_percent() 		# Must run before parse_legend
     fi
 }
 
+parse_speedup() 		# Must run before parse_legend
+{
+    if [ "${speedup}" != "" ];then
+	if [ "${y_format}" == "" ];then
+	    y_format="%.0fx"
+	fi
+	if [ "${y_range}" == "" ];then
+	    y_range="0,,1"
+	fi
+	key_command="set key rmargin"
+    fi
+}
+
 parse_yformat()			# After parse_percent
 {
     if [ "${y_format}" == "" ];then
@@ -2466,7 +2490,7 @@ parse_arguments()
 title:,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
 xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
-zmask:,xavg:,yavg:,percent,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
+zmask:,xavg:,yavg:,percent,speedup,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
 ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo"
     local getoptcmd="getopt -a -o ${short_args} -l ${long_args} -n getopt.sh -- ${@}"
     local getoptcmd_set_args="local args=\`${getoptcmd}\`"
@@ -2538,6 +2562,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--xgeo"|"-xgeo") x_geomean_flag="YES";;
 	    "--ygeo"|"-ygeo") y_geomean_flag="YES";;
 	    "--percent"|"-percent") percent="YES";;
+	    "--speedup"|"-speedup") speedup="YES";;
 	    "--barw"|"-barw") bar_width="$2";shift;;
 	    "--linew"|"-linew") line_width="$2";shift;;
 	    "--linetype"|"-linetype") line_type="$2";shift;;
@@ -2605,6 +2630,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     parse_xyrotate		# After parse_tags, parse_vals
 
     parse_percent 		# Must run before parse_legend
+    parse_speedup 		# Must run before parse_legend
     parse_yformat		# After parse_percent
 
     # Parse Legend parameters
@@ -2739,6 +2765,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     print_msg "| xgeo: ${x_geomean_flag}\n"
     print_msg "| ygeo: ${y_geomean_flag}\n"
     print_msg "| percent: ${percent}\n"
+    print_msg "| speedup: ${speedup}\n"
     print_msg "| bar width: ${bar_width}\n"
     print_msg "| line width: ${line_width}\n"
     print_msg "| line type: ${line_type}\n"
@@ -2820,6 +2847,7 @@ usage()
     print_msg "   --ygeo                       : (Opt) Use with --yavg to enable geomean.\n"
     print_msg "   --ignore,-i                  : (Opt) Ignore Filter ERROR.\n"
     print_msg "   --percent                    : (Opt) Change Y axis to show %% vals.\n"
+    print_msg "   --speedup                    : (Opt) Change Y axis to show speedups. REQUIRES normalized values!!!.\n"
     print_msg "   --noviewer                   : (Opt) Disable launching the VIEWER.\n"
     print_msg "   --forceviewer                : (Opt) Force enable the VIEWER.\n"
     print_msg "   --viewer <file viewer>       : (Opt) Prefer to use VIEWER.\n"
@@ -3288,9 +3316,10 @@ moufoplot()
     local viewer=${RETVAL}
     if [ "${viewer}" != "" ]&&[ "${no_viewer}" != "YES" ];then
 	print_msg "View ${epsfile} using ${viewer}\n"
-	local viewcmd="${viewer} ${epsfile} "
+	local viewcmd="nohup ${viewer} ${epsfile} &"
 	print_msg "${viewcmd}\n"
-	eval ${viewcmd}
+	eval ${viewcmd} &
+	usleep 100000			# Without this the viewer does not start...
     fi
 }
 
