@@ -1684,11 +1684,16 @@ get_free_file()
     local cnt=0
     local num=`printf "%04d" ${cnt}`
     local fname="${base}.${num}.${suffix}"
+    local last_fname
     while [ -f ${fname} ]; do
+	last_fname=${fname}
 	cnt=$((${cnt} + 1))
 	local num=`printf "%04d" ${cnt}`
 	fname="${base}.${num}.${suffix}"
     done
+    if [ "${overwrite}" != "" ]; then
+	fname=${last_fname}
+    fi
     echo ${fname}
 }
 
@@ -2508,7 +2513,7 @@ parse_arguments()
 title:,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
 xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
-zmask:,xavg:,yavg:,percent,speedup,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
+zmask:,xavg:,yavg:,percent,speedup,overwrite,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
 ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo"
     local getoptcmd="getopt -a -o ${short_args} -l ${long_args} -n getopt.sh -- ${@}"
     local getoptcmd_set_args="local args=\`${getoptcmd}\`"
@@ -2596,6 +2601,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--outformat"|"-outformat") out_format="$2";shift;;
 	    "--silent"|"-silent") silent="YES";;
 	    "--regen"|"-regen") regen="$2";shift;;
+	    "--overwrite"|"-overwrite") overwrite="YES";;
 	    "--version"|"-version"|"-v") version; exit 0;;
 	    "--") break;
 	esac
@@ -2799,6 +2805,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     print_msg "| viewer: ${eps_viewer}\n"
     print_msg "| outformat: ${out_format}\n"
     print_msg "| silent: ${silent}\n"
+    print_msg "| overwrite: ${overwrite}\n"
     print_msg "| regen: ${regen}\n"
     print_msg "+-------------------------------+\n"
 
@@ -2878,6 +2885,7 @@ usage()
     print_msg "   --outformat <eps|png|jpeg>   : (Opt) Select output file format.\n"
     print_msg "   --silent                     : (Opt) Silent output on screen.\n"
     print_msg "   --regen                      : (Opt) Regenerate graph from .eps file.\n"
+    print_msg "   --overwrite                  : (Opt) Overwrite the last graph. (don't generate new moufoplot.xxxx.eps file)\n"
     print_msg "   --version (or -v)            : Print version and exit.\n"
     print_msg "   --help                       : Print this help screen.\n"
     exit 1
