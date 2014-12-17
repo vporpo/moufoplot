@@ -2491,7 +2491,7 @@ restore_data()
 	fi 
 	if [ ${parse_line} -eq 1 ]; then
 		# echo "DUMPING"
-	    local newline=`echo -e "${line}\n"|sed 's/%//g'`
+	    local newline=`echo -e "${line}\n"|sed 's/^%%//g'`
 	    # Only write to output if non-empty
 	    if [ `echo ${newline} | wc -w` -gt 0 ]; then
 		echo ${newline} >> ${output_file}
@@ -3276,7 +3276,9 @@ moufoplot()
 	local tmp_moufoplot_options_file=/tmp/moufoplot.options.tmp
 	restore_data "${regen}" "${MOUFOPLOT_STRING} " "${MOUFOPLOT_GP_DATA_STRING}" "${tmp_moufoplot_options_file}"
 	local args=`cat ${tmp_moufoplot_options_file} | sed 's/moufoplot //'`
-	print_msg "Regenerated ${MOUFOPLOT_STRING} command:\n ${args}\n"
+	# Escape printf unsafe characters such as "%"
+	local escaped_args=`echo ${args} | sed 's/%/%%/g'`
+	print_msg "Regenerated ${MOUFOPLOT_STRING} command:\n ${escaped_args}\n"
 
 	# Data points used to regenerate moufoplot data from them
 	print_msg "Restoring data points from ${regen} --> ${data_file} ... \n"
