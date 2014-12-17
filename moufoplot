@@ -594,8 +594,14 @@ gp_title()
 
 gp_set_grid()
 {
-    echo "set grid y" >>${gpfname}
-    # echo "set grid x" >>${gpfname}
+    if [ "${y_grid}" == "YES" ]&&[ "${noy_grid}" != "YES" ]; then
+	echo "set grid ytics ls 10 lt rgb \"black\"" >> ${gpfname}
+	# echo "set grid y" >>${gpfname}
+    fi
+    if [ "${x_grid}" == "YES" ]&&[ "${nox_grid}" != "YES" ]; then
+	echo "set grid xtics ls 10 lt rgb \"black\"" >> ${gpfname}
+	# echo "set grid x" >>${gpfname}
+    fi
 }
 
 gp_key()
@@ -690,7 +696,6 @@ gp_bar_options()
     fi
 
     echo "set style fill solid 1.0 border lt \"black\"" >> ${gpfname}
-    echo "set grid ytics ls 10 lt rgb \"black\"" >> ${gpfname}
 
     gp_labels
 
@@ -1722,6 +1727,9 @@ set_defaults()
 	print_msg "Directory ${dir} missing. Creating it..."
 	mkdir -p ${dir}
     fi
+
+    # Set Y grid by default
+    y_grid="YES"
 }
 
 get_normalize_values_nums()
@@ -2510,7 +2518,7 @@ parse_arguments()
 {
     local short_args="hd:x:y:z:f:t:c:iv"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
-title:,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
+title:,xgrid,ygrid,noxgrid,noygrid,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
 xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,speedup,overwrite,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
@@ -2544,6 +2552,10 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--filter"|"-filter"|"-f") others="$2";shift;;
 	    "--title"|"-title"|"-t") title="$2";shift;;
 	    "--xtags"|"-xtags") x_tags="$2";shift;;
+	    "--xgrid"|"-xgrid") x_grid=YES;;
+	    "--noygrid"|"-noygrid") noy_grid=YES;;
+	    "--noxgrid"|"-noxgrid") nox_grid=YES;;
+	    "--ygrid"|"-ygrid") y_grid=YES;;
 	    "--noxtags"|"-noxtags") nox_tags="YES";;
 	    "--ytags"|"-ytags") y_tags="$2";shift;;
 	    "--noytags"|"-noytags") noy_tags="YES";;
@@ -2831,6 +2843,10 @@ usage()
     print_msg "   --zvals,-z \"<z values>\"    : The identifiers of the Z values.\n"
     print_msg "   --filter,-f \"<filter vals>\": The filtering identifiers.\n"
     print_msg "   --title, -t \"<title>\"      : (Opt) Graph title.\n"
+    print_msg "   --xgrid                      : (Opt) X grid\n"
+    print_msg "   --noxgrid                    : (Opt) Dixable X grid\n"
+    print_msg "   --ygrid                      : (Opt) Y grid\n"
+    print_msg "   --noygrid                    : (Opt) Disable Y grid\n"
     print_msg "   --xlabel \"<x label>\"       : (Opt) Label of the X axis.\n"
     print_msg "   --xlabeloffset <xlabel offset>: (Opt) Set the offset of xlabel.\n"
     print_msg "   --ylabel \"<y label>\"       : (Opt) Label of the Y axis.\n"
