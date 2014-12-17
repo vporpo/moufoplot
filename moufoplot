@@ -595,11 +595,11 @@ gp_title()
 gp_set_grid()
 {
     if [ "${y_grid}" == "YES" ]&&[ "${noy_grid}" != "YES" ]; then
-	echo "set grid ytics ls 10 lt rgb \"black\"" >> ${gpfname}
+	echo "set grid ytics ls 10 lt rgb \"${grid_color}\"" >> ${gpfname}
 	# echo "set grid y" >>${gpfname}
     fi
     if [ "${x_grid}" == "YES" ]&&[ "${nox_grid}" != "YES" ]; then
-	echo "set grid xtics ls 10 lt rgb \"black\"" >> ${gpfname}
+	echo "set grid xtics ls 10 lt rgb \"${grid_color}\"" >> ${gpfname}
 	# echo "set grid x" >>${gpfname}
     fi
 }
@@ -1730,6 +1730,9 @@ set_defaults()
 
     # Set Y grid by default
     y_grid="YES"
+    if [ "${grid_color}" == "" ]; then
+	grid_color="grey"
+    fi
 }
 
 get_normalize_values_nums()
@@ -2518,7 +2521,7 @@ parse_arguments()
 {
     local short_args="hd:x:y:z:f:t:c:iv"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
-title:,xgrid,ygrid,noxgrid,noygrid,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
+title:,xgrid,ygrid,noxgrid,gridcolor:,noygrid,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
 xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,speedup,overwrite,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
@@ -2553,6 +2556,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--title"|"-title"|"-t") title="$2";shift;;
 	    "--xtags"|"-xtags") x_tags="$2";shift;;
 	    "--xgrid"|"-xgrid") x_grid=YES;;
+	    "--gridcolor"|"-gridcolor") grid_color="$2";shift;;
 	    "--noygrid"|"-noygrid") noy_grid=YES;;
 	    "--noxgrid"|"-noxgrid") nox_grid=YES;;
 	    "--ygrid"|"-ygrid") y_grid=YES;;
@@ -2844,6 +2848,7 @@ usage()
     print_msg "   --filter,-f \"<filter vals>\": The filtering identifiers.\n"
     print_msg "   --title, -t \"<title>\"      : (Opt) Graph title.\n"
     print_msg "   --xgrid                      : (Opt) X grid\n"
+    print_msg "   --gridcolor                  : (Opt) Color of the grid\n"
     print_msg "   --noxgrid                    : (Opt) Dixable X grid\n"
     print_msg "   --ygrid                      : (Opt) Y grid\n"
     print_msg "   --noygrid                    : (Opt) Disable Y grid\n"
