@@ -3084,103 +3084,6 @@ get_hidden_filters()
 }
 
 
-# Read the data existing in DATA_FILE in gnuplot data format and generate 
-# a moufoplot compatible input data file. Place results in OUTPUT_FILE
-regenerate_data()
-{
-    local data_file=${1}
-    local output_file=${2}
-    local i=-1
-    local x_array
-    local current_y
-    local current_z
-
-
-    local OTHERS_TAG
-    local o_tag
-    # Extra tags include: 1) the -filter, 2) the common filters in -x,-y,-z
-    for o_tag in ${others}; do 
-	OTHERS_TAG="${OTHERS_TAG}_${o_tag}"
-    done
-
-    local HIDDENT_TAG=""
-    get_hidden_filters ${x_vals}
-    HIDDEN_TAG="${HIDDEN_TAG}_${RETVAL}"
-    HIDDEN_TAG=`strip "${HIDDEN_TAG}" "_"`
-    get_hidden_filters ${y_vals}
-    HIDDEN_TAG="${HIDDEN_TAG}_${RETVAL}"
-    HIDDEN_TAG=`strip "${HIDDEN_TAG}" "_"`
-    get_hidden_filters ${y_vals}
-    HIDDEN_TAG="${HIDDEN_TAG}_${RETVAL}"
-    HIDDEN_TAG=`strip "${HIDDEN_TAG}" "_"`
-    printf "HIDDEN_TAG:${HIDDEN_TAG}\n"
-
-    # Remove leading/trailing '_'
-    OTHERS_TAG=`echo ${OTHERS_TAG} | sed 's/^_//' | sed 's/_$//'`
-    printf "OTHERS_TAG:${OTHERS_TAG}\n"
-
-    local EXTRA_TAGS="${HIDDEN_TAG}_${OTHERS_TAG}"
-    EXTRA_TAGS=`strip "${EXTRA_TAGS}" "_"`
-    printf "EXTRA_TAGS:${EXTRA_TAGS}\n"
-    
-
-    # If a directory, create it
-    check_if_directory "${output_file}"
-    local is_dir=${RETVAL}
-    if [ ${is_dir} ]; then
-	if [ ! -d ${output_file} ]; then
-	    mkdir -p ${output_file}
-	fi
-    else 
-	echo "" > ${output_file}
-    fi
-
-    while read line; do
-	# echo ${line}
-
-	# Skip empty lines
-	words_in_line=`echo ${line}|wc -w`
-	if [ ${words_in_line} -eq 0 ];then
-	    continue
-	fi 
-
-	i=$((${i} + 1))
-	# X axis
-	if [ ${i} -eq 0 ];then
-	    x_array=(`echo ${line} | cut -f 2- -d " "`)
-	    continue
-	else
-	        # Z axis
-	    local first=`echo ${line}|cut -f 1 -d " "`
-	    if [ ${first} == "#" ];then
-		current_z=`echo ${line}|cut -f 2 -d " "`
-		continue
-	    else
-                # Y axis
-		current_y=${first}
-	    fi
-	fi
-
-	# Parse the numbers
-	local wi=0
-	for word in `echo ${line}|cut -f 2- -d " "`; do
-	    if [ "${current_z}" != "#" ];then
-		local TAG=${x_array[${wi}]}_${current_y}_${current_z}_${EXTRA_TAGS}
-	    else 
-		local TAG=${x_array[${wi}]}_${current_y}_${EXTRA_TAGS}
-	    fi
-
-	    if [ "${is_dir}" ];then
-		echo "0${word}" > ${output_file}/${TAG}
-	    else
-		echo ${TAG}:0${word} >> ${output_file}
-	    fi
-	    wi=$((${wi} + 1))
-	done
-	
-    done < ${data_file}
-}
-
 calculate_max_xyz()
 {
     set_ifs ", "
@@ -3270,8 +3173,8 @@ moufoplot()
     if [ ${regen} ];then 
 	# See if .eps file contains the moufodata
 	# If so, then retrieve it from there
-	cat ${regen} | egrep "^%% ${MOUFOPLOT_DATA_STRING}" > /dev/null
-	local moufodata_exists=${?}
+	egrep "^%% ${MOUFOPLOT_DATA_STRING}"  ${regen} > /dev/null
+	local moufodata_exists=$?
 
 	local tmp_moufoplot_options_file=/tmp/moufoplot.options.tmp
 	restore_data "${regen}" "${MOUFOPLOT_STRING} " "${MOUFOPLOT_GP_DATA_STRING}" "${tmp_moufoplot_options_file}"
@@ -3299,19 +3202,10 @@ moufoplot()
 	    printf "******************************************************\n"
 	    printf "No moufodata found on ${regen}.\n"
 	    printf "This is probably because ${regen} has been generated\n"
-	    printf "by some old version of ${MOUFOPLOT_STRING}.\n"
-	    printf "I will try my best to retrieve the data.\n"
-	    printf "Press enter to continue...\n"
+	    printf "by some old version of moufoplot, missing: ${MOUFOPLOT_STRING}.\n"
+	    printf "Exiting...\n"
 	    printf "******************************************************\n"
-	    read
-	    printf "Regenerating data from ${data_file} into ${DIR}...\n"
-	    regenerate_data ${data_file} ${DIR}
-	    printf "\nRegenerated Data (in ${DIR}):\n"
-	    if [ -d "${DIR}" ]; then
-		ls -1 ${DIR}
-	    elif [ -f "${DIR}" ]; then
-		cat ${DIR}
-	    fi
+	    exit 1
 	fi 
 
 	# Now that the DATA_FILE is populated, reparse the args
@@ -3319,9 +3213,8 @@ moufoplot()
 	# local CMD_ARGS_QUOTED=`echo ${CMD_ARGS}|sed 's/\"/\\\"/g'`
 	# echo "QUOTED: ${CMD_ARGS_QUOTED}"
 	# echo ${args}
-
-	parse_arguments ${args} ${CMD_ARGS}
-	if [ ${moufodata_exists} -eq 0 ];then 
+	parse_arguments ${args} ${CMD_ARGS} -d ${moufodata_file}
+	if [ ${moufodata_exists} -eq 0 ];then
 	    DIR=${moufodata_file}
 	fi
     fi
@@ -3330,7 +3223,6 @@ moufoplot()
 
     append_avg_vals
     append_avg_tags
-
 
     set_defaults
     # if [ $? -ne 0 ]; then exit 1; fi
