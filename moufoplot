@@ -19,6 +19,11 @@
 
 # Changelog
 # ---------
+# v0.06 19DEC2014 Added:
+#                 - support for overlay text using --txt
+#                 - support for vertical grid lines e.g. --xgrid, --noxgrid
+#                 Deprecated restoring data from .eps files with missing data
+#                 Various bug fixes
 # v0.05 05JUL2013 Added geo-mean support
 #
 # v0.04 06JUN2013 .eps files generated contain the moufoplot data. Regeneration
@@ -29,7 +34,7 @@
 
 
 MOUFOPLOT_STRING="MoufoPlot"
-moufoplot_version="0.05"
+moufoplot_version="0.06"
 
 MOUFOPLOT_GP_STRING="moufoplot .gp:"
 MOUFOPLOT_GP_DATA_STRING="moufoplot data:"
@@ -560,6 +565,19 @@ gp_labels()
     echo "set xlabel \" ${x_title}\" offset 0,${x_label_offset}"  >> ${gpfname}
     if [ "${y_title}" != "" ]; then
 	echo "set ylabel \"${y_title}\" offset ${y_label_offset},0"  >> ${gpfname}
+    fi
+    if [ "${overlay_txt}" != "" ]; then
+	echo -n "set label \"${overlay_txt_msg}\" at ${overlay_txt_loc}" >> ${gpfname}
+	if [ "${overlay_txt_color}" != "" ]; then
+	    echo -n " tc rgb \"${overlay_txt_color}\"" >> ${gpfname}
+	fi
+	if [ "${overlay_txt_font_size}" != "" ];then
+	    echo -n " font \",${overlay_txt_font_size}\"" >> ${gpfname}
+	fi
+	if [ "${overlay_txt_font_back}" != "" ]; then 
+	    echo -n " ${overlay_txt_front_back}" >> ${gpfname}
+	fi
+	echo "" >> ${gpfname}
     fi
 }
 
@@ -2434,6 +2452,50 @@ parse_vals()
 
 }
 
+
+overlay_txt_usage()
+{
+    echo "Usage: --txt \"TEXT\",X,Y[,optional color][,optional font size][,optional front/back position]"
+    echo "Example: --txt \"Some text\",1,21.3,blue,30,front"
+}
+
+parse_overlay_txt()
+{
+    if [ "${overlay_txt}" == "" ];then
+	return
+    fi 
+    local cnt=0
+    overlay_txt_msg=`echo ${overlay_txt} | cut -d ',' -f 1`
+    local overlay_txt_coord_x=`echo ${overlay_txt} | cut -d ',' -f 2`
+    local overlay_txt_coord_y=`echo ${overlay_txt} | cut -d ',' -f 3`
+    overlay_txt_loc="${overlay_txt_coord_x},${overlay_txt_coord_y}"
+    overlay_txt_color=`echo ${overlay_txt} | cut -d ',' -f 4`
+    overlay_txt_font_size=`echo ${overlay_txt} | cut -d ',' -f 5`
+    overlay_txt_front_back=`echo ${overlay_txt} | cut -d ',' -f 6`
+
+    is_number ${overlay_txt_coord_x}
+    local is_x=${RETVAL}
+    is_number ${overlay_txt_coord_y}
+    local is_y=${RETVAL}
+    if [ "${overlay_txt_coord_x}" == "" ]||[ "${overlay_txt_coord_y}" == "" ]||[ "${is_x}" != "yes" ]||[ "${is_y}" != "yes" ]; then
+	echo "ERROR: in --txt: coordinates \"${overlay_txt_coord_x},${overlay_txt_coord_y}\" missing or not numbers."
+	overlay_txt_usage
+	exit 1
+    fi
+    is_number ${overlay_txt_font_size}
+    local is_font_size_a_num=${RETVAL}
+    if [ "${is_font_size_a_num}" != "yes" ]; then
+	echo "ERROR: in --txt: font size \"${overlay_txt_font_size}\"is not a number"
+	overlay_txt_usage
+	exit 1
+    fi
+    if [ "${overlay_txt_front_back}" != "" ]&&[ "${overlay_txt_front_back}" != "front" ]&&[ "${overlay_txt_front_back}" != "back" ]; then
+	echo "ERROR: in --txt: wrong front/back ???"
+	overlay_txt_usage
+	exit 1
+    fi
+    print_msg "Overlay Text: ${overlay_txt_msg}, ${overlay_txt_loc}, ${overlay_txt_color}, ${overlay_txt_font_size}, ${overlay_txt_front_back}\n"
+}
 # Display a waiting bar /-\
 wait_cnt=0
 wait_bar()
@@ -2525,7 +2587,7 @@ title:,xgrid,ygrid,noxgrid,gridcolor:,noygrid,xlabel:,ylabel:,data:,xtags:,noxta
 xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,speedup,overwrite,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
-ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo"
+ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo,txt:"
     local getoptcmd="getopt -a -o ${short_args} -l ${long_args} -n getopt.sh -- ${@}"
     local getoptcmd_set_args="local args=\`${getoptcmd}\`"
     # echo "GETOPT: $getoptcmd_set_args"
@@ -2600,6 +2662,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--yavg"|"-yavg") y_avg="$2";shift;;
 	    "--xgeo"|"-xgeo") x_geomean_flag="YES";;
 	    "--ygeo"|"-ygeo") y_geomean_flag="YES";;
+	    "--txt"|"-txt") overlay_txt="$2";shift;;
 	    "--percent"|"-percent") percent="YES";;
 	    "--speedup"|"-speedup") speedup="YES";;
 	    "--barw"|"-barw") bar_width="$2";shift;;
@@ -2711,6 +2774,8 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     if [ $? -ne 0 ]; then exit 1; fi    
 
     parse_offsets
+
+    parse_overlay_txt
 
     if [ "${y_tics}" == "" ]&&[ "${y_range}" == "" ];then
 	y_tics=5
@@ -2893,6 +2958,7 @@ usage()
     print_msg "   --ygeo                       : (Opt) Use with --yavg to enable geomean.\n"
     print_msg "   --ignore,-i                  : (Opt) Ignore Filter ERROR.\n"
     print_msg "   --percent                    : (Opt) Change Y axis to show %% vals.\n"
+    print_msg "   --txt                        : (Opt) Overlay text anywhere in text\n"
     print_msg "   --speedup                    : (Opt) Change Y axis to show speedups. REQUIRES normalized values!!!.\n"
     print_msg "   --noviewer                   : (Opt) Disable launching the VIEWER.\n"
     print_msg "   --forceviewer                : (Opt) Force enable the VIEWER.\n"
