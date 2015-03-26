@@ -20,6 +20,8 @@
 # Changelog
 # ---------
 # v0.07 26MAR2015 Added:
+#                 Manually set the {x,y,z}tics with
+#                 --xtics, --ytics, --ztics
 #                 Support to disable drawing the tics on the axis
 #                 --noxtics, --noytics, --noztics
 # v0.06 19DEC2014 Added:
@@ -682,6 +684,18 @@ gp_fonts()
     echo "set ylabel font \"${font_type},${ylabel_font_size}\" " >> ${gpfname}
     echo "set xlabel font \"${font_type},${xlabel_font_size}\" " >>${gpfname}
 
+    # Override {x,y,z}tics
+    if [ "${xtics}" != "" ]; then
+	echo "set xtics ${xtics}" >>${gpfname}
+    fi
+    if [ "${ytics}" != "" ]; then
+	echo "set ytics ${ytics}" >>${gpfname}
+    fi
+    if [ "${ztics}" != "" ]; then
+	echo "set ztics ${ztics}" >>${gpfname}
+    fi
+
+    # Disable {x,y,z}tics
     if [ ${no_xtics} ]; then
 	echo "unset xtics" >>${gpfname}
     fi
@@ -691,7 +705,6 @@ gp_fonts()
     if [ ${no_ztics} ]; then
 	echo "unset ztics" >>${gpfname}
     fi
-
 }
 
 gp_bar_options()
@@ -749,8 +762,11 @@ gp_bar_options()
 	    fi
 
 	    local color=${color_array[$cmn]}
-
-	    plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}:xtic(1) with histograms title columnheader(${cmn}) lt ${line_type_array[${xi}]} lw ${line_width} lc rgb \"${color}\","
+	    local USING_XTIC=":xtic(1)"
+	    if [ "${xtics}" != "" ]; then
+		local USING_XTIC=""
+	    fi
+	    plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}${USING_XTIC} with histograms title columnheader(${cmn}) lt ${line_type_array[${xi}]} lw ${line_width} lc rgb \"${color}\","
 	    cmn=$((cmn+1))
 	    xi=$((${xi} + 1))
 	done
@@ -831,7 +847,11 @@ gp_line_options()
 
 	local color=${color_array[$cmn]}
 
-	plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}:xtic(1) with linespoints title columnheader(${cmn}) lw ${line_width} ps ${point_size} pt ${point_type_array[${xi}]} lt ${line_type_array[${xi}]} lc rgb \"${color}\","
+	local USING_XTIC=":xtic(1)"
+	if [ "${xtics}" != "" ]; then
+	    local USING_XTIC=""
+	fi
+	plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}${USING_XTIC} with linespoints title columnheader(${cmn}) lw ${line_width} ps ${point_size} pt ${point_type_array[${xi}]} lt ${line_type_array[${xi}]} lc rgb \"${color}\","
 	cmn=$((cmn+1))
 	xi=$((${xi} + 1))
     done
@@ -2598,7 +2618,7 @@ parse_arguments()
     local short_args="hd:x:y:z:f:t:c:iv"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
 title:,xgrid,ygrid,noxgrid,gridcolor:,noygrid,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
-noxtics,noytics,noztics,xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
+noxtics,noytics,noztics,xtics:,ytics:,ztics:,xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,speedup,overwrite,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
 ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo,txt:"
@@ -2644,6 +2664,9 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--noxtics"|"-noxtics") no_xtics="YES";;
 	    "--noytics"|"-noytics") no_ytics="YES";;
 	    "--noztics"|"-noztics") no_ztics="YES";;
+	    "--xtics"|"-xtics") xtics="$2";shift;;
+	    "--ytics"|"-ytics") ytics="$2";shift;;
+	    "--ztics"|"-ztics") ztics="$2";shift;;
 	    "--xlabel"|"-xlabel") x_title="$2";shift;;
 	    "--xlabeloffset"|"-xlabeloffset") x_label_offset="$2";shift;;
 	    "--ylabel"|"-ylabel") y_title="$2";shift;;
@@ -2823,6 +2846,9 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     print_msg "| noxtics: ${no_xtics}\n"
     print_msg "| noytics: ${no_ytics}\n"
     print_msg "| noztics: ${no_ztics}\n"
+    print_msg "| xtics: ${xtics}\n"
+    print_msg "| ytics: ${ytics}\n"
+    print_msg "| ztics: ${ztics}\n"
     print_msg "| ztagsoffset: ${z_tags_offset}\n"
     print_msg "| x norm filters: ${x_norm}\n"
     print_msg "| y norm filters: ${y_norm}\n"
@@ -2954,6 +2980,9 @@ usage()
     print_msg "   --noxtics                    : (Opt) Disable X axis tics.\n"
     print_msg "   --noytics                    : (Opt) Disable Y axis tics.\n"
     print_msg "   --noztics                    : (Opt) Disable Z axis tics.\n"
+    print_msg "   --xtics (e.g.\"0, 2, 20\")   : (Opt) Override xtics.\n"
+    print_msg "   --ytics (e.g.\"0, 2, 20\")   : (Opt) Override ytics.\n"
+    print_msg "   --ztics (e.g.\"0, 2, 20\")   : (Opt) Override ztics.\n"
     print_msg "   --ztagsoffset <ztags offset> : (Opt) Set the offset of z tags.\n"
     print_msg "   --xnorm \"<x norm filters>\" : (Opt) Normalization filter X.\n"
     print_msg "   --ynorm \"<y norm filters>\" : (Opt) Normalization filter Y.\n"
