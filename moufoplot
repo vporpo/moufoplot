@@ -19,6 +19,9 @@
 
 # Changelog
 # ---------
+# v0.07 26MAR2015 Added:
+#                 Support to disable drawing the tics on the axis
+#                 --noxtics, --noytics, --noztics
 # v0.06 19DEC2014 Added:
 #                 - support for overlay text using --txt
 #                 - support for vertical grid lines e.g. --xgrid, --noxgrid
@@ -678,6 +681,17 @@ gp_fonts()
     echo "set title font \"${font_type},${title_font_size}\" " >> ${gpfname}
     echo "set ylabel font \"${font_type},${ylabel_font_size}\" " >> ${gpfname}
     echo "set xlabel font \"${font_type},${xlabel_font_size}\" " >>${gpfname}
+
+    if [ ${no_xtics} ]; then
+	echo "unset xtics" >>${gpfname}
+    fi
+    if [ ${no_ytics} ]; then
+	echo "unset ytics" >>${gpfname}
+    fi
+    if [ ${no_ztics} ]; then
+	echo "unset ztics" >>${gpfname}
+    fi
+
 }
 
 gp_bar_options()
@@ -2584,7 +2598,7 @@ parse_arguments()
     local short_args="hd:x:y:z:f:t:c:iv"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
 title:,xgrid,ygrid,noxgrid,gridcolor:,noygrid,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
-xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
+noxtics,noytics,noztics,xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,speedup,overwrite,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
 ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo,txt:"
@@ -2627,6 +2641,9 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--noytags"|"-noytags") noy_tags="YES";;
 	    "--ztags"|"-ztags") z_tags="$2";shift;;
 	    "--noztags"|"-noztags") noz_tags="YES";;
+	    "--noxtics"|"-noxtics") no_xtics="YES";;
+	    "--noytics"|"-noytics") no_ytics="YES";;
+	    "--noztics"|"-noztics") no_ztics="YES";;
 	    "--xlabel"|"-xlabel") x_title="$2";shift;;
 	    "--xlabeloffset"|"-xlabeloffset") x_label_offset="$2";shift;;
 	    "--ylabel"|"-ylabel") y_title="$2";shift;;
@@ -2803,6 +2820,9 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     print_msg "| noytags: ${noy_tags}\n"
     print_msg "| ztags: ${z_tags}\n"
     print_msg "| noztags: ${noz_tags}\n"
+    print_msg "| noxtics: ${no_xtics}\n"
+    print_msg "| noytics: ${no_ytics}\n"
+    print_msg "| noztics: ${no_ztics}\n"
     print_msg "| ztagsoffset: ${z_tags_offset}\n"
     print_msg "| x norm filters: ${x_norm}\n"
     print_msg "| y norm filters: ${y_norm}\n"
@@ -2812,8 +2832,8 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     print_msg "| y tags rotate: ${y_tics_rotate}\n"
     print_msg "| Legend: ${legend_params}\n"
     print_msg "| Size: ${size_param}\n"
-    print_msg "| Xformat: ${x_format}\n"
-    print_msg "| Yformat: ${y_format}\n"
+    print_msg "| Xformat: ${x_format} e.g. \"2%g\",\"%4.2f\"\n"
+    print_msg "| Yformat: ${y_format} e.g. \"2%g\",\"%4.2f\"\n"
     print_msg "| Ytics: ${y_tics}\n"
     print_msg "| Yrange: ${y_range}\n"
     print_msg "| Colors: ${user_colors}\n"
@@ -2931,6 +2951,9 @@ usage()
     print_msg "   --noytags                    : (Opt) Disable Y axis tags.\n"
     print_msg "   --ztags \"<tags>\"           : (Opt) Tags for the Z axis.\n"
     print_msg "   --noztags                    : (Opt) Disable Z axis tags.\n"
+    print_msg "   --noxtics                    : (Opt) Disable X axis tics.\n"
+    print_msg "   --noytics                    : (Opt) Disable Y axis tics.\n"
+    print_msg "   --noztics                    : (Opt) Disable Z axis tics.\n"
     print_msg "   --ztagsoffset <ztags offset> : (Opt) Set the offset of z tags.\n"
     print_msg "   --xnorm \"<x norm filters>\" : (Opt) Normalization filter X.\n"
     print_msg "   --ynorm \"<y norm filters>\" : (Opt) Normalization filter Y.\n"
