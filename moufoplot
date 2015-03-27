@@ -20,7 +20,8 @@
 # Changelog
 # ---------
 # v0.08 27MAR2015 Added:
-#                 --xrange
+#                 --xrange, to set the range of the X axis
+#                 --x2grid, to generate a fancy X grid between bars
 # v0.07 26MAR2015 Added:
 #                 Manually set the {x,y,z}tics with
 #                 --xtics, --ytics, --ztics
@@ -619,12 +620,18 @@ gp_title()
 
 gp_set_grid()
 {
+    grid_line_type="ls 10 lt rgb \"${grid_color}\""
     if [ "${y_grid}" == "YES" ]&&[ "${noy_grid}" != "YES" ]; then
-	echo "set grid ytics ls 10 lt rgb \"${grid_color}\"" >> ${gpfname}
+	echo "set grid ytics ${grid_line_type}" >> ${gpfname}
 	# echo "set grid y" >>${gpfname}
     fi
-    if [ "${x_grid}" == "YES" ]&&[ "${nox_grid}" != "YES" ]; then
-	echo "set grid xtics ls 10 lt rgb \"${grid_color}\"" >> ${gpfname}
+    if [ "${x_grid}" == "YES" ]&&[ "${nox_grid}" != "YES" ]&&[ "${x2_grid}" == "" ]; then
+	echo "set grid xtics ${grid_line_type}" >> ${gpfname}
+	# echo "set grid x" >>${gpfname}
+    fi
+    if [ "${x2_grid}" == "YES" ]&&[ "${nox_grid}" != "YES" ]; then
+	echo "set x2tics -0.5, 1 scale 0 format \"\" nomirror" >> ${gpfname}
+	echo "set grid x2tics ${grid_line_type}" >> ${gpfname}
 	# echo "set grid x" >>${gpfname}
     fi
 }
@@ -2694,7 +2701,7 @@ parse_arguments()
 {
     local short_args="hd:x:y:z:f:t:c:iv"
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
-title:,xgrid,ygrid,noxgrid,gridcolor:,noygrid,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
+title:,,x2grid,xgrid,ygrid,noxgrid,gridcolor:,noygrid,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
 noxtics,noytics,noztics,xtics:,ytics:,ztics:,xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,xrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,speedup,overwrite,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
@@ -2729,6 +2736,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--title"|"-title"|"-t") title="$2";shift;;
 	    "--xtags"|"-xtags") x_tags="$2";shift;;
 	    "--xgrid"|"-xgrid") x_grid=YES;;
+	    "--x2grid"|"-x2grid") x2_grid=YES;;
 	    "--gridcolor"|"-gridcolor") grid_color="$2";shift;;
 	    "--noygrid"|"-noygrid") noy_grid=YES;;
 	    "--noxgrid"|"-noxgrid") nox_grid=YES;;
@@ -3041,6 +3049,7 @@ usage()
     print_msg "   --filter,-f \"<filter vals>\": The filtering identifiers.\n"
     print_msg "   --title, -t \"<title>\"      : (Opt) Graph title.\n"
     print_msg "   --xgrid                      : (Opt) X grid\n"
+    print_msg "   --x2grid                     : (Opt) Fancy X grid between bars\n"
     print_msg "   --gridcolor                  : (Opt) Color of the grid\n"
     print_msg "   --noxgrid                    : (Opt) Dixable X grid\n"
     print_msg "   --ygrid                      : (Opt) Y grid\n"
