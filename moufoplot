@@ -19,6 +19,8 @@
 
 # Changelog
 # ---------
+# v0.08 27MAR2015 Added:
+#                 --xrange
 # v0.07 26MAR2015 Added:
 #                 Manually set the {x,y,z}tics with
 #                 --xtics, --ytics, --ztics
@@ -39,7 +41,7 @@
 
 
 MOUFOPLOT_STRING="MoufoPlot"
-moufoplot_version="0.06"
+moufoplot_version="0.08"
 
 MOUFOPLOT_GP_STRING="moufoplot .gp:"
 MOUFOPLOT_GP_DATA_STRING="moufoplot data:"
@@ -632,23 +634,6 @@ gp_key()
     echo "${key_command}" >> ${gpfname}
 }
 
-# pretty_tics
-gp_ytics()
-{
-    if [ "${y_range_step}" == "" ];then
-	# y_range_step=`echo "(${max_value} - ${min_value}) / ${y_tics}"|bc -l`
-	y_range_step=`echo "(${max_value} - 0) / ${y_tics}"|bc -l`
-	local is_y_dist_gt3=`greater_than ${y_range_step} 3`
-	if [ "${is_y_dist_gt3}" == "1" ];then
-	    y_range_step=${y_range_step/.*}
-	fi
-    fi
-    if [ "${y_tics}" == "0" ];then
-	echo "unset ytics" >> ${gpfname}
-    else
-	echo "set ytics ${y_range_step}" >> ${gpfname}
-    fi
-}
 
 gp_yrange()
 {
@@ -664,6 +649,13 @@ gp_yrange()
 	extra_tics=${extra_tics/.*}
 	local y_max=`echo "(${y_tics} + ${extra_tics})  * ${y_range_step}"|bc -l`
 	echo "set yrange[0:${y_max}]" >> ${gpfname}
+    fi
+}
+
+gp_xrange()
+{
+    if [ "${x_range}" != "" ]; then
+	echo "set xrange[${x_range_min}:${x_range_max}]" >> ${gpfname}
     fi
 }
 
@@ -684,27 +676,6 @@ gp_fonts()
     echo "set ylabel font \"${font_type},${ylabel_font_size}\" " >> ${gpfname}
     echo "set xlabel font \"${font_type},${xlabel_font_size}\" " >>${gpfname}
 
-    # Override {x,y,z}tics
-    if [ "${xtics}" != "" ]; then
-	echo "set xtics ${xtics}" >>${gpfname}
-    fi
-    if [ "${ytics}" != "" ]; then
-	echo "set ytics ${ytics}" >>${gpfname}
-    fi
-    if [ "${ztics}" != "" ]; then
-	echo "set ztics ${ztics}" >>${gpfname}
-    fi
-
-    # Disable {x,y,z}tics
-    if [ ${no_xtics} ]; then
-	echo "unset xtics" >>${gpfname}
-    fi
-    if [ ${no_ytics} ]; then
-	echo "unset ytics" >>${gpfname}
-    fi
-    if [ ${no_ztics} ]; then
-	echo "unset ztics" >>${gpfname}
-    fi
 }
 
 gp_bar_options()
@@ -719,8 +690,10 @@ gp_bar_options()
     gp_fonts
     gp_key
     gp_title
-    gp_ytics
-    gp_yrange 
+    gp_tics
+    gp_yrange
+    gp_xrange
+
 
     # Bargraph specific
     if [ "${bar_width}" != "" ];then
@@ -814,6 +787,52 @@ gp_bar_options()
     echo "${plot_cmd%?}" >> ${gpfname}
 }
 
+gp_tics()
+{
+    # xtics: Automatically set tics based on range
+    if [ "${xtics}" != "" ];then
+	echo "set xtics ${xtics}" >> ${gpfname}
+    fi
+    # ytics: pretty tics
+    if [ "${y_range_step}" == "" ];then
+	# y_range_step=`echo "(${max_value} - ${min_value}) / ${y_tics}"|bc -l`
+	y_range_step=`echo "(${max_value} - 0) / ${y_tics}"|bc -l`
+	local is_y_dist_gt3=`greater_than ${y_range_step} 3`
+	if [ "${is_y_dist_gt3}" == "1" ];then
+	    y_range_step=${y_range_step/.*}
+	fi
+    fi
+    if [ "${y_tics}" == "0" ];then
+	echo "unset ytics" >> ${gpfname}
+    else
+	echo "set ytics ${y_range_step}" >> ${gpfname}
+    fi
+
+
+    # Override {x,y,z}tics
+    if [ "${xtics}" != "" ]; then
+	echo "set xtics ${xtics}" >>${gpfname}
+    fi
+    if [ "${ytics}" != "" ]; then
+	echo "set ytics ${ytics}" >>${gpfname}
+    fi
+    if [ "${ztics}" != "" ]; then
+	echo "set ztics ${ztics}" >>${gpfname}
+    fi
+
+    # Disable {x,y,z}tics
+    if [ ${no_xtics} ]; then
+	echo "unset xtics" >>${gpfname}
+    fi
+    if [ ${no_ytics} ]; then
+	echo "unset ytics" >>${gpfname}
+    fi
+    if [ ${no_ztics} ]; then
+	echo "unset ztics" >>${gpfname}
+    fi
+
+}
+
 gp_line_options()
 {
     gp_terminal
@@ -825,10 +844,11 @@ gp_line_options()
     gp_fonts
     gp_key
     gp_title
-    gp_ytics
+    gp_tics
     gp_yrange
-    echo "set xrange[0:]" >> ${gpfname}
+    gp_xrange
     gp_labels
+
 
     # PLOT
     local plot_cmd="plot "
@@ -887,7 +907,8 @@ gp_hmap_options()
     local ytics_cmd="${RETVAL}"
     echo "${ytics_cmd}" >> ${gpfname}
 
- 
+    gp_tics
+
 	# PLOT
     local plot_cmd="plot "
     plot_cmd="${plot_cmd} \"${data_file}\" matrix with image"
@@ -1503,6 +1524,44 @@ sanity_checks()
 	    local is=${RETVAL}
 	    if [ "${is}" == "no" ];then
 		echo "ERROR: in yrange: ${y_range}. ${y_range_step} is not a number."
+		exit 1
+	    fi
+	fi
+    fi
+
+    # xrange
+    if [ "${x_range}" != "" ];then
+	x_range_min=${x_range_array[0]}
+	x_range_max=${x_range_array[1]}
+	x_range_step=${x_range_array[2]}
+	is_number ${x_range_min}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: in xrange: ${x_range}. ${x_range_min} is not a number."
+	    exit 1
+	fi
+	is_number ${x_range_max}
+	local is=${RETVAL}
+	if [ "${is}" == "no" ];then
+	    echo "ERROR: in xrange: ${x_range}. ${x_range_max} is not a number."
+	    exit 1
+	fi
+
+	local isgt=`greater_than ${x_range_max} ${x_range_min}`
+	if [ "${isgt}" == "0" ];then
+	    echo "ERROR: in xrange:${x_range}. Should be ${x_range_max} > ${x_range_min}."
+	    exit 1
+	fi
+
+	if [ "${x_range_step}" != "" ];then
+	    if [ "${x_tics}" != "" ];then
+		echo "ERROR: Conflicting options --xtics ${x_tics} and --xrange ${x_range}."
+		exit 1
+	    fi
+	    is_number ${x_range_step}
+	    local is=${RETVAL}
+	    if [ "${is}" == "no" ];then
+		echo "ERROR: in xrange: ${x_range}. ${x_range_step} is not a number."
 		exit 1
 	    fi
 	fi
@@ -2158,6 +2217,24 @@ parse_yrange()
     fi
 }
 
+parse_xrange()
+{
+    if [ "${x_range}" != "" ];then
+	local ni=0
+	set_ifs ","
+	for num in ${x_range}; do
+	    x_range_array[${ni}]=${num}
+	    ni=$(($ni + 1))
+	done
+	reset_ifs
+	if [ ${ni} -lt 2 ];then
+	    echo "ERROR: yrange: ${x_range} should be a pair: num1,num2"
+	    exit 1
+	fi
+    fi
+}
+
+
 parse_colors()
 {
     if [ "${user_colors}" == "" ];then
@@ -2619,7 +2696,7 @@ parse_arguments()
     local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
 title:,xgrid,ygrid,noxgrid,gridcolor:,noygrid,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
 noxtics,noytics,noztics,xtics:,ytics:,ztics:,xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
-legend:,size:,xformat:,yformat:,ytics:,yrange:,colors:,ignore,gap:,xmask:,ymask:,\
+legend:,size:,xformat:,yformat:,ytics:,yrange:,xrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,speedup,overwrite,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
 ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo,txt:"
     local getoptcmd="getopt -a -o ${short_args} -l ${long_args} -n getopt.sh -- ${@}"
@@ -2692,6 +2769,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--yformat"|"-yformat") y_format="$2";shift;;
 	    "--ytics"|"-ytics") y_tics="$2";shift;;
 	    "--yrange"|"-yrange") y_range="$2";shift;;
+	    "--xrange"|"-xrange") x_range="$2";shift;;
 	    "--colors"|"-colors"|"-c") user_colors="$2";shift;;
 	    "--ignore"|"-ignore"|"-i") ignore_filter="YES";;
 	    "--gap"|"-gap") cluster_gap="$2";shift;;
@@ -2811,7 +2889,10 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     if [ $? -ne 0 ]; then exit 1; fi
 
     parse_yrange
-    if [ $? -ne 0 ]; then exit 1; fi    
+    if [ $? -ne 0 ]; then exit 1; fi
+
+    parse_xrange
+    if [ $? -ne 0 ]; then exit 1; fi
 
     parse_offsets
 
@@ -2862,6 +2943,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     print_msg "| Yformat: ${y_format} e.g. \"2%g\",\"%4.2f\"\n"
     print_msg "| Ytics: ${y_tics}\n"
     print_msg "| Yrange: ${y_range}\n"
+    print_msg "| Xrange: ${x_range}\n"
     print_msg "| Colors: ${user_colors}\n"
     print_msg "| Ignore Filter ERROR: ${ignore_filter}\n"
     print_msg "| Cluster GAP: ${cluster_gap}\n"
@@ -2998,6 +3080,7 @@ usage()
     print_msg "   --xformat \"format\"         : (Opt) Format of the x tags.\n"
     print_msg "   --yformat \"format\"         : (Opt) Format of the y tags.\n"
     print_msg "   --ytics NUM                  : (Opt) Number of tics on Y.\n"
+    print_msg "   --xrange MIN,MAX,STEP        : (Opt) Range of X tics.\n"
     print_msg "   --yrange MIN,MAX,STEP        : (Opt) Range of Y tics.\n"
     print_msg "   --colors,-c \"#color1,#color2...\": (Opt) User defined colors USE:\"quotes\".\n"
     print_msg "   --gap <number>               : (Opt) The gap between clusters.\n"
