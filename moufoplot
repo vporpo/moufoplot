@@ -22,6 +22,7 @@
 # v0.08 27MAR2015 Added:
 #                 --xrange, to set the range of the X axis
 #                 --x2grid, to generate a fancy X grid between bars
+#                 --extra, to append an extra command to .gp
 # v0.07 26MAR2015 Added:
 #                 Manually set the {x,y,z}tics with
 #                 --xtics, --ytics, --ztics
@@ -685,6 +686,11 @@ gp_fonts()
 
 }
 
+gp_extra()
+{
+    echo "${extra_cmd}" >> ${gpfname}
+}
+
 gp_bar_options()
 {
     local rowstacked=${1}
@@ -700,7 +706,7 @@ gp_bar_options()
     gp_tics
     gp_yrange
     gp_xrange
-
+    gp_extra
 
     # Bargraph specific
     if [ "${bar_width}" != "" ];then
@@ -855,7 +861,7 @@ gp_line_options()
     gp_yrange
     gp_xrange
     gp_labels
-
+    gp_extra
 
     # PLOT
     local plot_cmd="plot "
@@ -915,6 +921,7 @@ gp_hmap_options()
     echo "${ytics_cmd}" >> ${gpfname}
 
     gp_tics
+    gp_extra
 
 	# PLOT
     local plot_cmd="plot "
@@ -2700,7 +2707,7 @@ restore_data()
 parse_arguments()
 {
     local short_args="hd:x:y:z:f:t:c:iv"
-    local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,\
+    local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,extra:,\
 title:,,x2grid,xgrid,ygrid,noxgrid,gridcolor:,noygrid,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
 noxtics,noytics,noztics,xtics:,ytics:,ztics:,xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,xrange:,colors:,ignore,gap:,xmask:,ymask:,\
@@ -2733,6 +2740,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--yvals"|"-yvals"|"-y") y_vals="$2";shift;;
 	    "--zvals"|"-zvals"|"-z") z_vals="$2";shift;;
 	    "--filter"|"-filter"|"-f") others="$2";shift;;
+	    "--extra"|"-extra") extra_cmd="$2";shift;;
 	    "--title"|"-title"|"-t") title="$2";shift;;
 	    "--xtags"|"-xtags") x_tags="$2";shift;;
 	    "--xgrid"|"-xgrid") x_grid=YES;;
@@ -2920,6 +2928,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     print_msg "| y: ${y_vals}\n"
     print_msg "| z: ${z_vals}\n"
     print_msg "| filter: ${others}\n"
+    print_msg "| extra: ${extra_cmd}\n"
     print_msg "| title: ${title}\n"
     print_msg "| xlabel: ${x_title}\n"
     print_msg "| xlabel offset: ${x_label_offset}\n"
@@ -3047,6 +3056,7 @@ usage()
     print_msg "   --yvals,-y \"<y values>\"    : The identifiers of the Y values.\n"
     print_msg "   --zvals,-z \"<z values>\"    : The identifiers of the Z values.\n"
     print_msg "   --filter,-f \"<filter vals>\": The filtering identifiers.\n"
+    print_msg "   --extra,\"<Extra .gp cmd>\"  : Add extra gnuplot cmd to .gp\n"
     print_msg "   --title, -t \"<title>\"      : (Opt) Graph title.\n"
     print_msg "   --xgrid                      : (Opt) X grid\n"
     print_msg "   --x2grid                     : (Opt) Fancy X grid between bars\n"
