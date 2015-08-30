@@ -431,11 +431,24 @@ get_not_x()
     echo ${not_x_values}
 }
 
+# Fix float numbers with no leading 0 (e.g. .1234)
+fix_float() {
+    echo ${1} | grep -o "\..*" 2> /dev/null > /dev/null
+    if [ ${?} -eq 0 ]; then
+	RETVAL="0${data}"
+    else
+	RETVAL=${1}
+    fi
+}
 
 # Change input number from exponential notation to regular
 fix_exponential()
 {
     local data=$1
+    # Fix floats with no leading 0 (e.g. .1234)
+    fix_float "${data}"
+    data=${RETVAL}
+
     is_number "${data}"
     local isnum=${RETVAL}
     if [ "${isnum}" == "no" ];then
@@ -455,7 +468,6 @@ fix_exponential()
     # echo ${data}
     RETVAL=${data}
 }
-
 
 # Input: FILE
 # Output: The number contained in FILE
@@ -479,7 +491,6 @@ get_file_value()
 	    exit 1
 	fi
     fi
-    
     fix_exponential "${data}"
     if [ $? -ne 0 ];then
 	echo "ERROR: file: ${file}: ${data} is not a number OR an exponential."
