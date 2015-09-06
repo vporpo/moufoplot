@@ -2000,7 +2000,8 @@ parse_legend()
     local RJUST=14
     local SHORT=15
     local LONG=16
-    local AT=17
+    local VLONG=17
+    local AT=18
 
     # Default values:
     if [ "${plot_type}" == "stacked" ];then
@@ -2035,6 +2036,7 @@ parse_legend()
 	    "rjust") mask[${RJUST}]=1;;
 	    "short") mask[${SHORT}]=1;;
 	    "long") mask[${LONG}]=1;;
+	    "vlong") mask[${VLONG}]=1;;
 	    *) 
 		local atgrep=`echo ${p}|egrep -o "at(([0-9]+)|([0-9]+\.[0-9]+))x(([0-9]+)|([0-9]+\.[0-9]+))"`
 		if [ "${p}" == "${atgrep}" ]; then
@@ -2120,6 +2122,9 @@ parse_legend()
 	fi
 	if [ "${mask[${LONG}]}" == "1" ];then
 	    key_command="${key_command} samplen 2"
+	fi
+	if [ "${mask[${VLONG}]}" == "1" ];then
+	    key_command="${key_command} samplen 4"
 	fi
 
 
@@ -2271,8 +2276,8 @@ parse_colors()
 	color_array[1]="#000000" #(black)
 	color_array[2]="#202000" # black
 	color_array[3]="#ccaa00" # light yellow
-	color_array[4]="#0000AA" # dark blue
-	color_array[5]="#00BB00" # light green
+	color_array[4]="#4444EE" # dark blue
+	color_array[5]="#33CC33" # light green
 	color_array[6]="#ffdb66" # light yellow
 	color_array[7]="#AA0000" # red
 	color_array[8]="#6699ff" # light blue
