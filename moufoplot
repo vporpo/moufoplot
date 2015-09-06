@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# MoufoPlot 
-# Copyright (C) 2012,2013 Vasileios Porpodas <v DOT porpodas AT ed.ac.uk>
+# MoufoPlot
+# Copyright (C) 2012,2013,2014,2015 Vasileios Porpodas <vp331ATclDOTcam.ac.uk>
 #
 # MoufoPlot is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free
@@ -19,6 +19,9 @@
 
 # Changelog
 # ---------
+# v0.09 27MAR2015 Added Features:
+#                 --txt now supports multiple texts
+#                 --legend supports short,long,vlong parameters
 # v0.08 27MAR2015 Added:
 #                 --xrange, to set the range of the X axis
 #                 --x2grid, to generate a fancy X grid between bars
@@ -43,7 +46,7 @@
 
 
 MOUFOPLOT_STRING="MoufoPlot"
-moufoplot_version="0.08"
+moufoplot_version="0.09"
 
 MOUFOPLOT_GP_STRING="moufoplot .gp:"
 MOUFOPLOT_GP_DATA_STRING="moufoplot data:"
@@ -586,18 +589,23 @@ gp_labels()
     if [ "${y_title}" != "" ]; then
 	echo "set ylabel \"${y_title}\" offset ${y_label_offset},0"  >> ${gpfname}
     fi
-    if [ "${overlay_txt}" != "" ]; then
-	echo -n "set label \"${overlay_txt_msg}\" at ${overlay_txt_loc}" >> ${gpfname}
-	if [ "${overlay_txt_color}" != "" ]; then
-	    echo -n " tc rgb \"${overlay_txt_color}\"" >> ${gpfname}
-	fi
-	if [ "${overlay_txt_font_size}" != "" ];then
-	    echo -n " font \",${overlay_txt_font_size}\"" >> ${gpfname}
-	fi
-	if [ "${overlay_txt_font_back}" != "" ]; then 
-	    echo -n " ${overlay_txt_front_back}" >> ${gpfname}
-	fi
-	echo "" >> ${gpfname}
+    local max=${#overlay_txt_msg[@]}
+    if [ "${overlay_txt[@]}" != "" ]; then
+	local cnt=0
+	while [ ${cnt} -lt ${max} ]; do
+	    echo -n "set label \"${overlay_txt_msg[${cnt}]}\" at ${overlay_txt_loc[${cnt}]}" >> ${gpfname}
+	    if [ "${overlay_txt_color[${cnt}]}" != "" ]; then
+		echo -n " tc rgb \"${overlay_txt_color[${cnt}]}\"" >> ${gpfname}
+	    fi
+	    if [ "${overlay_txt_font_size[${cnt}]}" != "" ];then
+		echo -n " font \",${overlay_txt_font_size[${cnt}]}\"" >> ${gpfname}
+	    fi
+	    if [ "${overlay_txt_font_back[${cnt}]}" != "" ]; then 
+		echo -n " ${overlay_txt_front_back[${cnt}]}" >> ${gpfname}
+	    fi
+	    echo "" >> ${gpfname}
+	    cnt=$((${cnt} + 1))
+	done
     fi
 }
 
@@ -2600,46 +2608,53 @@ parse_vals()
 
 overlay_txt_usage()
 {
-    echo "Usage: --txt \"TEXT\",X,Y[,optional color][,optional font size][,optional front/back position]"
-    echo "Example: --txt \"Some text\",1,21.3,blue,30,front"
+    echo "Usage: --txt \"'TEXT1',X1,Y1[,optional color][,optional font size][,optional front/back position] TEXT2,X2,Y2[,...] ...\""
+    echo "Example: --txt 'Some text1',1,21.3,blue,30,front"
+    echo "Example: --txt 'Some text1',1,21.3,blue,30,front 'More text2',2,20"
 }
 
 parse_overlay_txt()
 {
-    if [ "${overlay_txt}" == "" ];then
-	return
-    fi 
+    local overlay_txt_part
     local cnt=0
-    overlay_txt_msg=`echo ${overlay_txt} | cut -d ',' -f 1`
-    local overlay_txt_coord_x=`echo ${overlay_txt} | cut -d ',' -f 2`
-    local overlay_txt_coord_y=`echo ${overlay_txt} | cut -d ',' -f 3`
-    overlay_txt_loc="${overlay_txt_coord_x},${overlay_txt_coord_y}"
-    overlay_txt_color=`echo ${overlay_txt} | cut -d ',' -f 4`
-    overlay_txt_font_size=`echo ${overlay_txt} | cut -d ',' -f 5`
-    overlay_txt_front_back=`echo ${overlay_txt} | cut -d ',' -f 6`
+    set_ifs " "
+    for overlay_txt_part in ${overlay_txt}; do
+	if [ "${overlay_txt}" == "" ];then
+	    return
+	fi
+	overlay_txt_msg[${cnt}]=`echo ${overlay_txt_part} | cut -d ',' -f 1`
+	local overlay_txt_coord_x=`echo ${overlay_txt_part} | cut -d ',' -f 2 |sed 's/ //g'`
+	local overlay_txt_coord_y=`echo ${overlay_txt_part} | cut -d ',' -f 3 | sed 's/ //g'`
+	overlay_txt_loc[${cnt}]="${overlay_txt_coord_x},${overlay_txt_coord_y}"
+	overlay_txt_color[${cnt}]=`echo ${overlay_txt_part} | cut -d ',' -f 4`
+	overlay_txt_font_size[${cnt}]=`echo ${overlay_txt_part} | cut -d ',' -f 5`
+	overlay_txt_front_back[${cnt}]=`echo ${overlay_txt_part} | cut -d ',' -f 6`
 
-    is_number ${overlay_txt_coord_x}
-    local is_x=${RETVAL}
-    is_number ${overlay_txt_coord_y}
-    local is_y=${RETVAL}
-    if [ "${overlay_txt_coord_x}" == "" ]||[ "${overlay_txt_coord_y}" == "" ]||[ "${is_x}" != "yes" ]||[ "${is_y}" != "yes" ]; then
-	echo "ERROR: in --txt: coordinates \"${overlay_txt_coord_x},${overlay_txt_coord_y}\" missing or not numbers."
-	overlay_txt_usage
-	exit 1
-    fi
-    is_number ${overlay_txt_font_size}
-    local is_font_size_a_num=${RETVAL}
-    if [ "${is_font_size_a_num}" != "yes" ]; then
-	echo "ERROR: in --txt: font size \"${overlay_txt_font_size}\"is not a number"
-	overlay_txt_usage
-	exit 1
-    fi
-    if [ "${overlay_txt_front_back}" != "" ]&&[ "${overlay_txt_front_back}" != "front" ]&&[ "${overlay_txt_front_back}" != "back" ]; then
-	echo "ERROR: in --txt: wrong front/back ???"
-	overlay_txt_usage
-	exit 1
-    fi
-    print_msg "Overlay Text: ${overlay_txt_msg}, ${overlay_txt_loc}, ${overlay_txt_color}, ${overlay_txt_font_size}, ${overlay_txt_front_back}\n"
+	is_number ${overlay_txt_coord_x}
+	local is_x=${RETVAL}
+	is_number ${overlay_txt_coord_y}
+	local is_y=${RETVAL}
+	if [ "${overlay_txt_coord_x}" == "" ]||[ "${overlay_txt_coord_y}" == "" ]||[ "${is_x}" != "yes" ]||[ "${is_y}" != "yes" ]; then
+	    echo "ERROR: in --txt: coordinates \"${overlay_txt_coord_x},${overlay_txt_coord_y}\" missing or not numbers."
+	    overlay_txt_usage
+	    exit 1
+	fi
+	is_number ${overlay_txt_font_size}
+	local is_font_size_a_num=${RETVAL}
+	if [ "${is_font_size_a_num}" != "yes" ]; then
+	    echo "ERROR: in --txt: font size \"${overlay_txt_font_size}\"is not a number"
+	    overlay_txt_usage
+	    exit 1
+	fi
+	if [ "${overlay_txt_front_back}" != "" ]&&[ "${overlay_txt_front_back}" != "front" ]&&[ "${overlay_txt_front_back}" != "back" ]; then
+	    echo "ERROR: in --txt: wrong front/back ???"
+	    overlay_txt_usage
+	    exit 1
+	fi
+	print_msg "Overlay Text ${cnt}: ${overlay_txt_msg[${cnt}]}, ${overlay_txt_loc[${cnt}]}, ${overlay_txt_color[${cnt}]}, ${overlay_txt_font_size[${cnt}]}, ${overlay_txt_front_back[${cnt}]}\n"
+	cnt=$((${cnt} + 1))
+    done
+    reset_ifs
 }
 # Display a waiting bar /-\
 wait_cnt=0
