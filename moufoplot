@@ -1998,8 +1998,9 @@ parse_legend()
     local NOBOX=12
     local LJUST=13
     local RJUST=14
-    local SMALL=15
-    local AT=16
+    local SHORT=15
+    local LONG=16
+    local AT=17
 
     # Default values:
     if [ "${plot_type}" == "stacked" ];then
@@ -2032,7 +2033,8 @@ parse_legend()
 	    "nobox") mask[${NOBOX}]=1;;
 	    "ljust") mask[${LJUST}]=1;;
 	    "rjust") mask[${RJUST}]=1;;
-	    "small") mask[${SMALL}]=1;;
+	    "short") mask[${SHORT}]=1;;
+	    "long") mask[${LONG}]=1;;
 	    *) 
 		local atgrep=`echo ${p}|egrep -o "at(([0-9]+)|([0-9]+\.[0-9]+))x(([0-9]+)|([0-9]+\.[0-9]+))"`
 		if [ "${p}" == "${atgrep}" ]; then
@@ -2112,11 +2114,13 @@ parse_legend()
 	    key_command="${key_command} rmargin"
 	fi
 
-	# Sample size
-	if [ "${mask[${SMALL}]}" == "1" ];then
+	# Sample size short, long
+	if [ "${mask[${SHORT}]}" == "1" ];then
 	    key_command="${key_command} samplen 1"
 	fi
-
+	if [ "${mask[${LONG}]}" == "1" ];then
+	    key_command="${key_command} samplen 2"
+	fi
 
 
 
@@ -3104,8 +3108,8 @@ usage()
     print_msg "   --xrotate \"<angle>\"        : (Opt) Rotate angle for X tags.\n"
     print_msg "   --yrotate \"<angle>\"        : (Opt) Rotate angle for Y tags.\n"
     print_msg "   --legend \"<parameters>\"    : (Opt) Control legend attrib.\n"
-    print_msg "         Params: on/off, in/out, top/bottom/center, right/left,\n"
-    print_msg "                 horizontal/vertical, ljust,rjust, small, box, atMxN\n"
+    print_msg "    (on/off, in/out, top/bottom/center, right/left,\n"
+    print_msg "     horizontal/vertical, ljust,rjust, short/long, box, atMxN)\n"
     print_msg "   --size NUMxNUM               : (Opt) Dimensions of the graph.\n"
     print_msg "   --xformat \"format\"         : (Opt) Format of the x tags.\n"
     print_msg "   --yformat \"format\"         : (Opt) Format of the y tags.\n"
