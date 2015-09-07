@@ -19,7 +19,10 @@
 
 # Changelog
 # ---------
-# v0.09 27MAR2015 Added Features:
+# v0.10 07SEP2015 Added:
+#                 --hline prints a line at given coordinates
+#                 --txt now supports text rotation
+# v0.09 06SEP2015 Added Features:
 #                 --txt now supports multiple texts
 #                 --legend supports short,long,vlong parameters
 # v0.08 27MAR2015 Added:
@@ -46,7 +49,7 @@
 
 
 MOUFOPLOT_STRING="MoufoPlot"
-moufoplot_version="0.09"
+moufoplot_version="0.10"
 
 MOUFOPLOT_GP_STRING="moufoplot .gp:"
 MOUFOPLOT_GP_DATA_STRING="moufoplot data:"
@@ -583,30 +586,50 @@ gp_xy_format()
     fi
 }
 
-gp_labels()
+gp_hline()
 {
-    echo "set xlabel \" ${x_title}\" offset 0,${x_label_offset}"  >> ${gpfname}
-    if [ "${y_title}" != "" ]; then
-	echo "set ylabel \"${y_title}\" offset ${y_label_offset},0"  >> ${gpfname}
+    local hline_max=${#hline_x_from[@]}
+    if [ "${hline}" != "" ]; then
+	local cnt=0
+	while [ ${cnt} -lt ${hline_max} ]; do
+	    local arrow_cnt=$((${cnt} + 1))
+	    echo "set arrow ${arrow_cnt} lt ${hline_type[${cnt}]} lw ${hline_w[${cnt}]} from ${hline_x_from[${cnt}]},${hline_y_from[${cnt}]} to ${hline_x_to[${cnt}]},${hline_y_to[${cnt}]} lc rgb \"${hline_color[${cnt}]}\" nohead ${hline_front_back[${cnt}]} " >> ${gpfname}
+	    cnt=$((${cnt} + 1))
+	done
     fi
-    local max=${#overlay_txt_msg[@]}
+}
+
+gp_overlay_txt()
+{
+    local overlay_txt_max=${#overlay_txt_msg[@]}
     if [ "${overlay_txt[@]}" != "" ]; then
 	local cnt=0
-	while [ ${cnt} -lt ${max} ]; do
-	    echo -n "set label \"${overlay_txt_msg[${cnt}]}\" at ${overlay_txt_loc[${cnt}]}" >> ${gpfname}
+	while [ ${cnt} -lt ${overlay_txt_max} ]; do
+	    echo -n "set label \"${overlay_txt_msg[${cnt}]}\" at ${overlay_txt_loc[${cnt}]} rotate by ${overlay_txt_rotate[${cnt}]} " >> ${gpfname}
 	    if [ "${overlay_txt_color[${cnt}]}" != "" ]; then
 		echo -n " tc rgb \"${overlay_txt_color[${cnt}]}\"" >> ${gpfname}
 	    fi
 	    if [ "${overlay_txt_font_size[${cnt}]}" != "" ];then
 		echo -n " font \",${overlay_txt_font_size[${cnt}]}\"" >> ${gpfname}
 	    fi
-	    if [ "${overlay_txt_font_back[${cnt}]}" != "" ]; then 
+	    if [ "${overlay_txt_front_back[${cnt}]}" != "" ]; then 
 		echo -n " ${overlay_txt_front_back[${cnt}]}" >> ${gpfname}
 	    fi
 	    echo "" >> ${gpfname}
 	    cnt=$((${cnt} + 1))
 	done
     fi
+}
+
+gp_labels()
+{
+    echo "set xlabel \" ${x_title}\" offset 0,${x_label_offset}"  >> ${gpfname}
+    if [ "${y_title}" != "" ]; then
+	echo "set ylabel \"${y_title}\" offset ${y_label_offset},0"  >> ${gpfname}
+    fi
+
+    gp_overlay_txt
+    gp_hline
 }
 
 gp_size()
@@ -2608,27 +2631,37 @@ parse_vals()
 
 overlay_txt_usage()
 {
-    echo "Usage: --txt \"'TEXT1',X1,Y1[,optional color][,optional font size][,optional front/back position] TEXT2,X2,Y2[,...] ...\""
-    echo "Example: --txt 'Some text1',1,21.3,blue,30,front"
-    echo "Example: --txt 'Some text1',1,21.3,blue,30,front 'More text2',2,20"
+    echo "Usage: --txt \"TEXT1,X1,Y1[,optional rotate][,optional color][,optional font size][,optional front/back position]\"@\"TEXT2,X2,Y2[,...] ...\""
+    echo "NOTE: the delimiter is '@'"
+    echo "Example: --txt 'Some text1',1,21.3,30,blue,30,front"
+    echo "Example: --txt \"Some text1,1,21.3,0,blue,30,front\"@\"More text2,2,20\""
+}
+
+
+hline_usage()
+{
+    echo "Usage: --hline \"X1,Y1,X2,Y2[,optional width][,optional type][,optional color][,optional front/back] X3,Y3,X4,Y4[,...] ...\""
+    echo "Example: --hline 0,0,1,1 0,0,1,2"
+    echo "Example: --hline 0,0,1,1,5,2,#abcdef,front"
 }
 
 parse_overlay_txt()
 {
-    local overlay_txt_part
+    overlay_txt_part
     local cnt=0
-    set_ifs " "
+    set_ifs "@"
     for overlay_txt_part in ${overlay_txt}; do
 	if [ "${overlay_txt}" == "" ];then
 	    return
 	fi
-	overlay_txt_msg[${cnt}]=`echo ${overlay_txt_part} | cut -d ',' -f 1`
+	overlay_txt_msg[${cnt}]=$(echo ${overlay_txt_part} | cut -d ',' -f 1)
 	local overlay_txt_coord_x=`echo ${overlay_txt_part} | cut -d ',' -f 2 |sed 's/ //g'`
 	local overlay_txt_coord_y=`echo ${overlay_txt_part} | cut -d ',' -f 3 | sed 's/ //g'`
 	overlay_txt_loc[${cnt}]="${overlay_txt_coord_x},${overlay_txt_coord_y}"
-	overlay_txt_color[${cnt}]=`echo ${overlay_txt_part} | cut -d ',' -f 4`
-	overlay_txt_font_size[${cnt}]=`echo ${overlay_txt_part} | cut -d ',' -f 5`
-	overlay_txt_front_back[${cnt}]=`echo ${overlay_txt_part} | cut -d ',' -f 6`
+	overlay_txt_rotate[${cnt}]=`echo ${overlay_txt_part} | cut -d ',' -f 4 | sed 's/ //g'`
+	overlay_txt_color[${cnt}]=`echo ${overlay_txt_part} | cut -d ',' -f 5`
+	overlay_txt_font_size[${cnt}]=`echo ${overlay_txt_part} | cut -d ',' -f 6`
+	overlay_txt_front_back[${cnt}]=`echo ${overlay_txt_part} | cut -d ',' -f 7`
 
 	is_number ${overlay_txt_coord_x}
 	local is_x=${RETVAL}
@@ -2639,23 +2672,110 @@ parse_overlay_txt()
 	    overlay_txt_usage
 	    exit 1
 	fi
-	is_number ${overlay_txt_font_size}
+	is_number ${overlay_txt_font_size[${cnt}]}
 	local is_font_size_a_num=${RETVAL}
 	if [ "${is_font_size_a_num}" != "yes" ]; then
-	    echo "ERROR: in --txt: font size \"${overlay_txt_font_size}\"is not a number"
+	    echo "ERROR: in --txt: font size \"${overlay_txt_font_size[${cnt}]}\"is not a number"
 	    overlay_txt_usage
 	    exit 1
 	fi
-	if [ "${overlay_txt_front_back}" != "" ]&&[ "${overlay_txt_front_back}" != "front" ]&&[ "${overlay_txt_front_back}" != "back" ]; then
+
+	if [ "${overlay_txt_rotate[${cnt}]}" == "" ]; then
+	    overlay_txt_rotate[${cnt}]=0
+	fi
+	is_number ${overlay_txt_rotate[${cnt}]}
+	local is_rotate_a_num=${RETVAL}
+	if [ "${is_rotate_a_num}" != "yes" ]; then
+	    echo "ERROR: in --txt: rotate \"${overlay_txt_rotate[${cnt}]}\"is not a number"
+	    overlay_txt_usage
+	    exit 1
+	fi
+
+
+	if [ "${overlay_txt_front_back[${cnt}]}" != "" ]&&[ "${overlay_txt_front_back[${cnt}]}" != "front" ]&&[ "${overlay_txt_front_back[${cnt}]}" != "back" ]; then
 	    echo "ERROR: in --txt: wrong front/back ???"
 	    overlay_txt_usage
 	    exit 1
 	fi
-	print_msg "Overlay Text ${cnt}: ${overlay_txt_msg[${cnt}]}, ${overlay_txt_loc[${cnt}]}, ${overlay_txt_color[${cnt}]}, ${overlay_txt_font_size[${cnt}]}, ${overlay_txt_front_back[${cnt}]}\n"
+	print_msg "Overlay Text ${cnt}: MSG:${overlay_txt_msg[${cnt}]}, LOC:${overlay_txt_loc[${cnt}]}, ROTATE:${overlay_txt_color[${cnt}]}, COLOR:${overlay_txt_color[${cnt}]}, FONT_SIZE:${overlay_txt_font_size[${cnt}]}, F/B:${overlay_txt_front_back[${cnt}]}\n"
 	cnt=$((${cnt} + 1))
     done
     reset_ifs
 }
+
+
+parse_hline()
+{
+    if [ "${hline}" == "" ];then
+	return
+    fi
+    local hline_part
+    local cnt=0
+    set_ifs " "
+    for hline_part in ${hline}; do
+	hline_x_from[${cnt}]=`echo ${hline_part} | cut -d ',' -f 1`
+	hline_y_from[${cnt}]=`echo ${hline_part} | cut -d ',' -f 2 | sed 's/ //g'`
+	hline_x_to[${cnt}]=`echo ${hline_part} | cut -d ',' -f 3 |sed 's/ //g'`
+	hline_y_to[${cnt}]=`echo ${hline_part} | cut -d ',' -f 4 | sed 's/ //g'`
+	hline_w[${cnt}]=`echo ${hline_part} | cut -d ',' -f 5 | sed 's/ //g'`
+	hline_type[${cnt}]=`echo ${hline_part} | cut -d ',' -f 6 | sed 's/ //g'`
+	hline_color[${cnt}]=`echo ${hline_part} | cut -d ',' -f 7 | sed 's/ //g'`
+	hline_front_back[${cnt}]=`echo ${hline_part} | cut -d ',' -f 8 | sed 's/ //g'`
+
+	if [ "${hline_front_back[${cnt}]}" == "" ]; then
+	    hline_front_back[${cnt}]="front"
+	fi
+
+	is_number ${hline_x_from[${cnt}]}
+	local is_x_from=${RETVAL}
+	is_number ${hline_x_to[${cnt}]}
+	local is_x_to=${RETVAL}
+	is_number ${hline_y_from[${cnt}]}
+	local is_y_from=${RETVAL}
+	is_number ${hline_y_to[${cnt}]}
+	local is_y_to=${RETVAL}
+
+	if [ "${hline_x_from[${cnt}]}" == "" ]||[ "${hline_x_to[${cnt}]}" == "" ]||[ "${hline_y_from[${cnt}]}" == "" ]||[ "${hline_y_to[${cnt}]}" == "" ]||[ "${is_x_from}" != "yes" ]||[ "${is_x_to}" != "yes" ]||[ "${is_y_from}" != "yes" ]||[ "${is_y_to}" != "yes" ]; then
+	    echo "ERROR: in --hline: coordinates \"${hline_x_from[${cnt}]},${hline_x_to[${cnt}]},${hline_y_from[${cnt}]},${hline_y_to[${cnt}]}\" missing or not numbers."
+	    hline_usage
+	    exit 1
+	fi
+	# FIXME: give default values to hline_type and hline_w
+	if [ "${hline_w[${cnt}]}" == "" ]; then
+	    hline_w[${cnt}]=2
+	fi
+	if [ "${hline_type[${cnt}]}" == "" ]; then
+	    hline_type[${cnt}]=1
+	fi
+	if [ "${hline_color[${cnt}]}" == "" ]; then
+	    hline_color[${cnt}]=${color_array[2]}
+	fi
+
+	is_number ${hline_type[${cnt}]}
+	local is_hline_type_a_num=${RETVAL}
+	if [ "${is_hline_type_a_num}" != "yes" ]; then
+	    echo "ERROR: in --hline: hline type \"${hline_type[${cnt}]}\"is not a number"
+	    hline_usage
+	    exit 1
+	fi
+	is_number ${hline_w[${cnt}]}
+	local is_hline_w_a_num=${RETVAL}
+	if [ "${is_hline_w_a_num}" != "yes" ]; then
+	    echo "ERROR: in --hline: hline width \"${hline_w[${cnt}]}\"is not a number"
+	    hline_usage
+	    exit 1
+	fi
+
+	# Fix x
+	hline_x_from[${cnt}]=$(echo "${hline_x_from[${cnt}]} - 1" | bc -l)
+	hline_x_to[${cnt}]=$(echo "${hline_x_to[${cnt}]} - 1" | bc -l)
+
+	print_msg "Hline ${cnt}: X1:${hline_x_from[${cnt}]}, Y1:${hline_y_to[${cnt}]}, X2:${hline_x_to[${cnt}]}, Y2:${hline_y_to[${cnt}]}, WIDTH:${hline_w[${cnt}]}, TYPE:${hline_type[${cnt}]}, COLOR:${hline_color[${cnt}]}\n"
+	cnt=$((${cnt} + 1))
+    done
+    reset_ifs
+}
+
 # Display a waiting bar /-\
 wait_cnt=0
 wait_bar()
@@ -2747,7 +2867,7 @@ title:,,x2grid,xgrid,ygrid,noxgrid,gridcolor:,noygrid,xlabel:,ylabel:,data:,xtag
 noxtics,noytics,noztics,xtics:,ytics:,ztics:,xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,xrange:,colors:,ignore,gap:,xmask:,ymask:,\
 zmask:,xavg:,yavg:,percent,speedup,overwrite,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
-ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo,txt:"
+ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo,txt:,hline:"
     local getoptcmd="getopt -a -o ${short_args} -l ${long_args} -n getopt.sh -- ${@}"
     local getoptcmd_set_args="local args=\`${getoptcmd}\`"
     # echo "GETOPT: $getoptcmd_set_args"
@@ -2832,6 +2952,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--xgeo"|"-xgeo") x_geomean_flag="YES";;
 	    "--ygeo"|"-ygeo") y_geomean_flag="YES";;
 	    "--txt"|"-txt") overlay_txt="$2";shift;;
+	    "--hline"|"-hline") hline="$2";shift;;
 	    "--percent"|"-percent") percent="YES";;
 	    "--speedup"|"-speedup") speedup="YES";;
 	    "--barw"|"-barw") bar_width="$2";shift;;
@@ -2948,6 +3069,8 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     parse_offsets
 
     parse_overlay_txt
+
+    parse_hline
 
     if [ "${y_tics}" == "" ]&&[ "${y_range}" == "" ];then
 	y_tics=5
@@ -3148,6 +3271,9 @@ usage()
     print_msg "   --ignore,-i                  : (Opt) Ignore Filter ERROR.\n"
     print_msg "   --percent                    : (Opt) Change Y axis to show %% vals.\n"
     print_msg "   --txt                        : (Opt) Overlay text anywhere in text\n"
+    print_msg "     params: 'text',x,y,rotate,#color,size,front/back\n"
+    print_msg "   --hline                      : (Opt) Overlay horizontal line\n"
+    print_msg "     params: x1,y1,x2,y2,width,type,#color,front/back\n"
     print_msg "   --speedup                    : (Opt) Change Y axis to show speedups. REQUIRES normalized values!!!.\n"
     print_msg "   --noviewer                   : (Opt) Disable launching the VIEWER.\n"
     print_msg "   --forceviewer                : (Opt) Force enable the VIEWER.\n"
