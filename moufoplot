@@ -2688,7 +2688,7 @@ hline_usage()
 
 parse_overlay_txt()
 {
-    overlay_txt_part
+    local overlay_txt_part
     local cnt=0
     set_ifs "@"
     for overlay_txt_part in ${overlay_txt}; do
