@@ -602,7 +602,7 @@ gp_hline()
 gp_overlay_txt()
 {
     local overlay_txt_max=${#overlay_txt_msg[@]}
-    if [ "${overlay_txt[@]}" != "" ]; then
+    if [ "${overlay_txt}" != "" ]; then
 	local cnt=0
 	while [ ${cnt} -lt ${overlay_txt_max} ]; do
 	    echo -n "set label \"${overlay_txt_msg[${cnt}]}\" at ${overlay_txt_loc[${cnt}]} rotate by ${overlay_txt_rotate[${cnt}]} " >> ${gpfname}
@@ -794,7 +794,17 @@ gp_bar_options()
 	    if [ "${xtics}" != "" ]; then
 		local USING_XTIC=""
 	    fi
-	    plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}${USING_XTIC} with histograms title columnheader(${cmn}) lt ${line_type_array[${xi}]} lw ${line_width} lc rgb \"${color}\","
+	    local pattern
+
+	    # Bar fill pattern
+	    if [ "${patterns}" == "" ]; then
+		pattern=""
+	    else
+		if [ "${patterns_array[${xi}]}" != "" ]; then
+		    local pattern="fillstyle pattern ${patterns_array[${xi}]}"
+		fi
+	    fi
+	    plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}${USING_XTIC} with histograms title columnheader(${cmn}) lt ${line_type_array[${xi}]} lw ${line_width} lc rgb \"${color}\" ${pattern},"
 	    cmn=$((cmn+1))
 	    xi=$((${xi} + 1))
 	done
@@ -2438,6 +2448,35 @@ parse_linetype()
     fi
 }
 
+parse_patterns()
+{
+    if [ "${patterns}" != "" ];then
+	local pat
+	local i=0
+	set_ifs ", "
+	for pat in ${patterns}; do
+	    is_number ${pat}
+	    local is=${RETVAL}
+	    if [ "${is}" == "no" ];then
+		echo "ERROR: --patterns ${patterns}: ${pat} must be a number!"
+		exit 1
+	    fi
+	    patterns_array[${i}]=${pat}
+	    i=$(($i + 1))
+	done
+	reset_ifs
+    else
+	# Set default value
+	local i=0;
+	while [ ${i} -lt $((${max_x} + 1)) ]; do
+	    patterns_array[${i}]=1
+	    i=$((i + 1))
+	done
+    fi
+    echo "Bar Patterns: ${patterns_array[@]}"
+}
+
+
 parse_xavg()
 {
     if [ "${x_avg}" != "" ];then
@@ -2866,7 +2905,7 @@ parse_arguments()
 title:,,x2grid,xgrid,ygrid,noxgrid,gridcolor:,noygrid,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
 noxtics,noytics,noztics,xtics:,ytics:,ztics:,xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,xrange:,colors:,ignore,gap:,xmask:,ymask:,\
-zmask:,xavg:,yavg:,percent,speedup,overwrite,barw:,linew:,linetype:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
+zmask:,xavg:,yavg:,percent,speedup,overwrite,barw:,linew:,linetype:,pattern:,pntsize:,pnttype:,noviewer,forceviewer,viewer:,xlabeloffset:,\
 ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,regen:,xgeo,ygeo,txt:,hline:"
     local getoptcmd="getopt -a -o ${short_args} -l ${long_args} -n getopt.sh -- ${@}"
     local getoptcmd_set_args="local args=\`${getoptcmd}\`"
@@ -2958,6 +2997,7 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--barw"|"-barw") bar_width="$2";shift;;
 	    "--linew"|"-linew") line_width="$2";shift;;
 	    "--linetype"|"-linetype") line_type="$2";shift;;
+	    "--pattern"|"-pattern") patterns="$2";shift;;
 	    "--pntsize"|"-pntsize") point_size="$2";shift;;
 	    "--pnttype"|"-pnttype") point_type="$2";shift;;
 	    "--noviewer"|"-noviewer") no_viewer="YES";;
@@ -3046,6 +3086,9 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
     if [ $? -ne 0 ]; then exit 1; fi
 
     parse_ymask
+    if [ $? -ne 0 ]; then exit 1; fi
+
+    parse_patterns
     if [ $? -ne 0 ]; then exit 1; fi
 
     parse_linetype
@@ -3281,6 +3324,7 @@ usage()
     print_msg "   --barw <bar width>           : (Opt) Set the bar width.\n"
     print_msg "   --linew <line width>         : (Opt) Set the line width.\n"
     print_msg "   --linetype <3,6,1,...>       : (Opt) Set the line type.\n"
+    print_msg "   --pattern <3,1,7,...>        : (Opt) Bar fillstyle pattern.\n"
     print_msg "   --pntsize <point size>       : (Opt) Set the line point size.\n"
     print_msg "   --pnttype <3,6,1,...>        : (Opt) Set the line point types.\n"
     print_msg "   --noappend                   : (Opt) Dont append moufoplot data to eps.\n"
