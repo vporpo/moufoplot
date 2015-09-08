@@ -19,6 +19,8 @@
 
 # Changelog
 # ---------
+# v0.11 08SEP2015 Added:
+#                 --pattern to set the bar fillstyle pattern
 # v0.10 07SEP2015 Added:
 #                 --hline prints a line at given coordinates
 #                 --txt now supports text rotation
@@ -49,7 +51,7 @@
 
 
 MOUFOPLOT_STRING="MoufoPlot"
-moufoplot_version="0.10"
+moufoplot_version="0.11"
 
 MOUFOPLOT_GP_STRING="moufoplot .gp:"
 MOUFOPLOT_GP_DATA_STRING="moufoplot data:"
