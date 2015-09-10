@@ -19,6 +19,8 @@
 
 # Changelog
 # ---------
+# v0.12 10SEP2015 Added:
+#                 --errorbars to show error bars
 # v0.11 08SEP2015 Added:
 #                 --pattern to set the bar fillstyle pattern
 # v0.10 07SEP2015 Added:
@@ -51,7 +53,7 @@
 
 
 MOUFOPLOT_STRING="MoufoPlot"
-moufoplot_version="0.11"
+moufoplot_version="0.12"
 
 MOUFOPLOT_GP_STRING="moufoplot .gp:"
 MOUFOPLOT_GP_DATA_STRING="moufoplot data:"
@@ -761,10 +763,16 @@ gp_bar_options()
 
 
     if [ "${rowstacked}" == "" ];then
-	if [ "${cluster_gap}" != "" ]; then
-    	    echo "set style histogram cluster gap ${cluster_gap} title offset 0,${z_tags_offset}" >> ${gpfname}
+	if [ "${errorbars}" != "" ]; then
+	    local type="errorbars lw ${eblw} "
 	else
-    	    echo "set style histogram cluster gap 1 title offset 0,${z_tags_offset}" >> ${gpfname}
+	    local type="cluster"
+	fi
+
+	if [ "${cluster_gap}" != "" ]; then
+    	    echo "set style histogram ${type} gap ${cluster_gap} title offset 0,${z_tags_offset}" >> ${gpfname}
+	else
+    	    echo "set style histogram ${type} gap 1 title offset 0,${z_tags_offset}" >> ${gpfname}
 	fi
     else
     	echo "set style histogram ${rowstacked} title offset 0,${z_tags_offset}" >> ${gpfname}
@@ -779,6 +787,7 @@ gp_bar_options()
     local x_set_array=(${x_set})
     local x
     local cmn=2
+    local plot_cmn=${cmn}
     set_ifs "${IFS_CHAR}"
     local xi=0
     local z
@@ -806,14 +815,24 @@ gp_bar_options()
 		    local pattern="fillstyle pattern ${patterns_array[${xi}]}"
 		fi
 	    fi
-	    plot_cmd="${plot_cmd} \"${data_file}\" using ${cmn}${USING_XTIC} with histograms title columnheader(${cmn}) lt ${line_type_array[${xi}]} lw ${line_width} lc rgb \"${color}\" ${pattern},"
+
+	    if [ "${errorbars}" != "" ]; then
+		local effective_cmn=${plot_cmn}
+		local using_cmn="${effective_cmn}:$((${effective_cmn}+1))"
+	    else
+		local effective_cmn=${cmn}
+		local using_cmn="${effective_cmn}"
+	    fi
+	    plot_cmd="${plot_cmd} \"${data_file}\" using ${using_cmn}${USING_XTIC} with histograms title columnheader(${effective_cmn}) lt ${line_type_array[${xi}]} lw ${line_width} lc rgb \"${color}\" ${pattern},"
 	    cmn=$((cmn+1))
+	    plot_cmn=$((${plot_cmn}+2))
 	    xi=$((${xi} + 1))
 	done
     else
 	local zi=0
 	while [ ${zi} -lt ${max_z} ];do
 	    local cmn=2
+	    local plot_cmn=${cmn}
 
 	    if [ "${noz_tags}" == "YES" ];then
 		local ztag=""
@@ -831,14 +850,25 @@ gp_bar_options()
 		    continue
 		fi
 
-		local color=${color_array[$cmn]}
+		if [ "${errorbars}" != "" ]; then
+		    local effective_cmn=${plot_cmn}
+		    local using_cmn="${effective_cmn}:$((${effective_cmn}+1))"
+		else
+		    local effective_cmn=${cmn}
+		    local using_cmn="${cmn}"
+		fi
+
+		local color=${color_array[${effective_cmn}]}
 		if [ ${zi} -eq 0 ];then
-		    local title_stuff="title columnheader(${cmn})"
+		    local title_stuff="title columnheader(${effective_cmn})"
 		else
 		    local title_stuff="notitle"
 		fi
-		plot_cmd="${plot_cmd} \"${data_file}\" index ${zi} using ${cmn}:xtic(1) with histograms ${title_stuff} lt ${line_type_array[${xi}]} lw ${line_width} lc rgb \"${color}\","
+
+		plot_cmd="${plot_cmd} \"${data_file}\" index ${zi} using ${using_cmn}:xtic(1) ${with_type} ${title_stuff} lt ${line_type_array[${xi}]} lw ${line_width} lc rgb \"${color}\","
+
 		cmn=$((cmn+1))
+		plot_cmn=$((${plot_cmn}+2))
 		xi=$((${xi} + 1))
 	    done
 	    zi=$((${zi} + 1))
@@ -1108,6 +1138,13 @@ create_data_file()
 	fi
 
 	data="${data} ${xtag}"
+
+	# Add error bars
+	if [ "${errorbars}" != "" ]; then
+	    local eb_tag="${xtag}ERROR"
+	    data="${data} ${eb_tag}"
+	fi
+
 	xi=$((${xi} + 1))
     done
     data="${data}\n"
@@ -1167,8 +1204,6 @@ create_data_file()
 		    x=""
 		fi
 
-			
-
 		if [ "${y_avg}" ]&&[ ${yi} -eq $((${max_y} - 1)) ];then
 		    if [ "${y_geomean_flag}" ]; then
 			file_val=`echo "e(l(${ysum[${xi}]}) / ${avg_max_y})" | bc -l` # root of
@@ -1218,6 +1253,13 @@ create_data_file()
 		# skip X,Y masked data
 		if [ "${x_mask_array[${xi}]}" != "0" ]&&[ "${y_mask_array[${yi}]}" != "0" ];then
 		    data="${data} ${file_val}"
+
+		    # Add error bar
+		    if [ "${errorbars}" != "" ]; then
+			local select_errorbar="${x} ${y} ${z} ${errorbars}"
+			get_match "${DIR}" "${select_errorbar}" "error_bar"
+			data="${data} ${RETVAL}"
+		    fi
 		fi
 
 		in_array ${xi} "${x_avg_array[@]}"
@@ -1911,6 +1953,10 @@ set_defaults()
     y_grid="YES"
     if [ "${grid_color}" == "" ]; then
 	grid_color="grey"
+    fi
+
+    if [ "${eblw}" == "" ]; then
+	eblw=3
     fi
 }
 
@@ -2903,7 +2949,7 @@ restore_data()
 parse_arguments()
 {
     local short_args="hd:x:y:z:f:t:c:iv"
-    local long_args="help,bar,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,extra:,\
+    local long_args="help,bar,errorbars:,eblw:,hmap,line,stack,dir:,xvals:,yvals:,zvals:,filter:,extra:,\
 title:,,x2grid,xgrid,ygrid,noxgrid,gridcolor:,noygrid,xlabel:,ylabel:,data:,xtags:,noxtags,ytags:,noytags,ztags:,noztags,\
 noxtics,noytics,noztics,xtics:,ytics:,ztics:,xnorm:,ynorm:,znorm:,xnormv:,ynormv:,znormv:,xrotate:,yrotate:,\
 legend:,size:,xformat:,yformat:,ytics:,yrange:,xrange:,colors:,ignore,gap:,xmask:,ymask:,\
@@ -2964,6 +3010,8 @@ ylabeloffset:,ztagsoffset:,gp:,out:,zlabel:,noappend,outformat:,silent,version,r
 	    "--ztagsoffset"|"-ztagsoffset") z_tags_offset="$2";shift;;
 	    "--help"|"-help"|"-h") usage; exit 1;;
 	    "--bar"|"-bar") plot_type="bargraph";;
+	    "--errorbars"|"-errorbars") errorbars="${2}";shift;;
+	    "--eblw"|"-eblw") eblw="${2}";shift;;
 	    "--hmap"|"-hmap") plot_type="heatmap";;
 	    "--line"|"-line") plot_type="linegraph";;
 	    "--stack"|"-stack") plot_type="stacked";;
@@ -3251,6 +3299,8 @@ usage()
     version
     print_msg "Usage: ${script_name} <OPTIONS>\n"
     print_msg "   --bar                        : (DEF) Generate histograms.\n"
+    print_msg "   --errorbars                  : The filter for error bars.\n"
+    print_msg "   --eblw                       : The line width of errorbars.\n"
     print_msg "   --stack                      : Generate stacked histograms.\n"
     print_msg "   --line                       : Generate line-graphs.\n"
     print_msg "   --hmap                       : Generate heat-map graphs.\n"
