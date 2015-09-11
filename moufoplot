@@ -1258,7 +1258,8 @@ create_data_file()
 		    if [ "${errorbars}" != "" ]; then
 			local select_errorbar="${x} ${y} ${z} ${errorbars}"
 			get_match "${DIR}" "${select_errorbar}" "error_bar"
-			data="${data} ${RETVAL}"
+			local norm_err_data=$(echo "${RETVAL} / ${normalize_value}" | bc -l)
+			data="${data} ${norm_err_data}"
 		    fi
 		fi
 
