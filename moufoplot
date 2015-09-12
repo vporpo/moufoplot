@@ -1192,10 +1192,13 @@ create_data_file()
 
 	    local sum_x_all=0
 	    local sumx
+	    local eb_sumx
 	    if [ ${x_geomean_flag} ]; then
 		sumx=1
+		eb_sumx=1
 	    else
 		sumx=0
+		eb_sumx=0
 	    fi
 	    local xi=0
 
@@ -1207,16 +1210,37 @@ create_data_file()
 		if [ "${y_avg}" ]&&[ ${yi} -eq $((${max_y} - 1)) ];then
 		    if [ "${y_geomean_flag}" ]; then
 			file_val=`echo "e(l(${ysum[${xi}]}) / ${avg_max_y})" | bc -l` # root of
-		    else 
+			if [ "${errorbars}" != "" ]; then
+			    eb_val=`echo "e(l(${eb_sum[${xi}]}) / ${avg_max_y})" | bc -l` # root of
+			fi
+		    else
 			file_val=`echo "(${ysum[${xi}]}) / ${avg_max_y}" | bc -l`
-		    fi 
+			if [ "${errorbars}" != "" ]; then
+			    eb_val=`echo "(${eb_sum[${xi}]}) / ${avg_max_y}" | bc -l`
+			fi
+		    fi
 		elif [ "${x_avg}" ]&&[ ${xi} -eq $((${max_x} - 1)) ]; then
 		    if [ "${x_geomean_flag}" ]; then
 			file_val=`echo "e(l(${sumx}) / ${avg_max_x})" | bc -l` # root of
+			if [ "${errorbars}" != "" ]; then
+			    eb_val=`echo "e(l(${eb_sumx}) / ${avg_max_x})" | bc -l` # root of
+			fi
 		    else
 			file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
+			if [ "${errorbars}" != "" ]; then
+			    eb_val=`echo "(${eb_sumx})/${avg_max_x}" | bc -l`
+			fi
 		    fi
-		else 
+		else
+
+		    if [ "${errorbars}" != "" ]; then
+			local select_errorbar="${x} ${y} ${z} ${errorbars}"
+			get_match "${DIR}" "${select_errorbar}" "error_bar"
+			eb_val=${RETVAL}
+			# local norm_err_data=$(echo "${RETVAL} / ${normalize_value}" | bc -l)
+			# data="${data} ${norm_err_data}"
+		    fi
+
 
 
 		# if [ ${xi} -lt ${max_x} ]&&[ ${yi} -lt ${max_y} ]&&[ ${zi} -lt ${max_z} ];then # x/y avg
@@ -1230,15 +1254,26 @@ create_data_file()
 		    fi
 		    if [ "${ignore_filter}" == "YES" ]&&[ "${file_val}" == "0" ]||[ "${ignore_filter}" == "YES" ]&&[ "${normalize_value}" == "0" ];then
 			file_val=0
+			eb_val=0
 		    else
 			file_val=`echo "${file_val} / ${normalize_value}"|bc -l`
+			if [ "${errorbars}" != "" ]; then
+			    eb_val=`echo "${eb_val} / ${normalize_value}"|bc -l`
+			fi
 		    fi
 
 		    if [ "${percent}" != "" ];then
 			file_val=`echo "${file_val} * 100" |bc -l`
+			if [ "${errorbars}" != "" ]; then
+			    eb_val=`echo "${eb_val} * 100" |bc -l`
+			fi
 		    fi
 		    if [ "${speedup}" != "" ];then
 			file_val=`echo "1/${file_val}" |bc -l`
+			# if [ "${errorbars}" != "" ]; then
+			    # echo "SPEEDUP: ${eb_val}"
+			    # eb_val=`echo "1/${eb_val}" |bc -l`
+			# fi
 		    fi
 		fi
 		sum_x_all=`echo "${sum_x_all} + ${file_val}" | bc -l`
@@ -1253,13 +1288,8 @@ create_data_file()
 		# skip X,Y masked data
 		if [ "${x_mask_array[${xi}]}" != "0" ]&&[ "${y_mask_array[${yi}]}" != "0" ];then
 		    data="${data} ${file_val}"
-
-		    # Add error bar
 		    if [ "${errorbars}" != "" ]; then
-			local select_errorbar="${x} ${y} ${z} ${errorbars}"
-			get_match "${DIR}" "${select_errorbar}" "error_bar"
-			local norm_err_data=$(echo "${RETVAL} / ${normalize_value}" | bc -l)
-			data="${data} ${norm_err_data}"
+			data="${data} ${eb_val}"
 		    fi
 		fi
 
@@ -1269,14 +1299,18 @@ create_data_file()
 			if [ "${ignore_filter}" == "YES" ]; then
 			    if [ "${file_val}" != "0" ];then
 				sumx="${sumx} * ${file_val}"
+				eb_sumx="${eb_sum} * ${eb_val}"
 			    else
 				sumx="${sumx} * 1"
+				eb_sumx="${eb_sum} * 1"
 			    fi
 			else
 			    sumx="${sumx} * ${file_val}"
+			    eb_sumx="${eb_sumx} * ${eb_val}"
 			fi
 		    else
 			sumx="${sumx} + ${file_val}"
+			eb_sumx="${eb_sumx} + ${eb_val}"
 		    fi
 		fi
 
@@ -1286,15 +1320,19 @@ create_data_file()
 			if [ "${ignore_filter}" == "YES" ]; then
 			    if [ "${file_val}" != "0" ];then
 				ysum[${xi}]="${ysum[${xi}]} * ${file_val}"
+				eb_sum[${xi}]="${eb_sum[${xi}]} * ${eb_val}"
 			    else
 				ysum[${xi}]="${ysum[${xi}]} * 1"
+				eb_sum[${xi}]="${eb_sum[${xi}]} * 1"
 			    fi
 			else
 			    ysum[${xi}]="${ysum[${xi}]} * ${file_val}"
+			    eb_sum[${xi}]="${eb_sum[${xi}]} * ${eb_val}"
 			fi
 		    else
 			ysum[${xi}]="${ysum[${xi}]} + ${file_val}"
-		    fi 
+			eb_sum[${xi}]="${eb_sum[${xi}]} + ${eb_val}"
+		    fi
 		fi
 
 		xi=$((${xi} + 1))
@@ -3603,8 +3641,10 @@ append_avg_vals()
 	while [ ${yi} -lt ${max_x} ];do
 	    if [ ${y_geomean_flag} ]; then
 		ysum[${yi}]="1"
+		eb_sum[${yi}]="1"
 	    else
 		ysum[${yi}]="0"
+		eb_sum[${yi}]="0"
 	    fi
 	    yi=$((${yi} + 1))
 	done
@@ -3617,9 +3657,9 @@ append_avg_tags()
     local avg_tag
     if [ "${x_avg}" != "" ];then
 	if [ ${x_geomean_flag} ]; then
-	    avg_tag="GMean"
+	    avg_tag="GMean_"
 	else
-	    avg_tag="avg"
+	    avg_tag="avg_"
 	fi
 	x_tags=${x_tags},${avg_tag}
 	xtags_array[${#xtags_array[@]}]=${avg_tag}
@@ -3627,9 +3667,9 @@ append_avg_tags()
 
     if [ "${y_avg}" != "" ];then
 	if [ ${y_geomean_flag} ]; then
-	    avg_tag="GMean"
+	    avg_tag="GMean_"
 	else
-	    avg_tag="avg"
+	    avg_tag="avg_"
 	fi
 	y_tags=${y_tags},${avg_tag}
 	ytags_array[${#ytags_array[@]}]=${avg_tag}
