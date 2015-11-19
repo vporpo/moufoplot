@@ -3602,7 +3602,7 @@ get_hidden_filters()
 
 calculate_max_xyz()
 {
-    set_ifs ", "
+    set_ifs ","
     max_x=0
     for x in ${x_array}; do
 	max_x=$((${max_x} + 1))
