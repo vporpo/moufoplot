@@ -1,4 +1,5 @@
 #!/bin/bash
+#!/bin/bash -xv
 #
 # MoufoPlot
 # Copyright (C) 2012,2013,2014,2015 Vasileios Porpodas <vp331ATclDOTcam.ac.uk>
@@ -19,6 +20,10 @@
 
 # Changelog
 # ---------
+# v0.13 22AUG2016 Fixed:
+#                 workaround for bc errors
+#                 Added:
+#                 support for negative numbers in -yrange
 # v0.12 10SEP2015 Added:
 #                 --errorbars to show error bars
 # v0.11 08SEP2015 Added:
@@ -51,9 +56,10 @@
 # v0.03 05JUN2013 Added restore function. Regenerate and modify graphs from 
 #                 existing moufoplot .eps files.
 
-
+SCALE="scale=4;"		# bc scale
+MUL_BASE=10			# for geomean error bars when values are too small
 MOUFOPLOT_STRING="MoufoPlot"
-moufoplot_version="0.12"
+moufoplot_version="0.13"
 
 MOUFOPLOT_GP_STRING="moufoplot .gp:"
 MOUFOPLOT_GP_DATA_STRING="moufoplot data:"
@@ -445,7 +451,7 @@ get_not_x()
 fix_float() {
     echo ${1} | grep -o "\..*" 2> /dev/null > /dev/null
     if [ ${?} -eq 0 ]; then
-	RETVAL="0${data}"
+	RETVAL="0${1}"
     else
 	RETVAL=${1}
     fi
@@ -1210,21 +1216,25 @@ create_data_file()
 
 		if [ "${y_avg}" ]&&[ ${yi} -eq $((${max_y} - 1)) ];then
 		    if [ "${y_geomean_flag}" ]; then
-			file_val=`echo "e(l(${ysum[${xi}]}) / ${avg_max_y})" | bc -l` # root of
+			file_val=`echo "${SCALE}e(l(${ysum[${xi}]}) / ${avg_max_y})" | bc -l` # root of
 			if [ "${errorbars}" != "" ]; then
-			    eb_val=`echo "e(l(${eb_sum[${xi}]}) / ${avg_max_y})" | bc -l` # root of
+			    # The original e(l(a * b *... j)/10) causes a*b*... to be 0
+			    # DO this instead: e(l(10000000000 * a * b *... j)/10)/10
+			    local MUL=$(echo "${MUL_BASE} ^ ${avg_max_y}" | bc -l)
+			    eb_val=$(echo "${SCALE}e(l(${MUL} * ${eb_sum[${xi}]}) / ${avg_max_y})/${MUL_BASE}" | bc -l) # root of
 			fi
 		    else
-			file_val=`echo "(${ysum[${xi}]}) / ${avg_max_y}" | bc -l`
+			file_val=`echo "${SCALE}(${ysum[${xi}]}) / ${avg_max_y}" | bc -l`
 			if [ "${errorbars}" != "" ]; then
-			    eb_val=`echo "(${eb_sum[${xi}]}) / ${avg_max_y}" | bc -l`
+			    eb_val=`echo "${SCALE}(${eb_sum[${xi}]}) / ${avg_max_y}" | bc -l`
 			fi
 		    fi
 		elif [ "${x_avg}" ]&&[ ${xi} -eq $((${max_x} - 1)) ]; then
 		    if [ "${x_geomean_flag}" ]; then
-			file_val=`echo "e(l(${sumx}) / ${avg_max_x})" | bc -l` # root of
+			file_val=`echo "${SCALE}e(l(${sumx}) / ${avg_max_x})" | bc -l` # root of
 			if [ "${errorbars}" != "" ]; then
-			    eb_val=`echo "e(l(${eb_sumx}) / ${avg_max_x})" | bc -l` # root of
+			    local MUL=$(echo "${MUL_BASE} ^ ${avg_max_y}" | bc -l)
+			    eb_val=$(echo "${SCALE}e(l(${MUL} * ${eb_sumx}) / ${avg_max_x})/${MUL_BASE}" | bc -l) # root of
 			fi
 		    else
 			file_val=`echo "(${sumx})/${avg_max_x}" | bc -l`
@@ -1285,7 +1295,6 @@ create_data_file()
 		else
 			find_min_max ${file_val}
 		fi
-
 		# skip X,Y masked data
 		if [ "${x_mask_array[${xi}]}" != "0" ]&&[ "${y_mask_array[${yi}]}" != "0" ];then
 		    data="${data} ${file_val}"
