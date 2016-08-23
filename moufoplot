@@ -488,6 +488,12 @@ get_file_value()
     eval local file="$1"
     # local data=`cat ${file}`
     local data=$(< ${file})
+    fix_exponential "${data}"
+    if [ $? -ne 0 ];then
+	echo "ERROR: file: ${file}: ${data} is not a number OR an exponential."
+	exit 1
+    fi
+    data=${RETVAL}
     if [ ! "${silent}" == "YES" ];then
 	echo "Reading value from ${file}... ${data}"
     fi
@@ -500,11 +506,6 @@ get_file_value()
 	    echo "ERROR: file ${file} is empty!!!"
 	    exit 1
 	fi
-    fi
-    fix_exponential "${data}"
-    if [ $? -ne 0 ];then
-	echo "ERROR: file: ${file}: ${data} is not a number OR an exponential."
-	exit 1
     fi
     RETVAL=${RETVAL}
 }
@@ -1658,11 +1659,11 @@ sanity_checks()
 	    exit 1
 	fi
 
-	local isgt=`greater_than ${y_range_max} ${y_range_min}`
-	if [ "${isgt}" == "0" ];then
-	    echo "ERROR: in yrange:${y_range}. Should be ${y_range_max} > ${y_range_min}."
-	    exit 1
-	fi
+	# local isgt=`greater_than ${y_range_max} ${y_range_min}`
+	# if [ "${isgt}" == "0" ];then
+	#     echo "ERROR: in yrange:${y_range}. Should be ${y_range_max} > ${y_range_min}."
+	#     exit 1
+	# fi
 
 	if [ "${y_range_step}" != "" ];then
 	    if [ "${y_tics}" != "" ];then
